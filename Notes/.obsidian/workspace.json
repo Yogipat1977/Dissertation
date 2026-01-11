@@ -1,0 +1,177 @@
+{
+  "main": {
+    "id": "76627f3804898959",
+    "type": "split",
+    "children": [
+      {
+        "id": "7551de26f3e9172b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "061038a8a3f2ccf6",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "CN6000_3D_XAI_VR_proposal.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "CN6000_3D_XAI_VR_proposal"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "00ab9b9e704c5361",
+    "type": "split",
+    "children": [
+      {
+        "id": "56a8048ea21c1763",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6f02670742c1bc74",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "1e5e1e03d5005851",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "0d22d80bd2f50f96",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "08bab25a363d9982",
+    "type": "split",
+    "children": [
+      {
+        "id": "37cf118796652650",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3c264932005aa779",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "CN6000_3D_XAI_VR_proposal.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for CN6000_3D_XAI_VR_proposal"
+            }
+          },
+          {
+            "id": "7667ac9d4f1e4271",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "CN6000_3D_XAI_VR_proposal.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from CN6000_3D_XAI_VR_proposal"
+            }
+          },
+          {
+            "id": "3d2dda3df0396a70",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "1a7bcd28f6013080",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "CN6000_3D_XAI_VR_proposal.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of CN6000_3D_XAI_VR_proposal"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "061038a8a3f2ccf6",
+  "lastOpenFiles": [
+    "Untitled.canvas",
+    "CN6000_3D_XAI_VR_proposal.md"
+  ]
+}
