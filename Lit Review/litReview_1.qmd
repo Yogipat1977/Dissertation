@@ -19,169 +19,169 @@ format:
 \newpage
 
 
-# Introduction
+# introduction
 
-## Clinical Background and the "Black Box" Challenge
+## clinical background and the "black box" challenge
 
-In modern oncology, properly identifying and managing brain tumours continues to be a major issue. Due to its simplicity and excellent volumetric resolution, magnetic resonance imaging (MRI) has become the highest standard for analysis (Menze et al., 2015). However, there is a substantial barrier in the interpretation of this data. At the moment, the process of defining the boundaries of tumors is mostly done by hand. Subjectivity and labour intensity are introduced by this reliance on human interpretation, which may not be sustainable for scaling healthcare solutions (Iftikhar et al., 2025). Automated technologies that can match or surpass human precision without the corresponding time restrictions are therefore desperately needed in medical applications.
+in modern oncology, properly identifying and managing brain tumours continues to be a major issue. due to its simplicity and excellent volumetric resolution, magnetic resonance imaging (mri) has become the highest standard for analysis (menze et al., 2015). however, there is a substantial barrier in the interpretation of this data. at the moment, the process of defining the boundaries of tumors is mostly done by hand. subjectivity and labour intensity are introduced by this reliance on human interpretation, which may not be sustainable for scaling healthcare solutions (iftikhar et al., 2025). automated technologies that can match or surpass human precision without the corresponding time restrictions are therefore desperately needed in medical applications.
 
-The response to this clinical need has been the rapid adoption of Deep Learning (DL) technologies, particularly 3D Convolutional Neural Networks (CNNs) like the 3D U-Net. These models have demonstrated "superior performance" in handling volumetric data compared to traditional methods (Iftikhar et al., 2025; Bhati et al., 2024). However, the integration of these advanced models has introduced a new, critical issue: the **"black box"** problem.
+the response to this clinical need has been the rapid adoption of deep learning (dl) technologies, particularly 3d convolutional neural networks (cnns) like the 3d u-net. these models have demonstrated "superior performance" in handling volumetric data compared to traditional methods (iftikhar et al., 2025; bhati et al., 2024). however, the integration of these advanced models has introduced a new, critical issue: the **"black box"** problem.
 
-While these models are highly accurate, their internal decision-making processes are opaque (Neri et al., 2023).**This creates a paradox in medical AI**: as models become more complex and accurate, they often become less interpretable to the clinicians using them. In a high-stakes environment like neurosurgery, a lack of transparency creates a "trust gap" (Wen et al., 2025). It is not enough for a model to simply output a segmentation mask; clinicians require the ability to verify why specific voxels were classified as tumour tissue. Therefore, the lack of interpretability is no longer just a technical issue, but a barrier to ethical and safe clinical deployment (Neri et al., 2023).
+while these models are highly accurate, their internal decision-making processes are opaque (neri et al., 2023).**this creates a paradox in medical ai**: as models become more complex and accurate, they often become less interpretable to the clinicians using them. in a high-stakes environment like neurosurgery, a lack of transparency creates a "trust gap" (wen et al., 2025). it is not enough for a model to simply output a segmentation mask; clinicians require the ability to verify why specific voxels were classified as tumour tissue. therefore, the lack of interpretability is no longer just a technical issue, but a barrier to ethical and safe clinical deployment (neri et al., 2023).
 
 
-##  Research Aims and Scope of Literature Review
+##  research aims and scope of literature review
 
-To address this disconnect between model accuracy and clinical trust, this literature review aims to critically evaluate the intersection of 3D Deep Learning, Explainable AI (XAI), and Immersive Visualisation. While these fields are often studied in isolation, this review argues that a unified framework is necessary to fully illuminate the "black box" of 3D CNNs.
+to address this disconnect between model accuracy and clinical trust, this literature review aims to critically evaluate the intersection of 3d deep learning, explainable ai (xai), and immersive visualisation. while these fields are often studied in isolation, this review argues that a unified framework is necessary to fully illuminate the "black box" of 3d cnns.
 
-The review is structured to build this argument logically:
+the review is structured to build this argument logically:
 
-**Section 2.0** establishes the technical capabilities of modern 3D CNN architectures for segmentation.
+**section 2.0** establishes the technical capabilities of modern 3d cnn architectures for segmentation.
 
-**Section 3.0** critically analyses current XAI methods (such as Grad-CAM and LIME), evaluating their limitations when applied to complex volumetric data.
+**section 3.0** critically analyses current xai methods (such as grad-cam and lime), evaluating their limitations when applied to complex volumetric data.
 
-**Section 4.0** explores the potential of immersive technologies (VR) to present these XAI outputs in a way that is intuitively understandable for clinicians.
+**section 4.0** explores the potential of immersive technologies (vr) to present these xai outputs in a way that is intuitively understandable for clinicians.
 
-**Section 5.0** synthesises these findings to identify the specific research gap this project will address: the lack of an integrated, 3D-visualised expalinability pipeline for brain tumour segmentation.
+**section 5.0** synthesises these findings to identify the specific research gap this project will address: the lack of an integrated, 3d-visualised expalinability pipeline for brain tumour segmentation.
 
 **section 6.0**  explains the investigation's findings and explains how this initiative will fill the identified gap.
 
  
-#  3D Deep Learning for Medical Brain Tumour Segmentation
+#  3d deep learning for medical brain tumour segmentation
 
-## Evaluation of 3D CNNs for Brain Tumour Segmentation
-
-
-Over the past decade, the field of medical image analysis has experienced a significant paradigm shift, moving from **"reasoning-based"** systems that relied on manual feature engineering to **"learning-based"** Deep Learning (DL) approaches (Neri et al., 2023). In the past, radiomics was used for the automated analysis of brain tumours. To train classifiers like Support Vector Machines (SVMs), domain specialists manually retrieved quantitative features including texture, intensity, and shape. However, this method was labour-intensive, prone to observer bias, and frequently failed to capture the intricate, non-linear spatial relationships present in volumetric data (Bhati et al., 2024).
-
-The introduction of Convolutional Neural Networks(CNNs) brought an and of manual paradigm. CNN prefer an end-to-end approach to extract features automatically by utilizing raw pixel data in contrast to classical machine learning. Initial implementation in neuro-oncology treated Magnetic Resonance imaging(MRI) as a series of 2D slices. As this approach allowed to take pre-trained networks into consideration(such as VGG or ResNet), it has significant drawback: it neglect the spatial context along the Z-axis(depth).
-
-In neuro-oncology, a tumor is an inherently volumetric entity; it defines the anatomical boundaries with continuation across the sagittal, coronal and axial planes. When 3D volume is processed as a series of 2D slices it frequently results in **"discontinuous predictions"**, which produce uneven and anatomically impossible 3D models where lesion is found in one slice but overlooked in the adjacent one(Iftikhar et al., 2025). To overcome this problem, the field has moved towards  3D CNNs, which simultaneously conduct convolutions on the entire (X, Y, Z) volume using volumetric kernels (such as $3 * 3 * 3$). This volumetric approach allows model to learn complex spatial hierarchies and inter-slice connections thanks to its volumetric methodology, which is essential for precise segmentation of brain tumor using high scaled Dataset like BraTS.
+## evaluation of 3d cnns for brain tumour segmentation
 
 
-## Evolution of Volumetric Segmentation Architectures
+over the past decade, the field of medical image analysis has experienced a significant paradigm shift, moving from **"reasoning-based"** systems that relied on manual feature engineering to **"learning-based"** deep learning (dl) approaches (neri et al., 2023). in the past, radiomics was used for the automated analysis of brain tumours. to train classifiers like support vector machines (svms), domain specialists manually retrieved quantitative features including texture, intensity, and shape. however, this method was labour-intensive, prone to observer bias, and frequently failed to capture the intricate, non-linear spatial relationships present in volumetric data (bhati et al., 2024).
+
+the introduction of convolutional neural networks(cnns) brought an and of manual paradigm. cnn prefer an end-to-end approach to extract features automatically by utilizing raw pixel data in contrast to classical machine learning. initial implementation in neuro-oncology treated magnetic resonance imaging(mri) as a series of 2d slices. as this approach allowed to take pre-trained networks into consideration(such as vgg or resnet), it has significant drawback: it neglect the spatial context along the z-axis(depth).
+
+in neuro-oncology, a tumor is an inherently volumetric entity; it defines the anatomical boundaries with continuation across the sagittal, coronal and axial planes. when 3d volume is processed as a series of 2d slices it frequently results in **"discontinuous predictions"**, which produce uneven and anatomically impossible 3d models where lesion is found in one slice but overlooked in the adjacent one(iftikhar et al., 2025). to overcome this problem, the field has moved towards  3d cnns, which simultaneously conduct convolutions on the entire (x, y, z) volume using volumetric kernels (such as $3 * 3 * 3$). this volumetric approach allows model to learn complex spatial hierarchies and inter-slice connections thanks to its volumetric methodology, which is essential for precise segmentation of brain tumor using high scaled dataset like brats.
+
+
+## evolution of volumetric segmentation architectures
  
-To handle the Computational complexity of 3D data while conducting segmentation that is pixel-perfect, the research community has standardize the **"Encoder-Decoder"** Architecture. Building upon the success of 2D U-Net, Çiçek et al. (2016) introduce the 3D U-Net architecture, a fully convolutional network for dense volumetric images segmentation. A U-shaped Symmetric model consists of two distinct pathways: 
+to handle the computational complexity of 3d data while conducting segmentation that is pixel-perfect, the research community has standardize the **"encoder-decoder"** architecture. building upon the success of 2d u-net, çiçek et al. (2016) introduce the 3d u-net architecture, a fully convolutional network for dense volumetric images segmentation. a u-shaped symmetric model consists of two distinct pathways: 
 
-1. **The Contracting Path(Encoder)**: This pathway significantly consider feature extraction. It consists of max-pooling layers after recursive block of 3D convolutions. As data processed through the encoder, the spatial resolution decreases while the number of feature increases.This path allows model to capture high-level conceptual data context("where is tumor present", such as differentiate tumor tissues for healthy one (Çiçek et al., 2016).
+1. **the contracting path(encoder)**: this pathway significantly consider feature extraction. it consists of max-pooling layers after recursive block of 3d convolutions. as data processed through the encoder, the spatial resolution decreases while the number of feature increases.this path allows model to capture high-level conceptual data context("where is tumor present", such as differentiate tumor tissues for healthy one (çiçek et al., 2016).
 
-2. **The Expanding path(Decoder)**: To regenerate the segmentation map, the spatial resolution needs to be restored which has lost during encoding. This path reconstruct the feature maps back to its initial input dimensions using up-convolution(transposed convolution) layers. Also provide precise location( "where is the tumor"). 
+2. **the expanding path(decoder)**: to regenerate the segmentation map, the spatial resolution needs to be restored which has lost during encoding. this path reconstruct the feature maps back to its initial input dimensions using up-convolution(transposed convolution) layers. also provide precise location( "where is the tumor"). 
  
 
-![3D U-Net Architecture](image.jpg)
+![3d u-net architecture](image.jpg)
 
-A critical innovation of the 3D U-Net introduce long-range skip connections. Deep neural network often face difficulty to acquire fine-grained spatial information after applying multiple pooling operations. The 3D U-Net addresses this problem concatenates high-resolution feature maps straight from the encoder to the appropriate decoder layers. According to the Çiçek et al. (2016), this mechanism allows the network to incorporate deep semantic features with shallow details,with precise boundary delineation  even when it trained with sparse annotations.
+a critical innovation of the 3d u-net introduce long-range skip connections. deep neural network often face difficulty to acquire fine-grained spatial information after applying multiple pooling operations. the 3d u-net addresses this problem concatenates high-resolution feature maps straight from the encoder to the appropriate decoder layers. according to the çiçek et al. (2016), this mechanism allows the network to incorporate deep semantic features with shallow details,with precise boundary delineation  even when it trained with sparse annotations.
 
-Despite its success, the standard U-Net struggles with small lesions. Medical images often contains irrelevant background information such as non-cosiderable tissue in the brain, while the standard U-Net treats all the pixels in a feature map  equally. To overcome this issue, researchers have integrated "Attention Mechanisms" into the U-Net architecture. As Explained by Natekar et al. (2020), the Attention U-Net incorporates **"Attention Gates"** into the skip connections.
+despite its success, the standard u-net struggles with small lesions. medical images often contains irrelevant background information such as non-cosiderable tissue in the brain, while the standard u-net treats all the pixels in a feature map  equally. to overcome this issue, researchers have integrated "attention mechanisms" into the u-net architecture. as explained by natekar et al. (2020), the attention u-net incorporates **"attention gates"** into the skip connections.
 
-This gates utilize the coarser signal form the gating vector(the deep layer) to filter the activations from the input signal (the shallow layer) before they are merged. This enhance the activations in the region of interest(ROI) and suppresses the irrelevant background regions using mathematics equations. This "soft-attention" mechanism improves the model's sensitivity to small, irregular lesions such as glioma subregions  without requiring additional guidance or complex cropping preprocessing (Natekar et al, (2020)). 
-
-
-parallel to the U-Net Milletari et al.(2016) proposed the V-Net,an optimized model only for volumetric medical data. V-Net is completely distinct for other models,incorporating the **Residual connections**(short-skip connections) block. This model resembles the ResNet philosophy, add the input of a block to its output, allowing gradients to flow more smoothly during backpropagation. compared to convolutional U-Net, this reduces the vanishing gradient issue and make it easier to train much deeper 3D networks (Milletari et al., 2016).
+this gates utilize the coarser signal form the gating vector(the deep layer) to filter the activations from the input signal (the shallow layer) before they are merged. this enhance the activations in the region of interest(roi) and suppresses the irrelevant background regions using mathematics equations. this "soft-attention" mechanism improves the model's sensitivity to small, irregular lesions such as glioma subregions  without requiring additional guidance or complex cropping preprocessing (natekar et al, (2020)). 
 
 
-Furthermore, the V-Net research has presented a solution to one of the most enduring challenges in the medical segmentation: Class Imbalance. In a dataset,tumor occupies less the 1% of the total volumetric pixels while rest of the area is unaffected  and healthy background. Standard objective functions like Cross-Entropy refuse to get success in this scenario,results in having model achievable accuracy as 99% by predicting "background irrelevant data for every voxel. To overcome this Milletari et al. (2016) introduced the **Dice coefficient**, which optimises the model by considering the gap between the ground truth and the expected segmentation: 
-
-$$D = \frac{2 \sum_{i}^{N} p_i g_i}{\sum_{i}^{N} p_i + \sum_{i}^{N} g_i}$$
-
-where the sums run through the $N$ voxels, of the predicted binary volume $p_i \in P$ and the ground truth binary volume $g_i \in G$. This function can improvise by rewriting it in a differentiable form. As a result, it can be optimized with gradient descent. It can be compute with respect to each predicted voxel, allowing the network to improve the overlap between the predictions and ground truth (Milletari et al., 2016).
-
-The gradient: 
-
-$$\frac{\partial D}{\partial p_j} = 2\left[\frac{g_j}{\sum_i p_i^2 + \sum_i g_i^2} - \frac{2 p_j (\sum_i p_i g_i)}{(\sum_i p_i^2 + \sum_i g_i^2)^2}\right]$$
-
-# Explainable AI (XAI) for Explainability in Medicine
-
-## The Need for Explainability in Clinical practice
-
-The integration of Artificial Intelligence (AI) into medical practice especially in high-stakes domains like neuro-oncology, has made it more difficult by the opacity of modern Deep learning (DL) models. Convolutional neural network has demonstrated super performance in segmentation like tasks, where their complex,non-linear decision-making remain inaccessible. This "Black Box" nature has became barrier in model adoption, often referred to as the **"trust gap"** (Wen et al., 2025).
-
-Just model prediction is insufficient in clinical practice, it must incorporate with justification that follows medical knowledge. As highlighted by Neri et al. (2023), the ethical and legal framework governing medicine, such as "Right to Explanation" under GDPR, demand that automated decisions be transparent and contestable. clinicians must be able to identify the reason behind the model classification on a specific region as tumor present or not to ensure patient safety(Iftikhar et al., 2025).
-
-Furthermore, XAI is not just a compliance tool but also a critical mechanism for model debugging and knowledge discovery. Researchers can detect "clever Hans" events, in which model learns misleading connection( e.g.,forecasting tumor based on specific hospital watermark rather then anatomical pathology)(Hou et al., 2024). when it comes to brain tumor segmentation,XAI refer to the validation of network focus on biologically relevant sub-regions such as the necrotic core or enhancing tumor(Natekar et al., 2020).
+parallel to the u-net milletari et al.(2016) proposed the v-net,an optimized model only for volumetric medical data. v-net is completely distinct for other models,incorporating the **residual connections**(short-skip connections) block. this model resembles the resnet philosophy, add the input of a block to its output, allowing gradients to flow more smoothly during backpropagation. compared to convolutional u-net, this reduces the vanishing gradient issue and make it easier to train much deeper 3d networks (milletari et al., 2016).
 
 
-## Review of Voxel-Based XAI Techniques
+furthermore, the v-net research has presented a solution to one of the most enduring challenges in the medical segmentation: class imbalance. in a dataset,tumor occupies less the 1% of the total volumetric pixels while rest of the area is unaffected  and healthy background. standard objective functions like cross-entropy refuse to get success in this scenario,results in having model achievable accuracy as 99% by predicting "background irrelevant data for every voxel. to overcome this milletari et al. (2016) introduced the **dice coefficient**, which optimises the model by considering the gap between the ground truth and the expected segmentation: 
 
-The literature categorizes XAI approaches according to their scope and timing relative to model training. A primary differences made between Ante-hoc(or "intrinsic) and post-hoc methods. 
-- **Ante-hoc:** is designed to interpretable by its nature. Example, Decision Tree or Linear Regression models, where the relationships between them is explicit( Agrawal et al., 2025). By integrating interpretable prototypes blocks directly into the network architecture, recent advancement in "self-Explainable AI (S-XAI)" planning to introduce the transparency in deep learning ( Hou et al., 2024).
+$$d = \frac{2 \sum_{i}^{n} p_i g_i}{\sum_{i}^{n} p_i + \sum_{i}^{n} g_i}$$
 
-- **post-hoc** methods are designed for explainability after the model has been trained. they treat a model as a "black box" and try to improve and approximate its behaviour  based on the given  inputs and outputs. This method prefers to be standard for analyzing medical imaging for model like 3D U-Net architecture to perform segmentation(Bhati et al., 2024),
+where the sums run through the $n$ voxels, of the predicted binary volume $p_i \in p$ and the ground truth binary volume $g_i \in g$. this function can improvise by rewriting it in a differentiable form. as a result, it can be optimized with gradient descent. it can be compute with respect to each predicted voxel, allowing the network to improve the overlap between the predictions and ground truth (milletari et al., 2016).
 
-**Further XAI methods are divided by their scope**: 
+the gradient: 
 
-- **Global Explanations**:  refers to methods that explain the overall logic of the model across the entire dataset, such as feature importance in model.
+$$\frac{\partial d}{\partial p_j} = 2\left[\frac{g_j}{\sum_i p_i^2 + \sum_i g_i^2} - \frac{2 p_j (\sum_i p_i g_i)}{(\sum_i p_i^2 + \sum_i g_i^2)^2}\right]$$
 
-- **Local Explanations**: refers to methods that explain the decision-making process of the model for specific inputs, such as reason behind by classified voxel region as tumor. Local explanation is important for clinical decision making as they offer the patient-specific rationale to diagnosis and therapy  planning (Iftikhar et al., 2025).
+# explainable ai (xai) for explainability in medicine
+
+## the need for explainability in clinical practice
+
+the integration of artificial intelligence (ai) into medical practice especially in high-stakes domains like neuro-oncology, has made it more difficult by the opacity of modern deep learning (dl) models. convolutional neural network has demonstrated super performance in segmentation like tasks, where their complex,non-linear decision-making remain inaccessible. this "black box" nature has became barrier in model adoption, often referred to as the **"trust gap"** (wen et al., 2025).
+
+just model prediction is insufficient in clinical practice, it must incorporate with justification that follows medical knowledge. as highlighted by neri et al. (2023), the ethical and legal framework governing medicine, such as "right to explanation" under gdpr, demand that automated decisions be transparent and contestable. clinicians must be able to identify the reason behind the model classification on a specific region as tumor present or not to ensure patient safety(iftikhar et al., 2025).
+
+furthermore, xai is not just a compliance tool but also a critical mechanism for model debugging and knowledge discovery. researchers can detect "clever hans" events, in which model learns misleading connection( e.g.,forecasting tumor based on specific hospital watermark rather then anatomical pathology)(hou et al., 2024). when it comes to brain tumor segmentation,xai refer to the validation of network focus on biologically relevant sub-regions such as the necrotic core or enhancing tumor(natekar et al., 2020).
 
 
-For 3D medical imaging, the most common XAI techniques are those that can generate the saliency maps, spatial representations of "feature importance". The three most prominent approaches are **Grad-CAM**, **LIME** and **SHAP**. 
+## review of voxel-based xai techniques
+
+the literature categorizes xai approaches according to their scope and timing relative to model training. a primary differences made between ante-hoc(or "intrinsic) and post-hoc methods. 
+- **ante-hoc:** is designed to interpretable by its nature. example, decision tree or linear regression models, where the relationships between them is explicit( agrawal et al., 2025). by integrating interpretable prototypes blocks directly into the network architecture, recent advancement in "self-explainable ai (s-xai)" planning to introduce the transparency in deep learning ( hou et al., 2024).
+
+- **post-hoc** methods are designed for explainability after the model has been trained. they treat a model as a "black box" and try to improve and approximate its behaviour  based on the given  inputs and outputs. this method prefers to be standard for analyzing medical imaging for model like 3d u-net architecture to perform segmentation(bhati et al., 2024),
+
+**further xai methods are divided by their scope**: 
+
+- **global explanations**:  refers to methods that explain the overall logic of the model across the entire dataset, such as feature importance in model.
+
+- **local explanations**: refers to methods that explain the decision-making process of the model for specific inputs, such as reason behind by classified voxel region as tumor. local explanation is important for clinical decision making as they offer the patient-specific rationale to diagnosis and therapy  planning (iftikhar et al., 2025).
 
 
-**Gradient-weighted Class Activation Mapping(Grad-CAM)** has recognize as the "Golden Standard" for the visualizing CNN decision in the medical imaging (Bhati et al., 2024). Grad-CAM is model-agnostic and can be applied to any CNN models with retraining compare to the earlier methods that required architectural changes.
-
-**Mechanism**: Grad-CAM utilize the gradient of the target concept(e.g., tumor) to produce a saliency map, which highlights the regions of the input image that contribute most to the prediction of the target class. It computes a weighted sum of the feature maps, where the weight represent the importance of each feature that channel to the prediction. To eliminate the negative contributions,A Rectified Linear Unit (ReLU) is then applied highlighting  more specific regions that support positively the class of interest (Selvaraju et al., 2017).
+for 3d medical imaging, the most common xai techniques are those that can generate the saliency maps, spatial representations of "feature importance". the three most prominent approaches are **grad-cam**, **lime** and **shap**. 
 
 
-**Application in 3D**: Natekar et al.(2020) successfully applied Grad-CAM to a 3D U-Net for brain tumour segmentation as it was originally designed for 2D images. There research showed that 3D Grad-CAM can localize tumor based on the aggregated gradients across volumetric feature maps. However, it has critical limitation which is resolution trade-off:because Grad-CAM uses feature maps from deep layers. As a result, the resulting heatmaps are often coarse and may bleed into surrounding tissue, reducing the voxel-level precision of the segmentation mask itself (Natekar et al., 2020). 
+**gradient-weighted class activation mapping(grad-cam)** has recognize as the "golden standard" for the visualizing cnn decision in the medical imaging (bhati et al., 2024). grad-cam is model-agnostic and can be applied to any cnn models with retraining compare to the earlier methods that required architectural changes.
+
+**mechanism**: grad-cam utilize the gradient of the target concept(e.g., tumor) to produce a saliency map, which highlights the regions of the input image that contribute most to the prediction of the target class. it computes a weighted sum of the feature maps, where the weight represent the importance of each feature that channel to the prediction. to eliminate the negative contributions,a rectified linear unit (relu) is then applied highlighting  more specific regions that support positively the class of interest (selvaraju et al., 2017).
+
+
+**application in 3d**: natekar et al.(2020) successfully applied grad-cam to a 3d u-net for brain tumour segmentation as it was originally designed for 2d images. there research showed that 3d grad-cam can localize tumor based on the aggregated gradients across volumetric feature maps. however, it has critical limitation which is resolution trade-off:because grad-cam uses feature maps from deep layers. as a result, the resulting heatmaps are often coarse and may bleed into surrounding tissue, reducing the voxel-level precision of the segmentation mask itself (natekar et al., 2020). 
 
 \newpage
 
-**Local Interpretable Model-agnostic Explanations (LIME)** has different approach. LIME treats the model as function only, without using internal Gradients. 
+**local interpretable model-agnostic explanations (lime)** has different approach. lime treats the model as function only, without using internal gradients. 
 
-**Mechanism**: LIME modifies the model's predictions and observe the change by masking out random superpixels( segments). It then fits a simple, interpretable model to this disrupted samples to predict model's behavior locally around specific image (Ribeiro et al., 2016).
+**mechanism**: lime modifies the model's predictions and observe the change by masking out random superpixels( segments). it then fits a simple, interpretable model to this disrupted samples to predict model's behavior locally around specific image (ribeiro et al., 2016).
 
-**Evaluation in 3D**: while LIME is highly recommended for 2D image segmentation, its performance in 3D is computationally expensive. According to the Agrawal et al., (2025) LIME require thousand of forward passes to generate stable explanation. For data like 3D images which has millions of voxels, generating valid superpixels and running sufficient distribution to achieve the significant statistics is often too slow for real-time  clinical workflows.Additionally, to define the "superpixels" in a 3D brain volume is quite difficult, frequently leads to unstable explanations that vary between runs. 
-
-
-**SHAP (SHapley Additive exPlanations)** provide a theoretically sound substitute based on cooperative game theory. Each feature(voxel) is given a "importance value" that represents its marginal contributions to the prediction, averaged over all possible combinations of features(Ribeiro et al., 2016).
-
-**Strength and Weaknesses**: SHAP provide the most mathematically consistent explanations, by conforming the summation of each feature attributes that is equal to the model's output. However, it has extreme computational costs in high-dimensional spaces. "DeepSHAP," an approximation method, has been used to accelerate this process, but research suggest that SHAP values can mislead the Explanation in deep networks, as they may violate axioms when features are highly correlated, which is often common in statically coherent MRI data (Miró-Nicolau et al., 2024).
+**evaluation in 3d**: while lime is highly recommended for 2d image segmentation, its performance in 3d is computationally expensive. according to the agrawal et al., (2025) lime require thousand of forward passes to generate stable explanation. for data like 3d images which has millions of voxels, generating valid superpixels and running sufficient distribution to achieve the significant statistics is often too slow for real-time  clinical workflows.additionally, to define the "superpixels" in a 3d brain volume is quite difficult, frequently leads to unstable explanations that vary between runs. 
 
 
-## Comparative Synthesis and the Fidelity Gap
+**shap (shapley additive explanations)** provide a theoretically sound substitute based on cooperative game theory. each feature(voxel) is given a "importance value" that represents its marginal contributions to the prediction, averaged over all possible combinations of features(ribeiro et al., 2016).
 
-All three methods have their strengths and weaknesses, but Grad-CAM is still the best performing method for 3D medical image segmentation because of its computational efficiency (only one backward pass is needed) and its capacity to make use use of  the spatial  information present in CNN feature maps (Natekar et al., 2020).
-
-However, a  critical "fidelity gap" exist, as existing measures frequently show significant discrepancy between the predicted and ground truth segmentation (Miró-Nicolau et al., 2024). This discrepancy is exacerbated by the standard practice  of analyzing 3D attention maps as static 2D slices, this is the method that hides volumetric coherence  and increase cognitive load for clinicians. Therefore, closing the "trust gap" calls for a paradigm change towards immersive Virtual Reality, which provides the high-dimensional, intuitive visualization needed to properly understand these deep volumetric insights, rather then simply algorithmic improvements. 
+**strength and weaknesses**: shap provide the most mathematically consistent explanations, by conforming the summation of each feature attributes that is equal to the model's output. however, it has extreme computational costs in high-dimensional spaces. "deepshap," an approximation method, has been used to accelerate this process, but research suggest that shap values can mislead the explanation in deep networks, as they may violate axioms when features are highly correlated, which is often common in statically coherent mri data (miró-nicolau et al., 2024).
 
 
-# Immersive Visualization in Medical Imaging
+## comparative synthesis and the fidelity gap
+
+all three methods have their strengths and weaknesses, but grad-cam is still the best performing method for 3d medical image segmentation because of its computational efficiency (only one backward pass is needed) and its capacity to make use use of  the spatial  information present in cnn feature maps (natekar et al., 2020).
+
+however, a  critical "fidelity gap" exist, as existing measures frequently show significant discrepancy between the predicted and ground truth segmentation (miró-nicolau et al., 2024). this discrepancy is exacerbated by the standard practice  of analyzing 3d attention maps as static 2d slices, this is the method that hides volumetric coherence  and increase cognitive load for clinicians. therefore, closing the "trust gap" calls for a paradigm change towards immersive virtual reality, which provides the high-dimensional, intuitive visualization needed to properly understand these deep volumetric insights, rather then simply algorithmic improvements. 
 
 
- The interpretation of volumetric  medical data has historically been analyse on 2D screens, which causes a lot of cognitive stress. According to Khedir et al. (2025) traditional slice-by-slice navigation requires to mentally reconstruct in volumetric architecture through clinicians. This process requires time as well as prone to spatial errors when you assessing the depth of the tumors relative to prominent brain regions. Even though 3D Convolutional Neural Network (CNNs) can process this volumetric data,the representation of their outputs remains largely stuck in 2D. 
-
- Emerging research suggest that immersive visualization such as Virtual Reality(VR) and Augmented Reality(AR) can bridge this gap. VR provide **stereoscopic depth perception** and **6-Degrees-of-Freedom(6DoF)** interaction which is way beyond then standard  monitors. This allow user to view the "saliency maps" not as flat overlay which is generated by the XAI but gives volumetric clouds suspended in 3D space. The NeuroXAI framework has immersive environments significantly  improves the clinician's ability to localize pathology and understand complex neural connectivity compared to standard desktop viewers(Zeineldin et al., 2022).
+# immersive visualization in medical imaging
 
 
-The application of VR is extends way beyond from passive viewing to active surgical planning. Defining tumor boundaries in neuro-oncology is critical. Recent advancement in Augmented Reality (AR) enables surgeons simulate trajectories and visualize "risk maps" created by deep learning models before entering to the operation theatre(Zeineldin, 2023; Khedir et al., 2025) . For situation like complex glioma, where 2D scans may not represent the tumor with key blood arteries, this tool is crucial resection corridor.
+ the interpretation of volumetric  medical data has historically been analyse on 2d screens, which causes a lot of cognitive stress. according to khedir et al. (2025) traditional slice-by-slice navigation requires to mentally reconstruct in volumetric architecture through clinicians. this process requires time as well as prone to spatial errors when you assessing the depth of the tumors relative to prominent brain regions. even though 3d convolutional neural network (cnns) can process this volumetric data,the representation of their outputs remains largely stuck in 2d. 
 
-Additionally, the idea of interactive AI is essential to current medical systems. Static heatmaps (like standard Grad-CAM) offers **"take it or leave it"** explanation. VR environments, on the other hand make the **human-in-the-loop(HITL)** interaction easier. immersive interfaces  enable clinicians to interrogate the model e.g. by digitally "erasing" a portion of the input volume to identify the prediction changes (Orsmaa et al., 2025). The interactivity change XAI from a static report into dynamic conversation between clinician and the AI, allowing the correction of model errors in real time(Orsmaa et al., 2025).
-
-
-To implement this immersive systems requires strong technological pipeline. Standard medical formats (DICOM/NIfTI) are not supported by native game engines like Unity. However, platforms like 3D slicer have fill the bridge. SlicerVR extension allows volume rendering of medical scans in VR headsets without any data conversation loss. Despite this, VR still continues to be a major difficulty in terms of integrating XAI. Most of the pipelines concentrate on 2D slice-based visualization,which fails to convey the volumetric feature importance and limits the clinical utility of XAI in more in depth scenarios (Zeineldin et al., 2022). There is a need for distinct workflows that can consume a 3D CNN's attention weights and render them as interactive volumetric objects, as proposed in frameworks like DeepIGN (Zeineldin, 2023).
-
-# Synthesis and Research Gap
-
-## The Disconnect Between Model Accuracy and Clinical Utility
-
-After addressing and reviewing three most significant chapters of this review, A distinct contrast has been established. The models like 3D U-Net and its variants has achieved a tremendous success in segmenting brain tumor (Çiçek et al., 2016; Milletari et al., 2016). On the other side the opacity of the "Black Box" remains a critical barrier to the clinical trust (Neri et al., 2023). Although methods like Grad-CAM have successfully  illuminated the internal logic of these networks (Natekar et al., 2020), current implementation suffers from three major limitations that this project aims to address. 
+ emerging research suggest that immersive visualization such as virtual reality(vr) and augmented reality(ar) can bridge this gap. vr provide **stereoscopic depth perception** and **6-degrees-of-freedom(6dof)** interaction which is way beyond then standard  monitors. this allow user to view the "saliency maps" not as flat overlay which is generated by the xai but gives volumetric clouds suspended in 3d space. the neuroxai framework has immersive environments significantly  improves the clinician's ability to localize pathology and understand complex neural connectivity compared to standard desktop viewers(zeineldin et al., 2022).
 
 
-## Identified Gaps in Current XAI Frameworks
+the application of vr is extends way beyond from passive viewing to active surgical planning. defining tumor boundaries in neuro-oncology is critical. recent advancement in augmented reality (ar) enables surgeons simulate trajectories and visualize "risk maps" created by deep learning models before entering to the operation theatre(zeineldin, 2023; khedir et al., 2025) . for situation like complex glioma, where 2d scans may not represent the tumor with key blood arteries, this tool is crucial resection corridor.
 
-Having global achievements in 3D XAI based on research such as NeuroXAI, there is still something which is called **"interactivity gap"** exists; current system static visualization rather than an active contribution of a user (Zeineldin et al., 2022). This passivity leads to a serious methodological error that confuses feature relevance with model confidence. As mentioned in the DeepIGN study (Zeineldin, (2023)), a network may exhibit high focal attention on a specific region while displaying high epistemic uncertainty. This could give confident result but incorrect false positives. As a result, existing 3D XAI methods do not provide the required mechanisms for **Interactive Correction or Uncertainty Quantification**, leave the functional gap where user cannot distinguish between a confident prediction and a statistical guess, or to change the model's focus (Abyasa and Rahmania, 2025).
-
-Furthermore, the  utility of these volumetric insights is severely constrained by the "cognitive friction" of traditional visualization mediums. Khedir-Amara et al (2025) mentioned that analyzing 3D volumetric pathology via slice-by-slice 2D  navigation increases significant burden to mentally reconstruct spatial relationships from the disconnected images. This 3D nature of the data and the 2D nature of the display limits the interpretability of the feature maps, as crucial depth signals lost in translation. Therefore, a clear research exists for a need of unique framework that not only generates, uncertainty-aware explanation but also represents that in an immersive virtual environment, to clarify whether or not the engagement significantly lowers the cognitive load as compare to conventional medical workflows.
+additionally, the idea of interactive ai is essential to current medical systems. static heatmaps (like standard grad-cam) offers **"take it or leave it"** explanation. vr environments, on the other hand make the **human-in-the-loop(hitl)** interaction easier. immersive interfaces  enable clinicians to interrogate the model e.g. by digitally "erasing" a portion of the input volume to identify the prediction changes (orsmaa et al., 2025). the interactivity change xai from a static report into dynamic conversation between clinician and the ai, allowing the correction of model errors in real time(orsmaa et al., 2025).
 
 
-# Conclusion
+to implement this immersive systems requires strong technological pipeline. standard medical formats (dicom/nifti) are not supported by native game engines like unity. however, platforms like 3d slicer have fill the bridge. slicervr extension allows volume rendering of medical scans in vr headsets without any data conversation loss. despite this, vr still continues to be a major difficulty in terms of integrating xai. most of the pipelines concentrate on 2d slice-based visualization,which fails to convey the volumetric feature importance and limits the clinical utility of xai in more in depth scenarios (zeineldin et al., 2022). there is a need for distinct workflows that can consume a 3d cnn's attention weights and render them as interactive volumetric objects, as proposed in frameworks like deepign (zeineldin, 2023).
 
-This literature review establishes while 3D Deep learning architectures, particularly the 3D U-Net, have achieved superior success in volumetric tumor segmentation, the deployment is critically hindered by the "Black Box" paradox (Neri et al., 2023). The clinical workflows still remain detach even if the Explainable methods like Grad-CAM provide mathematical solution for transparency. The reliance on static 2D slice-by-slice visualization fails to convey the complex spatial resolution of 3D pathologies, is hindered by a significant cognitive  load that limits the clinical trust (Natekar et al., 2020).
+# synthesis and research gap
 
-Consequently, this research focusing on bridging the "trust gap" requires the paradigm shift form passive observation to the interactive environment. By developing a virtual reality environment that incorporate uncertainty quantification with real time feedback, this project aims to "Illuminate the Black Box" effectively. This innovative method will ensure that this High-performance AI is not just accurate but also understandable and useful for medical practice.
+## the disconnect between model accuracy and clinical utility
+
+after addressing and reviewing three most significant chapters of this review, a distinct contrast has been established. the models like 3d u-net and its variants has achieved a tremendous success in segmenting brain tumor (çiçek et al., 2016; milletari et al., 2016). on the other side the opacity of the "black box" remains a critical barrier to the clinical trust (neri et al., 2023). although methods like grad-cam have successfully  illuminated the internal logic of these networks (natekar et al., 2020), current implementation suffers from three major limitations that this project aims to address. 
+
+
+## identified gaps in current xai frameworks
+
+having global achievements in 3d xai based on research such as neuroxai, there is still something which is called **"interactivity gap"** exists; current system static visualization rather than an active contribution of a user (zeineldin et al., 2022). this passivity leads to a serious methodological error that confuses feature relevance with model confidence. as mentioned in the deepign study (zeineldin, (2023)), a network may exhibit high focal attention on a specific region while displaying high epistemic uncertainty. this could give confident result but incorrect false positives. as a result, existing 3d xai methods do not provide the required mechanisms for **interactive correction or uncertainty quantification**, leave the functional gap where user cannot distinguish between a confident prediction and a statistical guess, or to change the model's focus (abyasa and rahmania, 2025).
+
+furthermore, the  utility of these volumetric insights is severely constrained by the "cognitive friction" of traditional visualization mediums. khedir-amara et al (2025) mentioned that analyzing 3d volumetric pathology via slice-by-slice 2d  navigation increases significant burden to mentally reconstruct spatial relationships from the disconnected images. this 3d nature of the data and the 2d nature of the display limits the interpretability of the feature maps, as crucial depth signals lost in translation. therefore, a clear research exists for a need of unique framework that not only generates, uncertainty-aware explanation but also represents that in an immersive virtual environment, to clarify whether or not the engagement significantly lowers the cognitive load as compare to conventional medical workflows.
+
+
+# conclusion
+
+this literature review establishes while 3d deep learning architectures, particularly the 3d u-net, have achieved superior success in volumetric tumor segmentation, the deployment is critically hindered by the "black box" paradox (neri et al., 2023). the clinical workflows still remain detach even if the explainable methods like grad-cam provide mathematical solution for transparency. the reliance on static 2d slice-by-slice visualization fails to convey the complex spatial resolution of 3d pathologies, is hindered by a significant cognitive  load that limits the clinical trust (natekar et al., 2020).
+
+consequently, this research focusing on bridging the "trust gap" requires the paradigm shift form passive observation to the interactive environment. by developing a virtual reality environment that incorporate uncertainty quantification with real time feedback, this project aims to "illuminate the black box" effectively. this innovative method will ensure that this high-performance ai is not just accurate but also understandable and useful for medical practice.
 
 \newpage
 
 
-# References
+# references
