@@ -1,0 +1,30 @@
+---
+title: "Chapter 3: Methodology"
+author: 
+  - Yogi Amitkumar Patel
+  - U2536809
+format: 
+  pdf: 
+    toc: true
+    number-sections: true
+    toc-depth: 2
+    geometry: margin=1in
+---
+
+\newpage
+
+# Introduction
+
+This chapter delineates the comprehensive methodology employed to build and validate the proposed framework "Illuminating the Black Box". The primary objective is to establish an  interconnected end-to-end pipeline that enhances the transparency of 3D-CNN based brain tumor segmentation. This is achieved by combining a high performance volumetric segmentation model, 3D explainable AI (XAI) techniques and, immersive virtual reality (VR) visualisation which creates synergy with results better than they would have achieved individually.
+
+The methodology is designed to address the critical voids identified in chapter 2, which include the opacity of models, the cognitive friction of 3D image analysis on 2D displays and lack of interactive, uncertainty-aware explanations. Considering a structured approach, the chapter details the dataset chosen, the architectural design and training, 3D XAI methods, VR visualization, and the quantitative evaluation framework used to assess both segmentation accuracy and explanation.
+
+# Proposed Approach
+
+This research adopts a pragmatic, iterative development strategy centered on secondary data analysis of the standardised BraTS 2021 dataset. Considering the exploratory nature of integrating novel XAI and VR, the project implementation follows the **scrum** method from **agile** methodology. This software development life cycle (SDLC) is well known for its flexibility in aggregating components. This framework facilitates iterative sprints focusing on discrete modules, allowing for continuous evaluation and refinement. 
+
+Within this SDLC an **evolutionary prototyping** method is also employed to construct the integrated system. Implementation of system progresses through sequential prototyping phases beginning with establishing 3D CNN segmentation models followed by  implementing 3D XAI techniques to generate volumetric saliency maps, ends up to developing VR visualisation pipeline for immersive interpretation. This approach mitigates risk by validating each core component before integration. 
+
+Underpinning the entire technical workflow is a **3D-native paradigm**. Entire processing from the initial convolutional operations in the segmentation network to the most refined outcomes designed to preserve and leverage volumetric  context, ensuring that the generated insights are inherently spatial.
+
+

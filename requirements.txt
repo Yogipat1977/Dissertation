@@ -1,0 +1,8 @@
+torch
+torchvision
+torchaudio
+monai[nibabel, tqdm]
+numpy
+matplotlib
+scikit-image
+pandas

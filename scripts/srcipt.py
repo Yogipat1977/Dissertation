@@ -1,0 +1,19 @@
+import synapseclient
+import synapseutils
+import os
+
+syn = synapseclient.login(authToken='eyJ0eXAiOiJKV1QiLCJraWQiOiJXN05OOldMSlQ6SjVSSzpMN1RMOlQ3TDc6M1ZYNjpKRU9VOjY0NFI6VTNJWDo1S1oyOjdaQ0s6RlBUSCIsImFsZyI6IlJTMjU2In0.eyJhY2Nlc3MiOnsic2NvcGUiOlsidmlldyIsImRvd25sb2FkIiwibW9kaWZ5Il0sIm9pZGNfY2xhaW1zIjp7fX0sInRva2VuX3R5cGUiOiJQRVJTT05BTF9BQ0NFU1NfVE9LRU4iLCJpc3MiOiJodHRwczovL3JlcG8tcHJvZC5wcm9kLnNhZ2ViYXNlLm9yZy9hdXRoL3YxIiwiYXVkIjoiMCIsIm5iZiI6MTc2OTI4MTI5NCwiaWF0IjoxNzY5MjgxMjk0LCJqdGkiOiIzMTQ4MSIsInN1YiI6IjM1NzI1MDEifQ.tcFv0Y064tbz0zpbcczFCz80tfVIvu81w2eKdp3FMGCYflUgZJDj4JU4Lidv3ZME_s261-MSi-WC3aj17TK79sCk56qn28UPaUopHZQfAygtnmuKwwDe6gJxQcy8_j9ejXm4LIu1Wap8KRWoHpcYzgWhyOCmw7AV1uqrvaE73j7Mk7soI3nT5z0Z0X96a-BUnBn1kJ4juautvp6u3sJO60KrrrJoek_DEdB3romUhjd3aFHfF3ST8yGQhChickQJOXN19CYclJ-UqVfPZpyHa9lvvEQyfKU4huhRn4VPK55Bx8DYh6uevjIyjvlSGZfgfAyX7QwzIzp7SrvDYDbtRQ')
+
+folder_id = 'syn51514105'
+# 3. Specify your EXACT folder path
+# Using os.path.expanduser handles the '~' symbol correctly in Python
+download_path = os.path.expanduser('~/Documents/Dissertation/data/BraTS2023_GLI')
+
+if not os.path.exists(download_path):
+    os.makedirs(download_path)
+
+print(f"Syncing data to: {download_path}")
+
+# 4. Sync the folder recursively to the new path
+files = synapseutils.syncFromSynapse(syn, folder_id, path=download_path)
+
