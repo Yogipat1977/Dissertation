@@ -1,0 +1,2619 @@
+--- START OF METHODOLOGY FROM: 3D-Unet Model.pdf ---
+
+Methodology section not found.
+
+--- START OF METHODOLOGY FROM: AXONS-3.pdf ---
+
+and uncertainty quantification, are augmented to the
+workflow to interpret the process of reaching the predicted
+segmentation. The proposed AXONS-3 workflow provides visually
+intuitive feedback and justifications to foster greater stakeholder
+comprehension and trust, contributing to the transparency of AI-
+driven systems needed for reliable adoption in clinical settings.
+Keywords—3D U-Net, brain tumor segmentation, deep learn-
+ing, Explainable AI (XAI), healthcare AI, interpretability, neu-
+roimaging, post-hoc, transparency
+I. INTRODUCTION
+Brain tumors in general are categorized as benign (non-
+cancerous) or malignant (cancerous). Regardless of their type,
+brain tumors are potentially life-threatening due to the dis-
+ruptions they create toward surrounding brain tissue [1]. Early
+detection of tumors enables early diagnosis which is critical to
+the patient’s outcome. Magnetic resonance imaging (MRI) is
+a non-invasive medical imaging technique that is commonly
+used for brain imaging (neuroimaging) and is effective for
+visualizing soft tissues, blood vessels, and abnormalities. How-
+ever, the resulting high volume of images/slices presents chal-
+lenges for manual evaluation by clinicians. The cognitive and
+visual system has limitations in focus and sensitivity, creating
+a margin for human error [2], [3]. The repetitive nature of this
+task is mentally demanding because each slice is examined
+and requires high focus to accurately interpret the results
+[4]. At a certain point, fatigue coupled with neurocognitive
+limitations could accumulate and start to negatively affect
+diagnostic accuracy, resulting in errors, delayed diagnoses, and
+inconsistent decision-making [5], [6].
+Deep Learning (DL) models, particularly Convolutional
+Neural Networks (CNNs), are highly prospective in the context
+of neuroimaging because of their ability to catch intricate
+characteristics in the image, which are often not as easily
+distinguished by the human eye, mitigating missed detections
+[7], [8]. Among these, the 3D U-Net architecture [9] stands out
+for its ability to process volumetric data, making it ideal for
+brain tumor segmentation in MRI [10], [11]. The integration
+of AI in neuroimaging analysis acts as a tool that enhances,
+aids, and supports the work of clinicians, providing cues/hints
+to areas of interest in a medical image, allowing clinicians,
+specifically radiologists, to spend less cognitive energy in
+manually dissecting each image, and instead focus on higher-
+level tasks such as diagnostic synthesizing. However, the im-
+plementation of these systems requires not only high technical
+accuracy but also features like interpretability and transparency
+to gain the trust of clinicians and patients.
+Friction in implementing AI in healthcare prevails due to
+the system’s opacity in its decision-making. For AI systems to
+be integrated effectively, clinicians must trust the models and
+understand how predictions are generated [12]. According to
+a paper by [13], the rate of model interpretability decreases as
+model accuracy increases. Higher-accuracy, ”black-box”, DL
+models are considered as low interpretability methods because
+of their architectural complexity which involves a significantly
+higher number of trainable parameters, complicating the pro-
+cess of tracing their decision boundaries. This results in a
+lack of trust and transparency from users involved such as
+clinicians and patients, especially where clinical decisions can
+have profound consequences [14].
+Explainable AI (XAI) is an emerging field that addresses
+the challenge of interpretability of AI systems, enabling end-
+979-8-3315-3308-3/25/$31.00 ©2025 IEEE
+2025 IEEE Conference on Cognitive and Computational Aspects of Situation Management (CogSIMA)
+64
+2025 IEEE Conference on Cognitive and Computational Aspects of Situation Management (CogSIMA) | 979-8-3315-3308-3/25/$31.00 ©2025 IEEE | DOI: 10.1109/COGSIMA64436.2025.11079472
+Authorized licensed use limited to: University of East London. Downloaded on November 29,2025 at 11:43:43 UTC from IEEE Xplore.  Restrictions apply. 
+
+users to better understand and comprehend their decisions
+[15]. In the context of CNNs, visual XAI methods provide
+intuitive feedback and justifications by revealing the regions
+that influence model predictions, enabling clinicians to assess
+their validity and identify potential areas of uncertainty [16],
+[17]. Providing a rationale for a model’s predictions alongside
+the development of an AI-driven brain tumor segmentation
+system enhances interpretability, bridging the gap between
+technical performance and clinical usability, with a study
+[18] proving that explainable systems receive more positive
+feedback on the acceptability of the system compared to
+those without. This alignment with the needs of clinicians and
+patients fosters a higher level of trust and confidence among
+users, advancing seamless adoption of these AI systems in
+clinical settings.
+The contributions of this research are as follows.
+• Presents an enhanced brain tumor segmentation process
+that redefines conventional radiology workflows by ad-
+dressing existing challenges, optimizing diagnostic accu-
+racy, and ensuring reliability.
+• Analyzes the utility of post-hoc visual XAI techniques for
+increasing interpretability and transparency by bridging
+the gap between AI predictions and confidence from
+clinicians and non-technical stakeholders.
+• Provides insights and reference points for future research,
+offering actionable recommendations for integrating XAI,
+uncertainty quantification, risk considerations, along with
+strategies for real-world clinical implementation.
+II. RELATED WORKS
+This research draws on recent studies in deep learning for
+brain tumor segmentation, resistance to AI in healthcare, seg-
+mentation interpretability, XAI stakeholders, and XAI guide-
+lines with a user-oriented approach. Throughout the years,
+researchers have continuously aimed to improve diagnostic ac-
+curacy and mitigate human errors using probabilistic methods.
+Specifically for brain MRI tumor segmentation, the 3D U-Net
+[9], an extension of the U-Net [19], has garnered significant
+interest among researchers, consistently obtaining exceptional
+
+--- END OF METHODOLOGY FROM: AXONS-3.pdf ---
+
+--- START OF METHODOLOGY FROM: BraTS.pdf ---
+
+, however, were validated on relatively small private
+datasets with varying metrics for performance quantiﬁcation,
+making objective comparisons between methods highly chal-
+lenging. Exacerbating this problem is the fact that different
+combinations of imaging modalities are often used in validation
+studies, and that there is no consistency in the tumor sub-com-
+partments that are considered. As a consequence, it remains
+difﬁcult to judge which image segmentation strategies may be
+worthwhile to pursue in clinical practice and research; what
+exactly the performance is of the best computer algorithms
+available today; and how well current automated algorithms
+perform in comparison with groups of human expert raters.
+In order to gauge the current state-of-the-art in automated
+brain tumor segmentation and compare between different
+methods, we organized in 2012 and 2013 a Multimodal Brain
+Tumor Image Segmentation Benchmark (BRATS) challenge
+in conjunction with the international conference on Med-
+ical Image Computing and Computer Assisted Interventions
+(MICCAI). For this purpose, we prepared and made available
+a unique dataset of MR scans of low- and high-grade glioma
+patients with repeat manual tumor delineations by several
+human experts, as well as realistically generated synthetic
+brain tumor datasets for which the ground truth segmentation
+is known. Each of 20 different tumor segmentation algorithms
+was optimized by their respective developers on a subset of
+this particular dataset, and subsequently run on the remaining
+images to test performance against the (hidden) manual delin-
+eations by the expert raters. In this paper we report the set-up
+and the results of this BRATS benchmark effort. We also de-
+scribe the BRATS reference dataset and online validation tools,
+which we make publicly available as an ongoing benchmarking
+resource for future community efforts.
+The paper is organized as follows. We brieﬂy review the
+current state-of-the-art in automated tumor segmentation, and
+survey benchmark efforts in other biomedical image inter-
+pretation tasks, in Section II. We then describe the BRATS
+set-up and data, the manual annotation of tumor structures, and
+the evaluation process in Section III. Finally, we report and
+discuss the results of our comparisons in Sections IV and V,
+respectively. Section VI concludes the paper.
+II. PRIOR WORK
+Algorithms for Brain Tumor Segmentation
+The number of clinical studies involving brain tumor quan-
+tiﬁcation based on medical images has increased signiﬁcantly
+over the past decades. Around a quarter of such studies relies on
+automated methods for tumor volumetry (Fig. 1). Most of the
+Fig. 1. Results of PubMed searches for brain tumor (glioma) imaging (red),
+tumor quantiﬁcation using image segmentation (blue), and automated tumor
+segmentation (green). While the tumor imaging literature has seen a nearly
+linear increase over the last 30 years, the number of publications involving
+tumor segmentation has grown more than linearly since 5–10 years. Around
+25% of such publications refer to “automated” tumor segmentation.
+existing algorithms for brain tumor analysis focus on the seg-
+mentation of glial tumor, as recently reviewed in [6], [7]. Com-
+paratively few methods deal with less frequent tumors such as
+meningioma [8]–[12] or speciﬁc glioma subtypes [13].
+Methodologically,
+many
+state-of-the-art
+algorithms
+for
+tumor segmentation are based on techniques originally de-
+veloped for other structures or pathologies, most notably for
+automated white matter lesion segmentation that has reached
+considerable accuracy [14]. While many technologies have
+been tested for their applicability to brain tumor detection
+and segmentation—e.g., algorithms from image retrieval as
+an early example [9]—we can categorize most current tumor
+segmentation methods into one of two broad families. In the
+so-called generative probabilistic methods, explicit models of
+anatomy and appearance are combined to obtain automated
+segmentations, which offers the advantage that domain-speciﬁc
+prior knowledge can easily be incorporated. Discriminative
+approaches, on the other hand, directly learn the relationship
+between image intensities and segmentation labels without any
+domain knowledge, concentrating instead on speciﬁc (local)
+image features that appear relevant for the tumor segmentation
+task.
+Generative models make use of detailed prior information
+about the appearance and spatial distribution of the different
+tissue types. They often exhibit good generalization to unseen
+images, and represent the state-of-the-art for many brain tissue
+segmentation tasks [15]–[21]. Encoding prior knowledge for a
+lesion, however, is difﬁcult. Tumors may be modeled as out-
+liers relative to the expected shape [22], [23] or image signal
+of healthy tissues [17], [24] which is similar to approaches
+for other brain lesions, such as Multiple Sklerosis [25], [26].
+In [17], for instance, a criterion for detecting outliers is used
+
+MENZE et al.: THE MULTIMODAL BRAIN TUMOR IMAGE SEGMENTATION BENCHMARK (BRATS)
+1995
+to generate a tumor prior in a subsequent expectation-max-
+imizations segmentation which treats tumor as an additional
+tissue class. Alternatively, the spatial prior for the tumor can be
+derived from the appearance of tumor-speciﬁc “bio-markers”
+[27], [28], or from using tumor growth models to infer the most
+likely localization of tumor structures for a given set of patient
+images [29]. All these models rely on registration for accurately
+aligning images and spatial priors, which is often problematic
+in the presence of large lesions or resection cavities. In order
+to overcome this difﬁculty, both joint registration and tumor
+segmentation [18], [30] and joint registration and estimation
+of tumor displacement [31] have been studied. A limitation of
+generative models is the signiﬁcant effort required for trans-
+forming an arbitrary semantic interpretation of the image, for
+example, the set of expected tumor substructures a radiologist
+would like to have mapped in the image, into appropriate prob-
+abilistic models.
+Discriminative models directly learn from (manually) an-
+notated training images the characteristic differences in the
+appearance of lesions and other tissues. In order to be ro-
+bust against imaging artifacts and intensity and shape vari-
+ations, they typically require substantial amounts of training
+data [32]–[38]. As a ﬁrst step, these methods typically extract
+dense, voxel-wise features from anatomical maps [35], [39]
+calculating, for example, local intensity differences [40]–[42],
+or intensity distributions from the wider spatial context of the
+individual voxel [39], [43], [44]. As a second step, these fea-
+tures are then fed into classiﬁcation algorithms such as support
+vector machines [45] or decision trees [46] that learn bound-
+aries between classes in the high-dimensional feature space,
+and return the desired tumor classiﬁcation maps when applied
+to new data. One drawback of this approach is that, because of
+the explicit dependency on intensity features, segmentation is
+restricted to images acquired with the exact same imaging pro-
+tocol as the one used for the training data. Even then, careful
+intensity calibration remains a crucial part of discriminative
+segmentation methods in general [47]–[49], and tumor seg-
+mentation is no exception to this rule.
+A possible direction that avoids the calibration issues of dis-
+criminative approaches, as well as the limitations of genera-
+tive models, is the development of joint generative-discrimi-
+native methods. These techniques use a generative method in
+a pre-processing step to generate stable input for a subsequent
+discriminative model that can be trained to predict more com-
+plex class labels [50], [51].
+Most generative and discriminative segmentation approaches
+exploit spatial regularity, often with extensions along the
+temporal dimension for longitudinal tasks [52]–[54]. Local reg-
+ularity of tissue labels can be encoded via boundary modeling
+for both generative [17], [55] and discriminative models [32],
+[33], [35], [55], [56], potentially enforcing non-local shape
+constraints [57]. Markov random ﬁeld (MRF) priors encourage
+similarity among neighboring labels in the generative context
+[25], [37], [38]. Similarly, conditional random ﬁelds (CRFs)
+help enforce—or prohibit—the adjacency of speciﬁc labels and,
+hence, impose constraints considering the wider spatial context
+of voxels [36], [43]. While all these segmentation models
+act locally, more or less at the voxel level, other approaches
+consider prior knowledge about the relative location of tumor
+structures in a more global fashion. They learn, for example, the
+neighborhood relationships between such structures as edema,
+Gadolinium-enhancing tumor structures, or necrotic parts of
+the tumor through hierarchical models of super-voxel clusters
+[42], [58], or by relating image patterns with phenomenological
+tumor growth models adapted to patient scans [31].
+While each of the discussed algorithms was compared em-
+pirically against an expert segmentation by its authors, it is dif-
+ﬁcult to draw conclusions about the relative performance of
+different methods. This is because datasets and pre-processing
+steps differ between studies, the image modalities considered,
+the annotated tumor structures, and the used evaluation scores
+all vary widely as well (Table I).
+Image Processing Benchmarks
+Benchmarks that compare how well different learning algo-
+rithms perform in speciﬁc tasks have gained a prominent role
+in the machine learning community. In recent years, the idea of
+benchmarking has also gained popularity in the ﬁeld of med-
+ical image analysis. Such benchmarks, sometimes referred to as
+“challenges,” all share the common characteristic that different
+groups optimize their own methods on a training dataset pro-
+vided by the organizers, and then apply them in a structured way
+to a common, independent test dataset. This situation is different
+from many published comparisons, where one group applies
+different techniques to a dataset of their choice, which hampers
+a fair assessment as this group may not be equally knowledge-
+able about each method and invest more effort in optimizing
+some algorithms than others (see [59]).
+Once benchmarks have been established, their test dataset
+often becomes a new standard in the ﬁeld on how to evaluate fu-
+ture progress in the speciﬁc image processing task being tested.
+The annotation and evaluation protocols also may remain the
+same even when new data are added (to overcome the risk of
+over-ﬁtting this one particular dataset that may take place after
+a while), or when related benchmarks are initiated. A key com-
+ponent in benchmarking is an online tool for automatically eval-
+uating segmentations submitted by individual groups [60], as
+this allows the labels of the test set never to be made public.
+This helps ensure that any reported results are not inﬂuenced by
+unintentional overtraining of the method being tested, and that
+they are therefore truly representative of the method's segmen-
+tation performance in practice.
+Recent examples of community benchmarks dealing with
+medical image segmentation and annotation include algorithms
+for artery centerline extraction [61], [62], vessel segmentation
+and stenosis grading [63], liver segmentation [64], [65], de-
+tection of microaneurysms in digital color fundus photographs
+[66], and extraction of airways from CT scans [67]. Rather few
+community-wide efforts have focused on segmentation algo-
+rithms applied to images of the brain (a current example deals
+with brain extraction (“masking”) [68]), although many of the
+validation frameworks that are used to compare different seg-
+menters and segmentation algorithms, such as STAPLE [69],
+[70], have been developed for applications in brain imaging, or
+even brain tumor segmentation [71].
+
+1996
+IEEE TRANSACTIONS ON MEDICAL IMAGING, VOL. 34, NO. 10, OCTOBER 2015
+TABLE I
+DATA SETS, MR IMAGE MODALITIES, EVALUATION SCORES, AND EVEN TUMOR TYPES USED FOR SELF-REPORTED PERFORMANCES IN THE BRAIN
+TUMOR IMAGE SEGMENTATION LITERATURE DIFFER WIDELY. SHOWN IS A SELECTION OF ALGORITHMS DISCUSSED HERE AND IN [7]. TUMOR
+TYPE IS DEFINED AS G—GLIOMA (UNSPECIFIED), HG—HIGH-GRADE GLIOMA, LG—LOW-GRADE GLIOMA, M—MENINGIOMA; “NA” INDICATES
+THAT NO INFORMATION IS REPORTED. WHEN AVAILABLE THE NUMBER OF TRAINING AND TESTING DATASETS IS REPORTED, ALONG WITH THE
+TESTING MECHANISM: TT—SEPARATE TRAINING AND TESTING DATASETS, CV—CROSS-VALIDATION
+III. SET-UP OF THE BRATS BENCHMARK
+The BRATS benchmark was organized as two satellite chal-
+lenge workshops in conjunction with the MICCAI 2012 and
+2013 conferences. Here we describe the set-up of both chal-
+lenges with the participating teams, the imaging data and the
+manual annotation process, as well as the validation procedures
+and online tools for comparing the different algorithms. The
+BRATS online tools continue to accept new submissions, al-
+lowing new groups to download the training and test data and
+submit their segmentations for automatic ranking with respect
+to all previous submissions.1 A common entry page to both
+benchmarks, as well as to the latest BRATS-related initiatives
+is www.braintumorsegmentation.org.2
+A. The MICCAI 2012 and 2013 Benchmark Challenges
+The ﬁrst benchmark was organized on October 1, 2012 in
+Nice, France, in a workshop held as part of the MICCAI 2012
+conference. During Spring 2012, participants were solicited
+through private e-mails as well as public e-mail lists and
+the MICCAI workshop announcements. Participants had to
+register with one of the online systems (cf. Section III-F) and
+could download annotated training data. They were asked to
+submit a four page summary of their algorithm, also reporting
+a cross-validated training error. Submissions were reviewed
+1challenge.kitware.com/midas/folder/102, www.virtualskeleton.ch/
+2Available online: www.braintumorsegmentation.org
+by the organizers and a ﬁnal group of twelve participants were
+invited to contribute to the challenge. The training data the par-
+ticipants obtained in order to tune their algorithms consisted of
+multi-contrast MR scans of 10 low- and 20 high-grade glioma
+patients that had been manually annotated with two tumor la-
+bels (“edema” and “core,” cf. Section III-D) by a trained human
+expert. The training data also contained simulated images for
+25 high-grade and 25 low-grade glioma subjects with the same
+two “ground truth” labels. In a subsequent “on-site challenge”
+at the MICCAI workshop, the teams were given a 12 h time
+period to evaluate previously unseen test images. The test
+images consisted of 11 high- and 4 low-grade real cases, as well
+as 10 high- and 5 low-grade simulated images. The resulting
+segmentations were then uploaded by each team to the online
+tools, which automatically computed performance scores for
+the two tumor structures. Of the twelve groups that participated
+in the benchmark, six submitted their results in time during
+the on-site challenge, and one group submitted their results
+shortly afterwards (Subbanna). During the plenary discussions
+it became apparent that using only two basic tumor classes
+was insufﬁcient as the “core” label contained substructures
+with very different appearances in the different modalities. We
+therefore had all the training data re-annotated with four tumor
+labels, reﬁning the initially rather broad “core” class by labels
+for necrotic, cystic and enhancing substructures. We asked
+all twelve workshop participants to update their algorithms to
+consider these new labels and to submit their segmentation
+
+MENZE et al.: THE MULTIMODAL BRAIN TUMOR IMAGE SEGMENTATION BENCHMARK (BRATS)
+1997
+TABLE II
+OVERVIEW OF THE ALGORITHMS EMPLOYED IN 2012 AND 2013. FOR A FULL DESCRIPTION PLEASE REFER TO THE APPENDIX AND THE WORKSHOP
+PROCEEDINGS AVAILABLE ONLINE (SEE SECTION III-A). THREE NON-AUTOMATIC ALGORITHMS REQUIRED A MANUAL INITIALIZATION
+
+--- END OF METHODOLOGY FROM: BraTS.pdf ---
+
+--- START OF METHODOLOGY FROM: BrainAR.pdf ---
+
+This paper introduces the BrainAR application, a novel
+approach designed to address the challenges associated
+with manual segmentation of brain tumors. The proposed
+application combines artificial intelligence and augmented
+reality. The AI component involves training a deep learning
+model for automated tumor segmentation in 3D brain MRI
+data. The segmentation results are then used in an augmented
+reality application to produce a patient-specific interactive
+3D visualization. The proposed framework is illustrated in
+Figure 1, this diagram illustrates the end-to-end processing
+pipeline from medical imaging input to augmented reality
+visualization. Raw multiparametric MRI scans (T1, T1ce,
+T2, FLAIR) undergo preprocessing including skull-stripping,
+N4 bias correction, and intensity normalization. The core
+AI component employs a 3D U-Net architecture trained
+on BraTS2021 data to segment tumor subregions. The
+model that demonstrated the best performance was then
+deployed on a local server using a Flask application,
+where post-processing techniques were integrated to enable
+online 3D rendering. An AR platform was subsequently
+developed using Unity 3D [31] and ARCore [32], handling
+the visualization and interaction with the segmentation results
+through a mobile interface. ARCore provides robust motion
+tracking capabilities through its feature point detection and
+simultaneous localization and mapping (SLAM) techniques.
+ARCore enables the application to track the device’s position
+and orientation without external markers, ensuring a stable
+overlay of virtual content onto the physical environment. This
+markerless approach ensures persistent alignment between
+virtual content and the physical world without requiring
+predefined markers or external sensors.
+BrainAR aims to enhance brain tumor diagnosis and
+clinical decision making by projecting interactive 3D tumor
+reconstructions from preoperative MRI, directly onto the
+patient’s anatomy via augmented reality, enabling surgeons
+to visualize tumor boundaries, functional areas, and critical
+structures in real-time spatial context. This reduces diagnostic
+uncertainty, improving tumor margin delineation accuracy
+versus conventional imaging alone, while providing intra-
+operative guidance that boosts resection completeness, and
+shortens surgery time. By offering an intuitive AR overlay,
+BrainAR aims to support critical decisions like preserving
+eloquent brain zones during resection and differentiating
+tumor subtypes, ultimately serving as a precision navigation
+tool that translates imaging data into actionable clinical
+insights for improved surgical outcomes.
+For practical operating room adoption, comprehensive
+clinical evaluation (e.g., multi-center trials measuring sur-
+gical outcomes) and end-user studies assessing surgeon
+usability, workflow integration, and cognitive load in live
+surgical settings will be essential to validate its real-world
+impact as a precision navigation tool that translates imaging
+data into actionable clinical insights.
+A. DEEP LEARNING FOR BRAIN TUMOR SEGMENTATION
+1) DATA COLLECTION
+Training a deep learning model for brain tumor MRI image
+segmentation requires a high-quality dataset. A comparative
+study demonstrated that the BraTS (Brain Tumor Segmen-
+tation) dataset [33] was identified as the most widely used
+and suitable, particularly for 3D visualization in the AR
+application, due to its inclusion of 3D MRI scans that are
+ideal for automatic 3D rendering. In the proposed approach,
+the BraTS2021 version of the BraTs dataset was used [33],
+which includes 1251 segmented 3D MRI images. The
+BraTS2021 dataset contains multiparametric MRI (mpMRI)
+scans, including: T1 native, T1 post-contrast (T1CE),
+T2-weighted (T2), and T2 Fluid Attenuated Inversion
+Recovery (T2-FLAIR). Each mpMRI image is associated
+with a segmentation mask with four class labels: 0 for
+background, 1 for necrotic tumor core, 2 for peritumoral
+edematous/invaded tissue, and 4 for Gd-enhancing tumor.
+Each modality and its corresponding mask have dimensions
+of 240 × 240 × 155.
+2) DATA PREPROCESSING
+To effectively segment brain tumors for 3D visualization and
+interaction, preprocessing is crucial for preparing the dataset
+for model training. In the proposed approach, first, cropping
+was applied to each MRI modality and its corresponding
+VOLUME 13, 2025
+128643
+
+M. Khedir et al.: BrainAR: Automated Brain Tumor Diagnosis With Deep Learning and 3D AR Visualization
+FIGURE 1. The workflow of the proposed framework.
+segmentation mask to convert them to a smaller size of 192×
+192 × 128. Cropping was applied to reduce computational
+complexity and training time. The 192×192×128 dimension
+represents the smallest size that fully contains the brain tissue,
+with only the background being removed. Subsequently, all
+images were normalized by dividing each pixel value by
+255, scaling them to a range of 0 to 1 to ensure faster
+and more stable convergence during model training. Each
+MRI modality (T1 native, T1CE, T2-weighted, T2-FLAIR)
+was standardized using the z-score technique to ensure
+consistency across modalities, with a mean of 0 and a
+standard deviation of 1. All modalities were then stacked
+into a single 4D image in the order of T1 native, T1CE,
+T2-weighted, and T2-FLAIR, resulting in images of size
+4 × 192 × 192 × 128.
+This fusion leverages complementary anatomical and
+pathological information across modalities, enhancing the
+model’s ability to learn robust and discriminative features.
+For the segmentation masks, label transformation was applied
+to combine the tumor sub-regions (1, 2, 4) into a single
+label (1), representing the tumor, while label (0) was retained
+to represent the background class, resulting in binary masks.
+This simplification was intended to reduce model complexity,
+while also aligning with the primary goal of producing
+intuitive, whole-tumor visualizations in the AR application.
+To mitigate limitations from the modest original dataset
+size, we implemented rigorous data augmentation techniques
+exclusively during training. These included domain-specific
+transformations: random Gibbs noise (simulating MRI acqui-
+sition artifacts), 3D elastic deformations, multi-axis rotations
+(along x/y/z axes), scaling variations (zoom-in/out), and
+strategic flipping (axial/sagittal planes). Critically, each aug-
+mentation was applied to mutually exclusive image subsets
+to prevent compounding artifacts and preserve anatomical
+integrity. This protocol expanded the training set by 1,547
+synthetically generated volumes, increasing the effective
+training pool from 1,251 to 2,547 samples while maintaining
+patient distribution fidelity.
+3) MODEL TRAINING
+In recent years, U-Net architectures [19] have become the
+most popular deep learning models for medical data segmen-
+tation. This is mostly because they are accurate and good at
+processing different kinds of medical scans, as explained in
+the literature [7], [9], and [10]. This study focuses on selecting
+U-Net variants that offer high performance while maintaining
+a reduced number of parameters. The analysis identified
+the Residual U-Net [34] and the Attention U-Net [35] as
+128644
+VOLUME 13, 2025
+
+M. Khedir et al.: BrainAR: Automated Brain Tumor Diagnosis With Deep Learning and 3D AR Visualization
+promising architectures for evaluation on the pre-processed
+dataset.
+The 3D Residual U-Net [34] employed in this study is an
+enhanced version of the U-Net architecture, it has residual
+units that include a mechanism for dimension matching,
+as described in [36]. Each layer of the network consists
+of an encoding and decoding path with a skip connection.
+Unlike traditional U-Net implementations, the encoding
+path achieves downsampling through strided convolutions,
+while the decoding path performs upsampling using strided
+transpose convolutions at the beginning of each block. This
+Residual 3D U-Net is composed approximately of 4.8 million
+parameters and five layers, each with a stride of 2 and a
+kernel size of 3. On the other hand, the Attention U-Net [35]
+used in this study is composed of approximately 5.9 million
+parameters across five layers, each with a stride of 2 and a
+kernel size of 3. A final sigmoid activation layer was added
+to both networks to output probabilities between 0 and 1,
+representing the two classes: tumor or background.
+Both the 3D residual U-Net and 3D attention U-Net
+models were trained using the Adam optimizer with an initial
+learning rate of 0.001. A StepLR learning rate scheduler
+was employed to decay the learning rate of each parameter
+group by gamma = 0.1 every five epochs. Early stopping was
+applied to prevent overfitting by stopping the training if the
+validation loss did not improve for three consecutive epochs.
+The choice of hyperparameters was informed by a review
+of state-of-the-art literature, where the Adam optimizer and
+a learning rate of 0.001 are commonly adopted for medical
+image segmentation tasks. Due to the computational demands
+of processing high-dimensional 3D MRI data with four input
+channels, conducting an extensive hyperparameter search
+was not feasible.
+During the training of the 3D Residual U-Net, two loss
+functions were evaluated. The first (Equation 1) combined
+Binary Cross-Entropy (BCE) loss with Dice loss, while the
+second (Equation 2) combined Dice loss with Focal loss. The
+batch size was limited by GPU memory, with a maximum
+value of 4. Using the loss 1, the model converged in just
+7 epochs, whereas training with the loss 2 required 25 epochs
+to converge.
+For the 3D Attention U-Net, the second loss function 2 was
+selected based on its superior performance in the Residual
+U-Net. Due to memory constraints, the batch size was set
+to 2. The model converged after 21 epochs, with early
+stopping triggered when no improvement in validation loss
+was observed.
+L1 = 0.5 · Dice + 0.5 · BinaryCrossEntropy
+(1)
+L2 = 0.5 · Dice + 0.5 · Focal
+(2)
+4) EVALUATION METRICS
+The performance of the models was evaluated using several
+metrics: Dice score,
+95th percentile Hausdorff distance
+(HD95), Intersection Over Union (IOU), Specificity, and
+Sensitivity. As described in equation 3, the Dice score
+computes the overlap between the predicted segmentation
+and the ground truth.
+Dice = 2 · |P ∩G|
+|P| + |G|
+(3)
+where:
+• P (Predicted): The predicted segmentation region.
+• G (Ground Truth): The actual (true) segmentation
+region.
+• |P| and |G|: The areas of the predicted and ground truth
+regions, respectively.
+• |P ∩G|: The overlap area between the predicted and
+ground truth segmentation.
+The 95th percentile Hausdorff Distance (HD95) (equation 4)
+indicates the spatial distance between the boundaries of the
+predicted and actual segmentation, using the 95th percentile
+of the boundary distances rather than the maximum, making
+it less sensitive to outliers.
+HD95(A, B) = max
+
+percentile95
+ {min
+b∈B d(a, b) : a ∈A}
+
+,
+percentile95
+ {min
+a∈A d(b, a) : b ∈B}
+
+(4)
+where:
+• d(a, b): The distance between points a and b in the
+metric space.
+The Intersection over Union (IoU) measures the intersec-
+tion ratio to the union of the predicted and true regions,
+as illustrated in equation 5.
+IoU = |P ∩G|
+|P ∪G|
+(5)
+where:
+• P (Predicted): The predicted segmentation region.
+• G (Ground Truth): The actual (true) segmentation
+region.
+• |P ∩G|: The area of intersection between the predicted
+and ground truth regions.
+• |P∪G|: The area of the union of the predicted and ground
+truth regions.
+Specificity quantifies the proportion of correctly identified
+negative samples (equation 6), and sensitivity reflects the
+model’s ability to correctly identify true positives, as illus-
+trated in equation 7.
+Specificity =
+TN
+TN + FP
+(6)
+where:
+• TN (True Negatives): The number of correctly predicted
+negative instances.
+• FP (False Positives): The number of negative instances
+that were incorrectly classified as positive.
+Sensitivity =
+TP
+TP + FN
+(7)
+VOLUME 13, 2025
+128645
+
+M. Khedir et al.: BrainAR: Automated Brain Tumor Diagnosis With Deep Learning and 3D AR Visualization
+where:
+• TP (True Positives): The number of instances that were
+correctly predicted as positive.
+• FN (False Negatives): The number of positive instances
+that were incorrectly predicted as negative.
+Before applying these metrics, the segmentation results were
+binarized to obtain binary masks comparable to the ground
+truth, using two different threshold values: 0.45 and 0.5. The
+threshold of 0.5 was retained, as it yielded better results in
+most cases on both the validation and test sets. For the IoU and
+95th percentile Hausdorff Distance metrics, one-hot encoding
+was applied before computation.
+B. MODEL DEPLOYMENT
+For deployment, we selected the best-performing deep learn-
+ing model and integrated it into a Flask1 application hosted
+on a server to handle the computational tasks involved in MRI
+analysis efficiently. As illustrated in Figure 2, the distributed
+system architecture separates compute-intensive processing
+from real-time visualization tasks. The client application on
+a smartphone manages AR tracking, rendering, and user
+interactions. Communication occurs through HTTPS, this
+design allows model inference while maintaining respon-
+sive AR visualization, crucial for intraoperative use where
+computational resources are constrained. This setup allows
+users to send MRI scans from the mobile application to the
+server via a POST request. Upon receiving the MRI data,
+the API initiates a series of pre-processing steps, including
+cropping, normalization, standardization, and image fusion.
+The preprocessed data is then passed to the model, which
+generates a segmentation mask of the tumor. Post-processing
+is then applied to refine the output, including binarizing the
+mask by applying a threshold of 0.5. Padding is then used
+to restore the mask from the deep learning model’s output
+size of 192 × 192 × 128 back to the original dimensions
+of MRI scans, ensuring proper spatial alignment. The binary
+mask is then overlaid onto the corresponding brain image,
+with the mask visualized in red and the brain in grayscale
+for accurate localization. Finally, the result is converted
+into OBJ format and encoded in Base64 to enable transfer
+within the POST response. The processed result is packaged
+into JSON format and sent back to the client via a POST
+response. The client application extracts the Base64-encoded
+string from the JSON and decodes it to retrieve the OBJ
+format, which can be easily handled by AR libraries. This
+data is then used to automatically generate an interactive 3D
+visualization of the tumor and the brain, enabling users to
+examine and interact with the image in an AR environment.
+The deployment process was initially successful when tested
+on a local machine, which served as the backend server. It was
+equipped with an NVIDIA T550 GPU (12GB VRAM), a 12th
+Gen Intel® CoreTM i7-1260P CPU, 16GB of RAM, and ran
+Python 3.10.13 with PyTorch 2.2.0 and CUDA 11.8.
+1https://flask.palletsprojects.com/
+In designing the ARBrain mobile app, ergonomic con-
+siderations were carefully integrated to ensure an efficient,
+comfortable, and user-friendly experience for medical profes-
+sionals. The application features real-time 3D visualization
+of the segmented brain tumour within an anatomically
+accurate 3D brain model, enabling clinicians to explore
+and understand tumour location, size, and structure from
+multiple perspectives. The AR interface is optimized for
+handheld devices, minimizing the need for excessive arm
+movement and reducing user fatigue. To further enhance
+usability, the app supports multimodal interaction, including
+intuitive hand gesture control for manipulating the 3D model
+(e.g., rotate, zoom, highlight regions) and vocal commands
+for hands-free operation, which is particularly useful in
+sterile or multitasking environments. The interface design
+prioritizes clarity, with high-contrast visuals, accessible
+button placement, and support for both right- and left-handed
+use. These ergonomic and interaction design choices ensure
+that ARBrain is suitable for extended clinical use in diverse
+lighting and working conditions.
+This system offers significant advantages by managing
+all heavy computational tasks on a remote server, thereby
+maintaining a lightweight and responsive user interface. The
+server GPU was utilized to accelerate the inference process,
+resulting in faster response times. This approach enables
+access to the application from various devices, promoting
+broader usability. Furthermore, it enhances overall perfor-
+mance, facilitating a streamlined and efficient workflow,
+which contributes to an improved user experience.
+C. AUGMENTED REALITY MOBILE PLATFORM
+The use of mobile devices and smartphones to assist
+physicians and healthcare professionals is rapidly increas-
+ing [37]. Given their portability, accessibility, and ease
+of use, developing an AR mobile platform for medical
+assistance would be beneficial [37]. However, several factors
+need to be considered, including creating a user-friendly
+interface, enabling intuitive interactions, and incorporating
+3D visualization. These aspects are crucial to ensuring that
+the application is easy to use and lightweight for end users.
+As a first step, Figma2 was used to create a prototype
+for the application, starting with a minimum viable product
+(MVP) that includes only the essential buttons and screens.
+As shown in figure 3, the initial screen (screen a) displayed
+upon launching the app contains a ‘‘Get Started’’ button,
+which leads to the second screen (screen b) for uploading
+MRI scans. This screen features an ‘‘Upload’’ button to
+submit the scans, an ‘‘Exit’’ button to close the app, and a
+brief description of the application. Once the user uploads
+the MRI scans via screen (c), they are redirected to the
+augmented reality environment (figure 6), where spatial
+repositioning uses a three-finger drag gesture tracked via
+smartphone’ articulated hand tracking and 3D models of
+the brain and tumor can be visualized. The switch buttons
+2https://www.figma.com/fr-fr/
+128646
+VOLUME 13, 2025
+
+M. Khedir et al.: BrainAR: Automated Brain Tumor Diagnosis With Deep Learning and 3D AR Visualization
+FIGURE 2. The Client-Server architecture utilized in the BrainAR system.
+FIGURE 3. (a) The Get-Started screen of the BrainAR application, (b) The Upload screen of the BrainAR application, (c) Uploading MRI
+scans from local storage.
+highlighted in Figure 4 allow users to toggle between the
+tumor and the brain 5, volumetric rendering demonstrates
+clinical value and employs depth-enhanced rendering tech-
+niques. The brain model maintains transparency to preserve
+situational awareness. While the interaction buttons facilitate
+user engagement. The microphone icon represents voice
+interaction, as shown in figures 9, while the other buttons
+control the rotation 8, zooming 7, and translation of the 3D
+model 6. Additionally, a ‘‘Back’’ button is included to return
+to the upload screen for the option to try different MRI scans
+if needed.
+The application was developed using Unity 3D in con-
+junction with the ARCore library. Initially, the MRI scans
+are accessed from local files and subsequently sent via
+POST request to the server for processing. Upon receiving
+the response, the application utilizes the OBJ file format
+VOLUME 13, 2025
+128647
+
+M. Khedir et al.: BrainAR: Automated Brain Tumor Diagnosis With Deep Learning and 3D AR Visualization
+FIGURE 4. AR environment with different visualization and interaction
+buttons.
+to prepare the 3D models of the brain and tumor for
+visualization. The interaction logic, which includes manip-
+ulation of the 3D models, is implemented in C# within the
+Unity 3D environment. Gesture interactions, such as rotating,
+zooming in and out, and repositioning the model were
+implemented using ARCore’s hand tracking capabilities,
+enabling intuitive actions like tap, swipe, and pinch to select,
+rotate, or scale the 3D object. In parallel, voice commands
+were integrated via the SpeechToText3 API, which converts
+spoken words into text and automatically maps them to
+the corresponding transformations of the 3D model. These
+voice commands were carefully selected based on usability
+testing and user-centered design principles to ensure they are
+intuitive, contextually relevant, and effective in supporting
+hands-free interaction within the AR environment.
+IV. EXPERIMENTAL STUDY
+First, the dataset, composed of 1251 3D multi-parametric
+MRI images, was divided into three subsets: 80% for
+training, 10% for validation, and 10% for testing, resulting
+in 1000 images for training, 125 for validation, and 126 for
+testing. Table 2 highlights the results obtained on the test set.
+When the 3D Residual U-Net was trained using a combina-
+tion of Dice and binary cross-entropy (loss 1), it converged
+quickly within just 7 epochs. However, this rapid convergence
+limited the model’s ability to fully capture the underlying data
+features, resulting in suboptimal performance, as reflected in
+the evaluation metrics. In contrast, training with a combina-
+tion of Dice and focal loss (loss 2), which is more effective
+at handling class imbalance, led to improved metric scores,
+particularly in terms of the Dice coefficient. The 3D Attention
+U-Net was subsequently trained using the loss2 combination,
+which had shown superior results in the previous training.
+This model converged after 21 epochs. Despite this, the best
+overall performance was achieved by the 3D Residual U-Net.
+These findings highlight the effectiveness of the 3D Residual
+U-Net architecture compared to the 3D Attention U-Net when
+trained on the original dataset.
+3https://github.com/yasirkula/UnitySpeechToText
+FIGURE 5. Brain and tumor visualizations.
+FIGURE 6. Translation interaction.
+To enhance the results, data augmentation was imple-
+mented to increase the variability of the training set. Due
+to the extended training time, it was impractical to retrain
+all models. Therefore, the 3D Residual U-Net which had
+initially shown the best performance was retrained on the
+augmented dataset using loss2. As shown in Table 2, the
+Dice score improved by 0.005, the Hausdorff distance by
+0.809, the IoU by 0.004, and the sensitivity by 0.002.
+Although these improvements are modest, even after we
+applied data augmentation techniques, they indicate that
+128648
+VOLUME 13, 2025
+
+M. Khedir et al.: BrainAR: Automated Brain Tumor Diagnosis With Deep Learning and 3D AR Visualization
+FIGURE 7. Zoom interaction.
+TABLE 2. Obtained results on the test set.
+our model is highly sensitive to class imbalance. This is
+because the background class is significantly larger than the
+tumor region, and the data augmentation may not have been
+sufficient to address this issue. Across all models, a notable
+difference between sensitivity and specificity was observed,
+indicating that the models often missed positive cases
+(false negatives) while accurately identifying most negative
+cases (true negatives). These results also demonstrate the
+effectiveness of using focal loss, which has led to better
+performance compared to binary cross-entropy, as focal loss
+handles class imbalance more effectively. Table 3 presents
+sample prediction results from the trained models on the test
+set. These images were obtained from the 64th slice along the
+depth dimension of the 3D mask.
+As demonstrated in both the results in Table 2 and Table 3,
+the 3D residual U-Net model, trained on the augmented
+dataset, was selected for deployment due to its superior
+performance.
+The BrainAR application demonstrated strong perfor-
+mance in terms of timing. The deployment of the model on
+the server equipped with a GPU significantly reduced the
+computational load on the mobile device, thereby minimizing
+response times. Benchmarking over five test cases showed
+an average end-to-end prediction time of 61.57 seconds
+(standard deviation: 21.74 seconds), with a 95th percentile
+of 93.80 seconds. These metrics reflect the entire processing
+pipeline from image upload and preprocessing to segmenta-
+tion and 3D rendering, supporting responsive, on-demand AR
+visualization for clinical use. As demonstrated in Figure 7,
+the 3D visualization of the tumor produced by the system
+achieves a rendering quality that is visually comparable to
+manual reconstruction methods, while being fully automated
+VOLUME 13, 2025
+128649
+
+M. Khedir et al.: BrainAR: Automated Brain Tumor Diagnosis With Deep Learning and 3D AR Visualization
+TABLE 3. Prediction results on the test set using the 3D Attention U-Net and the 3D Residual U-Net trained with loss 2, both with and without data
+augmentation.
+and requiring no manual intervention for either reconstruction
+or rendering.
+Unlike non-mobile AR systems such as the HoloLens,
+which require expensive hardware, this platform is signif-
+icantly more cost-effective and portable, making it ideal
+for use in resource-constrained environments. The system
+provides an accessible and portable solution, reducing the
+time required for diagnosis through AI-driven segmentation
+while offering AR-based support for surgical planning. This
+combination has the potential to impact patient outcomes by
+enabling early detection and improving surgical preparation,
+which may contribute to reduced mortality rates and higher
+treatment success. However, the precision of segmentation
+remains a key limitation that requires further improvement
+in the future.
+Another limitation of the interaction experience stems
+from ARCore’s requirement for surface detection,4 which
+can make object manipulation, like zooming or moving
+4https://developers.google.com/ar/design/content/content-placement
+128650
+VOLUME 13, 2025
+
+M. Khedir et al.: BrainAR: Automated Brain Tumor Diagnosis With Deep Learning and 3D AR Visualization
+FIGURE 8. Rotation interaction.
+FIGURE 9. Voice interaction.
+less seamless, sometimes requiring users to reposition their
+device to reorient the model. While this does not affect the
+functionality, it may impact the fluidity of interaction in some
+cases. Although this prototype represents the first iteration
+of a novel system, it can potentially substantially impact the
+healthcare sector. The developed approach could be applied
+to other types of cancer or medical conditions, provided
+that the deep learning model is adapted to the specific task.
+To rigorously validate the application’s ease of use, we plan to
+conduct a formal evaluation study involving a diverse cohort
+of users, ranging from novice users to domain experts.
+
+--- END OF METHODOLOGY FROM: BrainAR.pdf ---
+
+--- START OF METHODOLOGY FROM: CNN-TumorNet.pdf ---
+
+: Our research presents CNN-TumorNet, a convolutional neural
+network for categorizing MRI images into tumor and non-tumor categories.
+Although deep learning models exhibit great accuracy, their complexity
+frequently restricts clinical application due to inadequate interpretability. To
+address this, we employed the LIME technique, augmenting model
+transparency and offering explicit insights into its decision-making process.
+
+--- END OF METHODOLOGY FROM: CNN-TumorNet.pdf ---
+
+--- START OF METHODOLOGY FROM: Demystifying Deep Learning .pdf ---
+
+, for details).
+Cao et al. (2022) proposed Multiscence Contextual Attention (MCA)-ResUNet, which combined the strengths of an
+attention module using CBAM (which extracts high-level features), residual blocks from ResUNet, and the segmentation
+capabilities of a conventional UNet. When tested on the BraTS 2017 and BraTS 2019 datasets, MCA-ResUNet
+3
+
+outperformed the other UNet variants. The top three models included UNet variants with attention mechanisms (UNet +
+MCA, UNet + SEblock, and MCA-ResUNet). The results demonstrated that the attention module significantly benefited
+the segmentation process and increased the magnitude of the Dice scores. As noted by the authors, previous studies
+used various attention gate architectures in their UNet models, but those that utilized both spatial and channel attention
+modules generally achieved the best results. The combination of spatial and channel attention in CBAM balanced the
+identification of important feature maps and the regions within those maps, leading to higher accuracy. Consequently,
+we used CBAM as the attention module in the AttUNet model used in this study.
+1.2
+Current Research Aims
+The current study focused on applying the best UNet models from previous studies, along with XAI, to 3D segmentation
+of brain tumors, and assessing which UNet model is most suitable for real-world clinical applications. Three types
+of UNet models — (i) the conventional UNet, (ii) ResUNet, and (iii) AttUNet — were evaluated for brain tumor
+segmentation performance. The ideas that we generated from the literature review, such as reducing the size of
+input images to speed up computation, exploring why certain UNet variants could not improve tumor segmentation
+
+--- END OF METHODOLOGY FROM: Demystifying Deep Learning .pdf ---
+
+--- START OF METHODOLOGY FROM: Explainable Artificial Intelligence (XAI) Techniques␊for Visualizing Deep Learning Models in Medical Imaging.pdf ---
+
+A comprehensive review of explainable AI in medical image analysis was published
+by [20–24]. While this review covers a broad range of topics, some critical areas, such
+as research on trainable attention (TA)-based methods, vision transformers, and their
+applications, have been overlooked. Our review aims to fill this gap by providing an
+extensive overview of various domains within medical imaging, addressing key aspects
+such as Domain, Task, Modality, Performance, and Technique.
+This research employs the Systematic Literature Review (SLR) method, which involves
+several stages. The research questions guiding this study are as follows:
+•
+What innovative methods exist for interpreting and visualizing deep learning models
+in medical imaging?
+•
+How effective are post-hoc visualization techniques (perturbation-based, gradient-
+based, decomposition-based, TA-based, and ViT) in improving model transparency?
+•
+What is the clinical relevance of interpretability techniques for actionable insights from
+deep learning models in healthcare?
+•
+What are the future research directions for model interpretability and visualization in
+medical applications?
+The survey examines over 400 recent papers on explainable AI (XAI) in medical image
+analysis. Relevant contributions were identified using keywords like “deep learning”,
+“convolutional neural networks”, “medical imaging”, “surveys”, “interpretation”, “visu-
+alization” and “review”. Sources included ArXiv, bioRxiv and medRxiv, Google Scholar,
+Scopus, and Science Direct, focusing on titles. Studies without results on medical im-
+age data or using only standard neural networks with manually designed features were
+excluded. In cases of similar work, the most significant publications were selected.
+The findings will be comprehensively presented, including a detailed description of
+the research methodology for replication. The literature search results, relevant articles, and
+their quality evaluations will be summarized in overview tables. Drawing from expertise
+in applying XAI techniques to medical image analysis, ongoing challenges, and future
+research directions will be discussed.
+3. Interpreting Model Design and Workflow
+Interpreting model design and workflow involves examining the hidden layers of
+convolutional neural networks (CNNs). This can be achieved through methods such as:
+1.
+Autoencoders for Learning Latent Representations
+2.
+Visualizing High-Dimensional Latent Data in a Two-Dimensional Space
+3.
+Visualizing Filters and Activations in Feature Maps
+
+J. Imaging 2024, 10, 239
+4 of 26
+3.1. Autoencoders for Learning Latent Representations
+Autoencoders (AE) are DL models for unsupervised feature learning [25], with appli-
+cations in anomaly detection [26], image compression [27], and representation learning [28].
+They consist of an encoder creating latent representations and a decoder reconstructing
+images. Variants include variational autoencoders (VAE) and adversarial autoencoders
+(AAE). In medical imaging, AEs detect abnormalities by comparing input images with
+reconstructions and highlighting high reconstruction loss areas. For instance, VAE has
+reconstructed OCT retinal images to detect pathologies [29], and AAE has localized brain
+lesions in MRI images [30]. Convolutional AEs have detected nuclei in histopathology
+images by combining learned representations with thresholding [31].
+3.2. Visualizing High-Dimensional Latent Data in a Two-Dimensional Space
+CNNs produce high-dimensional features, making visualization challenging. Dimen-
+sionality reduction techniques like Principal Component Analysis (PCA) and t-Distributed
+Stochastic Neighbor Embedding (tSNE) simplify this data. PCA performs linear transfor-
+mations, while tSNE [32] uses nonlinear methods to map high-dimensional data to lower
+dimensions. tSNE is effective for visualizing patterns and clusters, such as in abdominal
+ultrasound and histopathology image classification. The constraint-based embedding
+technique [33], using a divide-and-conquer algorithm to preserve k-nearest neighbors
+in 2D projections, has assessed deep belief networks separating brain MRI images of
+schizophrenic and healthy patients, though both tSNE and constraint-based embedding
+struggled with raw data separation.
+3.3. Visualizing Filters and Activations in Feature Maps
+A convolutional block extracts local features from input images through convolution
+filters, ReLU or GELU activations, and pooling layers. Filter visualization reveals CNN’s
+feature extraction capabilities, with initial layers capturing basic elements and later layers
+capturing intricate patterns. In medical imaging, filter visualization compares filters in
+Computer-Aided Detection (CAD) for 3D Computed Tomography (CT) images [9]. Larger
+filters offer more insights but require more memory. Feature map visualization, repre-
+senting layer outputs after activation, highlights active features and can indicate training
+issues. It is used in tasks like skin lesion classification [34], fetal facial plan recognition
+in ultrasound [35], brain lesion segmentation in MRI [6], and Alzheimer’s diagnosis with
+PET/MRI [36].
+4. Deep Learning Models in Medical Imaging
+Convolutional neural networks (CNNs) are essential in DL for MI. CNNs are adept at
+processing X-rays, Computed Tomography (CT) scans, and Magnetic Resonance Imaging
+(MRI) through their hierarchical feature representations. Studies [5–7] have demonstrated
+their effectiveness in various medical image analysis tasks. For instance, in segmentation
+tasks, CNNs excel at delineating organ boundaries or identifying anomalies within med-
+ical images, providing valuable insights for accurate diagnosis and treatment planning.
+Recurrent Neural Networks (RNNs) excel in the temporal modeling of dynamic imaging
+sequences, such as functional MRI or video-based imaging, by capturing temporal pat-
+terns [37]. Generative Adversarial Networks (GANs) are valuable for image synthesis,
+data augmentation, anomaly detection, generating synthetic images and learning normal
+patterns [38–40].
+Transformer-Based Architectures
+Transformer-based architectures, including bidirectional encoder representations from
+transformers (BERT) [41,42], and generative pre-trained transformer (GPT) [43], are emerg-
+ing for tasks like disease prediction, image reconstruction, and capturing complex depen-
+dencies in medical images.
+
+J. Imaging 2024, 10, 239
+5 of 26
+5. Interpretation and Visualization Techniques
+In recent years, numerous explainable artificial intelligence (XAI) techniques have
+been developed to enhance the interpretability of DL models, particularly in MI. These
+techniques can be broadly categorized into Perturbation-Based, Gradient-Based, Decompo-
+sition, and Attention methods.
+The timeline presented in Figure 2 illustrates the development of these XAI techniques
+over the years. The points on the timeline are color-coordinated by respective categories,
+including Dimensionality Reduction, Feature Visualization, Class Activation Mapping,
+Saliency Mapping, Prediction Difference Analysis, Grad-CAM, Integrated Gradient, Guided
+Backpropagation, Occlusion Sensitivity, Trainable Attention, Guided Grad-CAM, Layer-
+wise Relevance Propagation, Deconvolution, LIME, Backpropagation, Autoencoder, Mean-
+ingful Perturbation, SHAP, and Attention. Notably, the Gradient-Based category is the
+most densely populated, with CAM and Grad-CAM being among the most popular en-
+tries. The timeline also reveals a higher density of developments between 2017 and 2020.
+The comparison chart illustrates the visualization Techniques methods: Gradient-Based,
+Perturbation-Based, Decomposition-Based (LRP), and Trainable Attention Models in terms
+of model dependency, access to model parameters, and computational efficiency as shown
+in Table 1.
+Figure 2. Timeline of XAI Technique Development in medical imaging applications.
+Table 1. Comparison chart that illustrates the visualization techniques methods.
+Attributes
+Perturbation
+Gradient
+Decomposition
+Trainable Attention Models
+Model Dependency
+Model-agnostic
+Differentiable
+Model-specific
+Model-specific
+Access to Model Parameters
+No
+Yes
+Yes
+Yes
+Computational Efficiency
+Slower
+Faster
+Varies
+Varies
+5.1. Perturbation-Based Methods
+Perturbation-based methods evaluate how input changes affect model outputs to
+determine feature importance. By altering specific image regions, these methods identify
+areas that significantly influence predictions, typically visualized with heatmaps. As
+highlighted in recent surveys, perturbation-based XAI methods are crucial for exploring
+CNN models by systematically altering inputs and observing output changes, which is vital
+for understanding models used in safety-critical areas where transparency is essential [44].
+Techniques like Integrated Gradients (IG), Local Interpretable Model-agnostic Explanations
+(LIME), and Occlusion Sensitivity (OS) are used in various domains, including breast
+cancer detection, eye disease classification, and brain MRI analysis (see Table 2). The table
+categorizes studies by domain, task, modality, performance, and technique. These methods
+also test model sensitivity to input variations, ensuring robust interpretations.
+
+J. Imaging 2024, 10, 239
+6 of 26
+Table 2. Overview of Various Studies Using Perturbation-Based Methods in Medical Imaging.
+Domain
+Task
+Modality
+Performance
+Technique
+Citation
+Breast
+Classification
+MRI
+N/A
+IG
+[45]
+Eye
+Classification
+DR
+Accuracy: 95.5%
+IG
+[46]
+Multiple
+Classification
+DR
+N/A
+IG
+[47]
+Chest
+Detection
+X-ray
+Accuracy: 94.9%, AUC: 97.4%
+LIME
+[48]
+Gastrointestinal
+Classification
+Endoscopy
+Accuracy: 97.9%
+LIME
+[49]
+Brain
+Segmentation, Detection
+MRI
+ICC: 93.0%
+OS
+[50]
+Brain
+Classification
+MRI
+Accuracy: 85.0%
+OS
+[51]
+Breast
+Detection, Classification
+Histology
+Accuracy: 55.0%
+OS
+[52]
+Eye, Chest
+Classification, Detection
+OCT, X-ray
+Eye Accuracy: 94.7%, Chest Accuracy:
+92.8%
+OS
+[53]
+Chest
+Classification
+X-ray
+AUC: 82.0%
+OS, IG, LIME
+[54]
+5.1.1. Occlusion
+Zeiler and Fergus [55] introduced an occlusion method to assess the impact on model
+output when parts of an image are obstructed. Kermany et al. [53] utilized this method for
+interpreting optical coherence tomography images to diagnose retinal pathologies. A major
+limitation of occlusion is its high computational demand, as it requires inference for each
+occluded image region, increasing with image resolution and desired heatmaps.
+5.1.2. Local Interpretable Model-Agnostic Explanations (LIME)
+Recent studies emphasize the growing importance of local interpretation methods,
+such as LIME, which offer clear interpretability with lower computational complexity,
+making them suitable for real-time applications [56]. Ribeiro et al. [57] introduced local
+interpretable model-agnostic explanations (LIME) to identify superpixels (groups of con-
+nected pixels with similar intensities). Seah et al. [54] applied LIME to identify congestive
+heart failure in chest radiographs. LIME offers an advantage over occlusion by preserv-
+ing the altered image portions’ context, as they are not completely blocked as shown in
+Figure 3.
+Figure 3. Example uses of perturbation-based attribution methods for model interpretability which
+shows the comparison of several approaches to interpretation for identifying congestive heart failure
+on chest X-rays (Seah et al., 2018) [54].
+5.1.3. Integrated Gradients
+Sundararajan et al. [47] introduced integrated gradients (IG) to measure pixel im-
+portance by computing gradients across images interpolated between the original and a
+baseline image with all non-values. Sayres et al. [46] found that model-predicted grades
+and heatmaps improved the accuracy of diabetic retinopathy grading by readers.
+
+J. Imaging 2024, 10, 239
+7 of 26
+5.2. Gradient-Based Methods
+Backpropagation, used for weight adjustment in neural network training, is also
+employed in model interpretation methods to compute gradients. Unlike training, these
+methods do not alter weights but use gradients to highlight important image areas. The de-
+velopment of specialized deep learning networks like FISH-Net, which optimizes detection
+through innovative techniques such as rotated Gaussian heatmaps and noise refinement,
+highlights the potential of deep learning in achieving high precision and sensitivity in med-
+ical imaging tasks [58]. Figure 4 Shows examples of gradient-based attribution methods for
+model interpretability.
+Figure 4. Examples of gradient-based attribution methods for model interpretability. (A) Class maxi-
+mization visualization of malignant and benign breast masses on mammograms [13]. (B) Integrated
+gradients visualizing evidence of diabetic retinopathy on retinal fundus images [46]. (C) Visualization
+of malignant and benign breast masses [13]. (D) Guided backpropagation applied to ultrasound
+images for fetal heartbeat localization [8]. (E) Differentiation between benign and malignant breast
+masses in mammograms [10]. (F) Grad-CAM visualizations identifying discriminative regions in
+magnetoencephalography images for detecting eye-blink artifacts [59].
+5.2.1. Saliency Maps
+Saliency maps, introduced by Simonyan et al. [60], use gradient information to explain
+how deep convolutional networks classify images. They are used in class maximization and
+image-specific class saliency maps. Class maximization generates an image-maximizing
+activation for a class, as in:
+arg max Sc(I) −λ∥I∥2
+2
+Yi et al. [13] applied this to visualize malignant and benign breast masses. Image-
+specific class saliency maps create heatmaps showing each pixel’s significance in classifica-
+tion, computed as:
+Salc(x) = ∂Fc(x)
+∂x
+Dubost et al. [61] used these maps in a weakly supervised method for segmenting
+brain MRI structures. Saliency maps have also been utilized in diagnosing heart diseases in
+chest X-rays [12], classifying breast masses in mammography [62] with accuracy ranging
+from 85% to 92.9%, and identifying pediatric elbow fractures in X-rays [63] with accuracy of
+88.0% and area under curve (AUC) of 95.0%. Moreover, iterative saliency maps [64] enhance
+less obvious image regions by generating a saliency map, inpainting prominent areas, and
+
+J. Imaging 2024, 10, 239
+8 of 26
+iterating the process until the image classification changes or a limit is reached. This
+approach, applied to retinal fundus images for diabetic retinopathy grading, demonstrated
+higher sensitivity compared to traditional saliency maps. However, saliency has limitations.
+They do not distinguish if a pixel supports or contradicts a class, and their effectiveness
+diminishes in binary classification.
+5.2.2. Guided Backpropagation
+Guided backpropagation, introduced by Springenberg et al. [65], builds on the saliency
+map approach by Simonyan et al. [60] and the deconvnet concept by Zeiler and Fergus [55].
+It improves gradient backpropagation through ReLU layers, where negative activations are
+set to zero during the forward pass. Guided backpropagation discards gradients where
+either the forward activation or the backward gradient is negative, producing heatmaps
+that highlight pixels positively contributing to the classification.
+In 2017, Gao and Noble [8] applied guided backpropagation to ultrasound images
+for fetal heartbeat localization. They found that the heatmaps remained consistent despite
+variations in the heart’s appearance, size, position, and contrast. Conversely, Böhle et al. [66]
+discovered that guided backpropagation was less effective for visualizing Alzheimer’s
+disease in brain MRIs compared to other methods. Similarly, Dubost et al. [67] achieved
+an intraclass correlation coefficient (ICC) of 93.0% in brain MRI detection using guided
+backpropagation. Wang et al. [68] obtained an average accuracy of 93.7% in brain MRI
+classification with this technique. Gessert et al. [69] reported an accuracy of 99.0% in
+cardiovascular classification using OCT images. Wickstrom et al. [70] achieved a 94.9%
+accuracy in gastrointestinal segmentation using endoscopy. Lastly, Jamaludin et al. [71]
+reported an accuracy of 82.5% in musculoskeletal spine classification using MRI images
+with guided backpropagation.
+5.2.3. Class Activation Maps (CAM)
+Class Activation Mapping (CAM), introduced by Zhou et al. [72], visualizes regions of
+an image most influential in a neural network’s classification decision. CAM is computed
+as a weighted sum of feature maps from the final convolutional layer, using weights from
+the fully connected layer following global average pooling [73]. For a specific class c and
+image x:
+CAMc(x) = ∑
+k
+wc
+k fk(x)
+This heatmap highlights regions most relevant for classification. CAM has been ap-
+plied in various medical imaging applications, such as segmenting lung nodules in thoracic
+CT scans [74] and differentiating between benign and malignant breast masses in mammo-
+grams [10]. However, CAM’s effectiveness depends on the network architecture, requiring
+a global pooling (GAP) layer followed by a fully connected layer. While Zhou et al. [75]
+originally used GAP, Oquab et al. [76] demonstrated that global max pooling and log-sum-
+exponential pooling can also be used, with the latter yielding finer localization. Table 3
+summarizes CAM’s effectiveness across different medical imaging tasks, covering domain
+tasks, modalities, and performance metrics.
+
+J. Imaging 2024, 10, 239
+9 of 26
+Table 3. Performance metrics of various Medical Imaging tasks across different modalities using CAM.
+Domain-Task
+Modality
+Performance
+Citation
+Bladder Classification
+Histology
+Mean Accuracy: 69.9%
+[77]
+Brain Classification
+MRI
+Accuracy: 86.7%
+[78,79]
+Brain Detection
+MRI, PET, CT
+Accuracy: 90.2–95.3%, F1: 91.6–94.3%
+[80,81]
+Breast Classification
+X-ray, Ultrasound, MRI
+Accuracy: 83.0–89.0%
+[82–85]
+Breast Detection
+X-ray, Ultrasound
+Mean AUC: 81.0%, AUC: Mt-Net 98.0%,
+Sn-Net 92.8%, Accuracy: 92.5%
+[86–89]
+Chest Classification
+X-ray, CT
+Accuracy: 97.8%, Average AUC:
+75.5–96.0%
+[90–97]
+Chest Segmentation
+X-ray
+Accuracy: 95.8%
+[98]
+Eye Classification
+Fundus Photography, OCT, CT
+F1: 95.0%, Precision: 93.0%, AUC:
+88.0–99.0%
+[99–103]
+Eye Detection
+Fundus Photography
+Accuracy: 73.2–99.1%, AUC: 99.0%
+[104–108]
+Gastrointestinal (GI) Classification
+Endoscopy
+Mean Accuracy: 93.2%
+[109–112]
+Liver Classification, Segmentation
+Histology
+Mean Accuracy: 87.5%
+[113,114]
+Musculoskeletal Classification
+MRI, X-ray
+Accuracy: 86.0%, AUC: 85.3%
+[115,116]
+Skin Classification, Segmentation
+Dermatoscopy
+Accuracy: 83.6%, F1: 82.7%
+[117,118]
+Skull Classification
+X-ray
+AUC: 88.0–93.0%
+[119]
+Thyroid Classification
+Ultrasound
+Accuracy: 87.3%, AUC: 90.1%
+[120]
+Lymph Node Classification, Detection
+Histology
+Accuracy: 91.9%, AUC: 97.0%
+[121]
+Various Classification
+CT, MRI, Ultrasound, X-ray, Fundoscopy
+F1: 98.0%, Accuracy: 98.0%
+[122,123]
+5.2.4. Grad-CAM
+Grad-CAM, an extension of CAM by Selvaraju et al. [124], broadens its application
+to any network architecture and output, including image segmentation and captioning.
+It bypasses the global pooling layer and weights feature maps directly with gradients
+calculated via backpropagation from a target class. The gradients of the output for the class
+c concerning feature maps Ak are averaged globally, multiplied by Ak, and passed through
+a ReLU activation to discard negative values:
+Grad-CAMc(x) = ReLU
+ 
+∑
+k
+ 
+1
+Z ∑
+i ∑
+j
+∂yc
+∂Ak
+ij
+!
+Ak
+!
+Garg et al. employed grad-CAM visualizations to identify discriminative regions
+of magnetoencephalography images in the task of detecting eye-blink artifacts [59]. The
+authors found that the regions of the eye highlighted by grad-CAM are the same regions that
+human experts rely on. Table 4 summarizes the effectiveness of Grad-CAM across various
+medical imaging tasks, highlighting domains, tasks, modalities, and performance metrics.
+Table 4. Performance metrics of various Medical Imaging tasks across different modalities Using
+Grad-CAM.
+Domain-Task
+Modality
+Performance
+Citation
+Brain Classification
+MRI
+81.6–94.2% accuracy
+[125–130]
+Brain Detection
+Ultrasound
+94.2% accuracy
+[131]
+Breast Classification
+MRI
+91.0% AUC
+[132]
+Breast Segmentation
+Histology
+95.6% accuracy
+[133]
+Cardiovascular
+CT, X-ray, Ultrasound
+81.2–92.7% accuracy, AUC (81.0–96.3%)
+[134–137]
+Chest Classification
+X-ray, CT, Histology
+72.0–99.9% accuracy, AUC (70.0–97.9%)
+[138–149]
+Dental Classification
+X-ray
+85.4% accuracy, 92.5% AUC
+[150]
+Eye Classification
+Fundus, OCT
+81–97.5% accuracy, AUC (48.1–99.2%)
+[151–155]
+Gastrointestinal (GI) Classification
+CT, Endoscopy, Histology, MRI
+86.9–93.7% accuracy
+[156–160]
+Musculoskeletal
+X-ray
+74.8–96.3% accuracy
+[161–164]
+Thyroid Classification
+CT
+82.8% accuracy, 88.4% AUC
+[165]
+Whole-Body Scans
+MRI
+R2 value of 83.0%
+[166]
+Liver segmentation
+CT scans
+96% accuracy LiTS
+[167]
+Brain Tumor Detection
+MRI images
+98.52% accuracy
+[168]
+Breast Cancer
+DISH and FISH images
+97% accuracy
+[169]
+
+J. Imaging 2024, 10, 239
+10 of 26
+5.3. Decomposition-Based Methods
+Decomposition-based techniques for model interpretation focus on breaking down a
+model’s prediction into a heatmap showing each pixel’s contribution to the final decision.
+These techniques, such as LRP, have been widely applied across different domains.
+Layer-Wise Relevance Propagation (LRP)
+Layer-Wise Relevance Propagation (LRP), introduced by Bach et al. in 2015 [170], offers
+an alternative to gradient-based techniques like saliency mapping, guided backpropagation,
+and Grad-CAM. Instead of relying on gradients, LRP distributes the output of the final layer
+back through the network to calculate relevance scores for each neuron. This process is
+repeated recursively from the final layer to the input layer, generating a relevancy heatmap
+that can be overlaid on the input image. Further properties of LRP and details of its
+theoretical basis are given in (Montavon et al., 2017 [171]), and a comparison of LRP to
+other interpretation methods can be found in ([172–174]).
+The relevance score R(l,l+1)
+i←k
+for a neuron i in layer l from a neuron k in layer l + 1 is
+defined as:
+R(l,l+1)
+i←k
+= R(l+1)
+k
+aiwik
+∑h R(l,l+1)
+h←k
+The overall relevance score for neuron i in layer l is as follows:
+Rl
+i = ∑
+k
+R(l,l+1)
+i←k
+LRP has been applied in MI, such as diagnosing multiple sclerosis (MS) and Alzheimer’s
+disease (AD) using MRI scans. For MS, LRP heatmaps highlighted hyperintense lesions
+and affected brain areas [175] as shown in Figure 5, while for AD, they emphasized the
+hippocampal volume, a critical region for diagnosis [66]. LRP has been found to provide
+clearer distinctions compared to gradient-based methods and has been used in frameworks
+like DeepLight for linking brain regions with cognitive states [176].
+Figure 5. Example uses of decomposition-based attribution methods for model interpretability to
+show the Layerwise relevance propagation for model interpretation in diagnosing multiple sclerosis
+on brain MRI (Eitel et al., 2019) [175]. The Attention U-Net for organ segmentation in abdominal CT
+scans [177] and the areas upon which the model correctly focuses its predictions on the test images in
+explainable Vision Transformers model [178].
+5.4. Trainable Attention Models
+Trainable Attention (TA) Mechanisms provide a dynamic approach to model inter-
+pretation by integrating attention modules into neural networks. Introduced for CNNs by
+Jetley et al. [179], these soft attention modules generate attention maps that highlight im-
+portant image parts. They compute compatibility scores between local and global features
+⟨ls, g⟩using dot products and learned vectors a:
+as =
+exp(cs)
+∑n
+i=1 exp(cs,i)
+The output ga adjusts local features based on the attention map weights:
+
+J. Imaging 2024, 10, 239
+11 of 26
+ga = ∑asls
+This method enhances signals from compatible features while reducing those from
+less compatible ones. Applications of attention mechanisms in medical imaging include
+the Attention U-Net for organ segmentation in abdominal CT scans [177], fetal ultrasound
+classification, and breast mass segmentation in mammograms [180]. Additionally, they
+have improved melanoma lesion classification [181] and osteoarthritis grading in knee
+X-rays [182]. In cancer diagnostics, the CACNET method integrates attention mechanisms
+with Mask R-CNN to enhance nuclear segmentation and reduce noise interference, sig-
+nificantly improving the accuracy of CAC identification [183]. Attention-weighted RL
+(AWRL) models combine self-attention mechanisms with value function approximation to
+effectively filter out irrelevant features and enhance decision-making processes in complex
+tasks [184]. The Trainable Feature Matching Attention Network (TFMAN), incorporat-
+ing non-local and channel attention, exemplifies how trainable attention mechanisms can
+augment representation capabilities in CNNs for image super-resolution [185]. Though
+optimal configurations are application-specific, attention mechanisms are valued for their
+interpretability and performance enhancement.
+Table 5 provides an overview of various studies using TA models, highlighting the
+domains, tasks, modalities including MRI and histology, and performance metrics such
+as accuracy and F1-score, demonstrating the broad applicability and effectiveness of TA
+models in MI.
+Table 5. Overview of Studies Using Trainable Attention Models in Medical Imaging.
+Domain
+Task
+Modality
+Performance
+Citation
+Brain
+Detection
+MRI
+Accuracy: 76.5%
+[186]
+Brain
+Detection, Classification
+MRI
+CC: 61.3–64.8%, RMSE:
+1.503–5.701
+[187]
+Breast
+Classification
+X-ray
+Accuracy: 85.0%, AUC:
+89.0%
+[188]
+Breast
+Segmentation
+Mammo
+Accuracy: 78.4%, F1: 82.2%
+[189]
+Breast
+Classification
+Histology
+Accuracy: 90.3, AUC: 98.4%
+[190]
+Chest
+Detection
+X-ray
+Accuracy: 73.0–84.0%
+[191]
+Chest
+Classification
+CT
+Accuracy: 87.6%
+[192]
+Chest
+Segmentation
+MRI
+Accuracy: 91.3%
+[193]
+Eye
+Detection
+Fundus Photography
+Accuracy: 96.2%, AUC:
+98.3%
+[180]
+Gastrointestinal (GI)
+Classification
+Histology
+Accuracy: 88.4%
+[194]
+Skin
+Dermatoscopy
+[195]
+Skin
+Classification
+Dermatoscopy
+Average Precision: 67.2%,
+AUC: 88.3%
+[181]
+Female Reproductive System,
+Stomach
+Classification, Segmentation
+CT, Fetal Ultrasounds
+Ultrasound Classification:
+Accuracy: 97.7–98.0%, F1:
+92.2–93.3%, CT
+Segmentation: Recall:
+75.1–83.5%
+[177]
+Skeletal (Joint)
+Classification
+X-ray
+Accuracy: 64.3%
+[182]
+5.5. Vision Transformers
+Vision Transformers (ViTs) have emerged as a prominent alternative to convolutional
+neural networks (CNNs) in medical imaging. Unlike CNNs, which use local receptive fields
+to capture spatial hierarchies, ViTs employ self-attention to model long-range dependencies
+and global context [42,196,197]. By partitioning images into fixed-size patches treated as a
+sequence, ViTs utilize transformer encoder layers, effectively capturing complex anatomical
+structures and pathological patterns.
+ViTs have been employed to automate the Tanner-Whitehouse 3 (TW3) algorithm for
+bone age assessment, achieving clinically interpretable results with predictive accuracy
+comparable to that of experienced orthopedic surgeons [198]. ViTs have also demonstrated
+improved performance in diagnosing conditions such as tuberculosis, pneumothorax, and
+
+J. Imaging 2024, 10, 239
+12 of 26
+COVID-19 by leveraging self-supervision and self-training through knowledge distilla-
+tion [199]. In the domain of medical image registration, ViTs have been shown to enhance
+the accuracy of volumetric image alignment significantly, outperforming traditional meth-
+ods by capturing long-range spatial dependencies [200]. ViTs have also been applied to
+3D cryogenic electron tomography (cryoET) data, with CryoViT outperforming CNNs in
+segmenting complex organelles like mitochondria, particularly when training data are
+limited [201].
+ViTs have shown superior performance in segmentation, classification, and detection
+tasks, achieving high accuracy in segmenting tumors and organs in MRI and CT scans, as
+reflected in Dice scores. Their interpretability is enhanced through attention maps, gradient-
+based methods, and occlusion sensitivity, which aid in visualizing model predictions. These
+advancements highlight ViTs’ potential to improve diagnostic accuracy and provide deeper
+insights into medical image analysis, as discussed in Table 6. The areas upon which the
+model correctly focuses its predictions on the test image are presented in Figure 5. The
+regions of focus identified by the ViT model exhibit significant overlap with the areas of
+white blood cells [178].
+Table 6. Overview of Studies Using Vision Transformers in Medical Imaging.
+Domain
+Task
+Modality
+Performance
+Citation
+Stomach
+segmentation
+CT, MRI
+Dice Score: 77.5%, Hausdorff
+distance: 31.7%
+[202]
+Brain, Pancreas, Hippocampus
+segmentation
+MRI, CT
+Dice Scores: Brain: 87.9%,
+Pancreas: 83.6%, Hippocampus:
+88.1%
+[203]
+Bile-duct
+segmentation
+Hyperspectral
+Average Dice Score: 75.2%
+[204]
+Brain
+segmentation
+MRI
+Dice Scores: Enhancing Tumor
+Region: 78.7%, Whole Tumor
+Region: 90.1%, Regions of Tumor
+Core: 81.7%
+[205]
+Brain, Spleen
+segmentation
+MRI, CT
+Dice Score: 89.1%
+[206]
+Eye, Rectal, Brain
+segmentation
+Fundus, Colonoscopy, MRI
+Average Dice Score: 91.7%
+[207]
+Eye
+segmentation
+Pathology
+Dice Score: 78.6%, F1: 82.1%
+[208]
+Multi-organ
+segmentation
+Colonoscopy, Histology
+Average Dice Score: 86.8%
+[209]
+Aorta, Gallbladder, Kidney, Liver,
+Pancreas, Spleen, Stomach
+segmentation
+MRI, CT
+Average Dice Score: 78.1–80.4%
+[210–215]
+Heart
+segmentation
+MRI
+Average Dice Score: 88.3%
+[216]
+Skin, Chest
+segmentation
+X-ray, CT
+Average Dice Score: Skin: 90.7%,
+Chest: 86.6%
+[217]
+Rectal
+segmentation
+Colonoscopy, Histology
+Average Dice Score: 91.7%
+[218]
+Kidney
+segmentation
+CT
+Dice Score: 92.3%
+[219]
+Heart
+segmentation
+Echocardio- graphy
+Dice Score: 91.4%
+[220]
+Brain
+segmentation
+MRI
+Dice Score: 91.3–93.5%
+[221,222]
+Teeth
+segmentation
+X-ray
+Dice Score: 92.5%
+[223]
+Breast
+classification
+Ultrasound
+Accuracy: 86.7%, AUC 95.0%
+[224]
+Lung
+classification
+Microscopy
+Accuracy: 97.5%
+[225]
+Eye
+classification
+Fundus
+Accuracy: 95.9%, AUC: 96.3%
+[226,227]
+Chest
+classification
+Ultrasound
+Accuracy: 93.9%
+[228]
+Chest
+classification
+X-ray
+Average AUC: 93.1%, Accuracy:
+COVID: 98.0%, Pneumonia:
+92.0%
+[229–232]
+Lung
+classification
+CT
+F1: 76.0%
+[233]
+Chest
+classification
+X-ray, CT
+Overall Accuracy: 87.2–98.1%, F1:
+93.5%
+[234–237]
+6. Comparison of Different Interpretation Methods
+6.1. Categorization by Visualization Technique
+Visualization techniques in DL can be categorized based on their application and
+effectiveness. Table 7 summarizes various visualization techniques used in DL for inter-
+pretability. It categorizes methods based on their tasks, body parts, modalities, accuracy,
+and evaluation metrics. This table highlights that techniques like CAM and Grad-CAM are
+effective for image classification and localization across different modalities such as X-ray
+
+J. Imaging 2024, 10, 239
+13 of 26
+and MRI, achieving high accuracy. LRP is noted for its accuracy in segmentation tasks,
+while IG is utilized for classification with notable AUC-Receiver Operating Characteristic
+(ROC) scores. Attention-based methods improve performance and interpretability by fo-
+cusing on relevant regions, whereas perturbation-based methods assess model robustness.
+LIME provides model-agnostic explanations, and trainable attention models dynamically
+enhance feature focus.
+Table 7. Comparison of Visualization Techniques.
+Visualization
+Technique
+Task
+Body Parts
+Modality
+Accuracy
+
+--- END OF METHODOLOGY FROM: Explainable Artificial Intelligence (XAI) Techniques␊for Visualizing Deep Learning Models in Medical Imaging.pdf ---
+
+--- START OF METHODOLOGY FROM: Explainable CNN for brain tumor detection.pdf ---
+
+, these models might focus on non-discrimina-
+tive or irrelevant features, such as normal soft tissues, 
+instead of tumor areas, undermining the reliability of 
+their classifications and potentially leading to incorrect 
+diagnoses. Additionally, many existing models use com-
+plex architectures to enhance accuracy, but this increased 
+complexity raises computational costs, making real-time 
+clinical implementation more challenging. This is where 
+Explainable AI (XAI) comes in, referring to the tech-
+niques and approaches used to analyze and interpret how 
+these complex models arrive at their decisions. XAI aims 
+to provide an understanding that how DL models reach 
+the predictions or classifications, thereby enhancing 
+transparency, and accountability.
+In recent years, several DL approaches with XAI 
+have been developed. However, these studies often 
+lacked clear interpretability, resulting in inadequate 
+explainability. This lack of interpretation causes models 
+to focus on unnecessary features or normal soft tissues, 
+making the entire system questionable. Additionally, 
+brain tumor classification models often have additional 
+layers and parameters, increasing their complexity. 
+Simplifying a model reduces parameters, layers, or 
+computational complexity, enhancing interpretability 
+and deployment efficiency but potentially lowering 
+feature extraction and classification accuracy. The 
+challenge is balancing complexity and performance, 
+as complex models may depend on irrelevant features, 
+while simpler ones may struggle with complex patterns. 
+Our method uses explainable AI (XAI) to maintain 
+high accuracy by focusing on the most relevant tumor 
+regions. Moreover, previous studies did not use XAI to 
+simplify brain tumor classification models or enhance 
+their performance. Therefore, our objective is to use XAI 
+to develop an interpretable system that can improve the 
+model’s architecture and behavior, thereby enhancing 
+overall performance.
+The prime contributions of our research include: 
+1)	 Identifying real contributing abnormal tissues from 
+the brain MRIs using XAI to enhance the overall 
+performance of brain tumor classification.
+2)	 Achieving an interpretable model that provides 
+transparency into model decision-making process 
+making it superior to existing non-interpretable 
+approaches.
+3)	 Providing insights into the decision-making process 
+of model to reduce the number of layers in brain 
+tumor classification models.
+4)	 Achieving improved accuracy, precision, recall, and 
+F1-score of 99% on Dataset-1 and 94% on Dataset-2.
+This research paper is organized as follows: Sect.  con-
+ducts a detailed literature review of brain tumor clas-
+sification using DL approaches with and without XAI. 
+Section  details the employed methodology, focusing on 
+the utilization of XAI to make the brain tumor classifica-
+tion model less complex and more interpretable. Section  
+details the results and discusses their significance. Lastly, 
+section draws the study’s conclusions and outlines prom-
+ising future directions for research.
+2  Related Works
+Various researchers have proposed approaches for 
+brain tumor classification. The inclusion criteria for 
+our research for selecting literature review papers were 
+based on their relevance to deep learning brain tumor 
+classification using MR images. Moreover, papers on 
+brain tumor classification with explainability are also 
+selected. All these selected papers are from the years 
+2022 and above.
+2.1  Deep learning techniques without explainable AI
+S. M. Alzahrani [21] proposed a transformer model 
+combining 
+global 
+and 
+local 
+levels 
+of 
+attention 
+mechanisms for classifying brain tumors. Their model 
+got entire dataset’s global discriminative features 
+and correlations using external attention. Then they 
+achieved image patche’s local discriminative features 
+and correlations through the self-attention mechanism. 
+Additionally, the mixers of depth and point-wise 
+convolution highlighted key areas of spatial and channel-
+wise features of Images. Lastly, final output feature maps 
+were achieved by the use of a squeeze-and-excitation 
+mechanism. Furthermore, they used data-augmentation 
+techniques with ConvAttenMixer by using rescale 
+and data augmentation layers. Data augmentation and 
+the simple classification head enhanced the model’s 
+performance generally. For model evaluation, the 
+dataset containing 7022 MRIs of the brain with 4 classes 
+was used. Their model demonstrated an accuracy of 
+approximately 97.94%.
+In another study I. Gupta et  al. [22], introduced an 
+approach of 7-layered CNN to perform brain MRI 
+classification in two classes as benign or malignant. They 
+performed their investigation on a dataset containing 253 
+MRIs of the brain. For image preprocessing, the images 
+were cropped to get the brain section only with the use 
+of Edge Detection with Computer Vision (CV). The 
+technique of data augmentation was used on the training 
+dataset, using flipping, rotation, brightness, shear, 
+and shift techniques to augment the amount of train 
+data. They compared the efficiency of their proposed 
+CNN model with some pre-trained models including 
+ResNet-50, Inceptionv3, VGG-16 and some previous 
+
+Page 4 of 19
+Iftikhar et al. Brain Informatics           (2025) 12:10 
+state-of-the-art models. Among these architectures, their 
+proposed CNN model outperformed other architectures 
+with 94% accuracy.
+F. E. AlTahhan et  al. [23] initially conducted 
+classification using GoogleNet and AlexNet, two 
+convolutional neural networks that were pre-trained 
+and fine-tuned. Among these, AlexNet demonstrated 
+superior 
+performance. 
+To 
+further 
+enhance 
+the 
+performance of fine-tuned AlexNet, they explored two 
+hybrid approaches: one combining AlexNet with SVM 
+and the other combining AlexNet with KNN. They 
+worked with a limited dataset comprising 2880 brain 
+MRIs (T1-weighted contrast-enhanced) and utilized 
+K-Fold cross-validation to partition the data. The models, 
+which included fine-tuned GoogleNet, fine-tuned 
+AlexNet, AlexNet-SVM, and AlexNet-KNN, achieved 
+accuracies of 88%, 85%, 95%, and 97%, respectively.
+Z. Rasheed et  al. [24] introduced a methodology 
+starting 
+with 
+image 
+enhancement 
+techniques, 
+including sharpening with Gaussian blur and applying 
+Adaptive Histogram Equalization using CLAHE. They 
+subsequently employed a modified CNN model for 
+classification. Their study utilized an MRI dataset 
+consisting of 7023 images for model training. Their 
+approach was evaluated by comparing its effectiveness 
+against 
+pre-trained 
+models 
+including 
+VGG19, 
+InceptionV3, VGG16, ResNet50, and MobileNetV2. 
+During experimentation, their method achieved 97.84% 
+accuracy.
+O. Özkaraca et al. [25] Firstly, basic CNN architecture, 
+VGG16Net and DenseNet architectural structures 
+were investigated to know the effect of transfer learning 
+approaches on the success rates of their classification 
+problem. Their findings showed that the transfer 
+learning approaches that they used did not provide the
+
+--- END OF METHODOLOGY FROM: Explainable CNN for brain tumor detection.pdf ---
+
+--- START OF METHODOLOGY FROM: V-Net_Fully_Convolutional_Neural_Networks_for_Volumetric_Medical_Image_Segmentation.pdf ---
+
+.
+1. Introduction
+Recent research in computer vision and pattern recog-
+nition has highlighted the capabilities of Convolutional
+Neural Networks (CNNs), achieving state-of-the-art perfor-
+mances on challenging tasks such as classiﬁcation, segmen-
+tation and object detection. This success has been attributed
+to the ability of CNNs to learn a hierarchical representation
+of raw input data, without relying on handcrafted features.
+As the inputs are processed through the network layers, the
+level of abstraction of the resulting features increases. Shal-
+lower layers grasp local information while deeper layers use
+ﬁlters with much broader receptive ﬁelds, able to capture
+more global information [23].
+Segmentation is a highly relevant task in medical image
+analysis. Automatic delineation of organs and structures of
+interest is often necessary to perform tasks such as visual
+augmentation [13], computer assisted diagnosis [15], inter-
+ventions [24] and extraction of quantitative indices from im-
+ages [1]. However, compared to 2D images mostly used in
+computer vision, diagnostic and interventional images data
+in the medical ﬁeld are often volumetric. This creates a need
+for algorithms performing segmentations in 3D, by taking
+the whole volume content into account at once.
+In this work, we aim to segment prostate MRI volumes.
+This task is clinically relevant both during diagnosis, e.g.
+due to volume assessment [16], and during treatment plan-
+ning, e.g. by accurate boundary estimation [7, 24]. Prostate
+segmentation from MRI can be challenging due to large ap-
+pearance variation across different scans, e.g. in terms of
+deformations or changes of the intensity distribution. More-
+over, MRI volumes are often affected by artefacts and dis-
+tortions due to ﬁeld inhomogeneity.
+In this work we present a novel 3D segmentation ap-
+proach that leverages the power of a fully convolutional
+neural network, trained end-to-end, for processing of volu-
+metric medical images such as MRI. Compared to other re-
+cent approaches, our contributions are three-fold. First, in-
+stead of processing the input volumes in a 2D slice-by-slice
+fashion, we propose to directly use 3D convolutions. Sec-
+ond, we propose to maximize a novel objective function de-
+signed speciﬁcally for medical image segmentation, which
+2016 Fourth International Conference on 3D Vision
+978-1-5090-5407-7/16 $31.00 © 2016 IEEE
+DOI 10.1109/3DV.2016.79
+567
+2016 Fourth International Conference on 3D Vision
+978-1-5090-5407-7/16 $31.00 © 2016 IEEE
+DOI 10.1109/3DV.2016.79
+567
+2016 Fourth International Conference on 3D Vision
+978-1-5090-5407-7/16 $31.00 © 2016 IEEE
+DOI 10.1109/3DV.2016.79
+567
+2016 Fourth International Conference on 3D Vision
+978-1-5090-5407-7/16 $31.00 © 2016 IEEE
+DOI 10.1109/3DV.2016.79
+565
+2016 Fourth International Conference on 3D Vision
+978-1-5090-5407-7/16 $31.00 © 2016 IEEE
+DOI 10.1109/3DV.2016.79
+565
+Authorized licensed use limited to: University of East London. Downloaded on November 20,2025 at 20:28:53 UTC from IEEE Xplore.  Restrictions apply. 
+
+Figure 1. Slices from MRI volumes depicting prostate. This data is part of the PROMISE2012 challenge dataset [10].
+is based on the Dice overlap coefﬁcient. Third, we integrate
+recent insights into improved training convergence from lit-
+erature by formulating each convolutional stage such that
+it learns a residual function. We empirically observed that
+this mechanism ensures also our novel architecture to con-
+verge in a fraction of the time required by a similar network
+that does not learn residuals, when applied to the segmenta-
+tion task on the Promise 2012 dataset. We demonstrate fast
+and accurate results on prostate MRI test volumes and we
+provide direct comparison with other methods which were
+evaluated on the same test data1.
+2. Related Work
+CNNs have been recently used for medical image seg-
+mentation. Early approaches obtain anatomy delineation in
+images or volumes by performing patch-wise image clas-
+siﬁcation. Such segmentations are obtained by only con-
+sidering local context and therefore are prone to failure,
+especially in challenging modalities such as ultrasound,
+where a high number of mis-classiﬁed voxel are to be ex-
+pected. Post-processing approaches such as connected com-
+ponents analysis normally yield no improvement and there-
+fore, more recent works, propose to use the network predic-
+tions in combination with Markov random ﬁelds [9], vot-
+ing strategies [12] or more traditional approaches such as
+level-sets [2]. Patch-wise approaches also suffer from ef-
+ﬁciency issues. When densely extracted patches are pro-
+cessed in a CNN, a high number of computations is re-
+dundant and therefore the total algorithm runtime is high.
+In this case, more efﬁcient computational schemes can be
+adopted. CNNs employing fully connected layers can be,
+in some situations and with a few restrictions, converted to
+fully convolutional ones as shown in [18].
+Fully convolutional networks trained end-to-end were
+previously applied to 2D images both in computer vision
+[14, 11] and microscopy image analysis [17]. These mod-
+els, which served as an inspiration for our work, employed
+fully convolutional network architectures and were trained
+to predict a segmentation mask, delineating the structures
+1Detailed
+
+--- END OF METHODOLOGY FROM: V-Net_Fully_Convolutional_Neural_Networks_for_Volumetric_Medical_Image_Segmentation.pdf ---
+
+--- START OF METHODOLOGY FROM: Visualizing_UNet_Decisions_An_Explainable_AI_Perspective_for_Brain_MRI_Segmentation.pdf ---
+
+OLOGY
+The methodology proposed for the entire workflow is given
+in Figure 1. Each component is explained below:
+1) Dataset Loading: The BraTS 2020 Training and Valida-
+tion dataset [35] was loaded into the working environment.
+This dataset contains pre-operative MRI images and manual
+segmentation annotations for gliomas, including multiple
+tumor sub-regions.
+VOLUME 13, 2025
+133871
+
+D. Jeya Mala et al.: Visualizing UNet Decisions: An XAI Perspective for Brain MRI Segmentation
+FIGURE 1. Workflow for proposed methodology.
+2) Data Creation and Augmentation: Data generators
+were employed to create batches of training data [36].
+Augmentation techniques such as rotation, flipping, and
+scaling were applied to enhance the diversity of the training
+dataset and prevent overfitting.
+3) Data Visualization: Initial visualizations of the MRI
+images and the corresponding segmentations were performed
+to understand the characteristics of the dataset [38]. This
+included plotting sample images alongside their annotated
+segmentations to visually assess the quality of the data.
+4) Model Creation: A UNet architecture was designed
+for the segmentation task. The model was configured with
+appropriate layers, activation functions, and loss functions
+suitable for multi-class segmentation tasks [9], [10].
+5) Model Training: The UNet model was trained on the
+augmented dataset, monitoring the learning process through
+metrics such as loss, accuracy, and mean Intersection over
+Union (IoU). Learning curves were plotted to visualize the
+model’s performance over epochs [21].
+6) Determining Training and Validation Metrics: Train-
+ing and validation metrics, including accuracy, precision,
+recall, F1 score, Dice coefficient, and specificity, were calcu-
+lated after each epoch to assess the model’s performance [21].
+7) Application of Explainable AI Techniques: Explainable
+AI techniques were applied to the model’s predictions to
+generate visual explanations of the segmentation results [20].
+8) Evaluation of Explainability Metrics: For each explain-
+able AI model, different metrics were computed to quantify
+the reliability and effectiveness of the explanations. These
+metrics provided insights into how well the visualizations
+aligned with the model’s predictions [28], [30], [33].
+9) Visualizations
+and
+Explanations:
+The
+generated
+visual explanations from each technique were compared.
+Visualizations included overlaying explanation maps on the
+original MRI images to illustrate the focus areas of the model.
+10) Comparison of Scores: Comparison curves were plot-
+ted to visualize the performance of each explainable AI
+technique. This facilitated an assessment of which method
+provided the most reliable explanations [34].
+11) Final Comparison and Results Determination: The
+
+--- END OF METHODOLOGY FROM: Visualizing_UNet_Decisions_An_Explainable_AI_Perspective_for_Brain_MRI_Segmentation.pdf ---
+
+--- START OF METHODOLOGY FROM: integrating explainable AI (XAI) with machine␊learning for enhanced disease prediction .pdf ---
+
+like LIME and SHAP, model-specific techniques 
+such as CNN visualizations, and rule-based approaches 
+for enhancing interpretability. Similarly, Band et al. [12] 
+systematically reviewed XAI methods across healthcare 
+datasets, highlighting their strengths in transparency but 
+noting challenges like resource intensity and data biases. 
+Keywords  Explainable artificial intelligence (XAI), Machine learning (ML), Healthcare prediction, Local interpretable 
+model agnostic explanations (LIME), SHapley additive exPlanations (SHAP), XGBoost, Random forest
+
+Page 3 of 14
+Agrawal et al. Diagnostic Pathology          (2025) 20:105 
+Guleria et al. [13] introduced an XAI frame work for car­
+diovascular disease prediction, achieving high accuracy 
+with ensemble methods but facing limitations due to 
+small datasets and resource demands. Amann et al. [14] 
+provided a multidisciplinary perspective on XAI, advo­
+cating alignment with ethical principles but identifying 
+unresolved legal challenges in prediction transparency. 
+Similarly, Magesh et al. [15] employed LIME with trans­
+fer learning for Parkinson’s disease detection, achieving 
+notable accuracy but facing class imbalance and reliance 
+on image quality Sheu and Pardeshi [16] stressed human 
+interaction in XAI and demonstrated the effectiveness of 
+Grad-CAM and SHAP while calling for consistent scor­
+ing systems for broader acceptance.
+Several studies demonstrated the application of ML 
+with XAI in specific diseases. For instance, Gabbay et al. 
+[17] proposed an XAI-based model for COVID-19 sever­
+ity prediction, showcasing real-time applicability despite 
+dataset constraints. Dehghani and Yazdanparast [6] 
+explored symptom associations in COVID-19 patients 
+but lacked causal interpretation and symptom progres­
+sion tracking. Efforts in multi-disease prediction have 
+also been noticeable. Gaurav et al. [18] proposed a frame­
+work for disease prediction using real-life parameters, 
+achieving promising results but with limited dataset 
+adaptability.
+After reviewing the relevant literature, it is evident that 
+the integration of advanced technologies plays a critical 
+role in enhancing the performance and interpretabil­
+ity of complex systems. LIME, as shown in the works of 
+different researchers [19, 20] is a model-agnostic tech­
+nique that improves the interpretability of ML models. 
+In the proposed model, LIME will be utilized to provide 
+local explanations for the model’s predictions, allowing 
+for a deeper understanding of the decision-making pro­
+cess. This will be particularly beneficial in applications 
+where transparency is crucial, such as disease diagnosis 
+or energy management, enabling users to comprehend 
+the factors influencing the model’s output. Table 2 shows 
+the tabular representation of work done by researchers in 
+Table 1  List of acronyms used
+Sr.No.
+Full Form
+Acronym
+1
+Artificial Intelligence
+AI
+2
+Electronic Healthcare Records
+EHR
+3
+Machine Learning
+ML
+4
+Explainable Artificial Intelligence
+XAI
+5
+SHapley Additive exPlanations
+SHAP
+6
+Local Interpretable Model-agnostic Explanations
+LIME
+7
+eXtreme Gradient Boosting
+XGBoost
+8
+Exploratory Data Analysis
+EDA
+9
+Synthetic Minority Oversampling Technique
+SMOTE
+10
+Convolutional Neural Network
+CNN
+11
+Cardiovascular Disease
+CVD
+12
+Naive Bayes
+NB
+13
+Multilayer Perceptron
+MLP
+14
+Random Forest
+RF
+16
+Red Blood Cells
+RBC
+17
+White Blood Cells
+WBC
+Table 2  Work done by different researchers
+Ref 
+No.
+Disease 
+Detected
+Dataset Used
+Technology/Approach
+Key Outcomes
+[6]
+COVID 19
+COVID-19 records from 
+2,875 patients in three 
+hospitals. 34 symptoms, 
+with key ones as apnea, 
+cough, fever, and CVD.
+Frequency-based feature selection 
+with set thresholds.
+Apriori algorithm for symptom-
+outcome association.
+Symptom Associations:
+Recovery: fever, apnea, cough.
+Death: apnea, weakness, CVD, ventilator use.
+No causality, limited provider trust, lacks symptom progres­
+sion tracking.
+[12]
+Cardio­
+vascular 
+Disease
+Cleveland Heart Disease 
+dataset (303 instances, 14 
+features)
+Used SVM, KNN, AdaBoost, Gaussian 
+Naive Bayes for heart disease predic­
+tion. Applied XAI for feature selec­
+tion and model weight optimization.
+Achieved 82.5% accuracy with SVM.
+Enhanced interpretability for clinical decision-making. Small 
+dataset and limited attributes reduce robustness. Reliance on 
+a single dataset affects generalizability.
+[13]
+Parkinson’s 
+Disease
+642 DaTSCAN SPECT im­
+ages (430 PD, 212 non-PD
+VGG16 CNN with transfer learning 
+for classification. LIME for visual 
+explanations of image influencing 
+decisions.
+Accuracy: 95.2%, Sensitivity: 97.5%, Specificity: 90.9%.
+Aids early PD diagnosis and clinical decision-making. Class 
+imbalance. Limited generalizability and dependence on 
+image quality.
+[14]
+General 
+Disease
+General medical datasets 
+including pneumonia, 
+BSI, AKI, and ICU data
+Explain ability approaches like LIME, 
+SHAP, Grad-CAM,. Evaluation using 
+AUROC and sensitivity analysis
+Resource-intensive, with concerns over legal and ethical 
+uncertainty. Risk of bias in data, impacting model decisions.
+[15]
+COVID-19
+COVID-19 dataset 
+(50,000 + patients, from 
+May to October 2020).
+Used MLP and Random Forest for 
+severity prediction (high, medium, 
+low). Integrated LIME for improved 
+model interpretability.
+80% accuracy with both MLP and RF.
+Real-time assessments available via mobile and web apps. Da­
+taset limited to a specific region and time period. Performance 
+variability in medium severity cases, potential overfitting
+[18]
+Review on 
+Healthcare
+150 Articles in Health­
+care and interpretability 
+Models.
+LIME, Transfer Learning
+Systematic review of 53 articles, categorizing XAI methods like 
+SHAP, LIME, and Grad-CAM. Discusses applications to diseases 
+like brain tumors, COVID-19, and chronic kidney disease.
+
+Page 4 of 14
+Agrawal et al. Diagnostic Pathology          (2025) 20:105 
+the field of medical disease diagnosis using ML and DL 
+techniques.
+Proposed system methodology
+The primary goal of this system is to diagnose blood- 
+related diseases using various health indicators while 
+offering clear explanations through XAI techniques. The 
+steps of proposed methodology as illustrated in Fig.  1 
+includes data collection, preprocessing, EDA, Balancing, 
+splitting in train -test, examining ML models for perfor­
+mance and system integration with XAI for interpretabil­
+ity [21]. These steps are pictorially represented in Fig. 1.
+Data collection (Blood test report)
+The data analyzed in this research was drawn from Kag­
+gle and comprised of blood samples containing 25 health-
+related attributes. These attributes included parameters 
+such as hemoglobin, platelets, glucose, cholesterol, red 
+blood cells, white blood cells, and other biochemical 
+indices. Each sample was associated with specific illness 
+categories, providing a strong foundation for forecasting. 
+To make sure it satisfied quality requirements for analy­
+sis, the dataset was first examined for consistency, dupli­
+cation, and completeness [17]. Tabular representation of 
+attributes considered for disease diagnosis is shown in 
+Table 3.
+Data pre-processing
+Data cleaning is an essential first step in the data prepro­
+cessing phase, where duplicates are removed and missing 
+values are addressed to ensure the dataset is accurate and 
+consistent. Once the dataset is clean, standardization is 
+applied to all numerical features using the StandardScaler 
+technique. This process transforms the data to have a 
+mean of zero and a standard deviation of one, ensuring 
+that each feature contributes equally to the model and 
+preventing any potential bias during the training phase.
+In the preprocessing phase, the dataset underwent a 
+comprehensive cleaning process, including the removal 
+of duplicate entries and handling of missing values to 
+ensure consistency and reliability [22]. Quantitative 
+health indicators such as glucose, hemoglobin, choles­
+terol, platelet count, and other blood-related biomark­
+ers were standardized using the standardscaler from 
+sklearn, aligning them to a common scale with zero mean 
+and unit variance. This step was essential to prevent any 
+single feature from disproportionately influencing model 
+performance. Additionally, exploratory data analysis 
+(later part of the paper) revealed severe class imbalance 
+among disease categories, which could potentially skew 
+model predictions towards the dominant class.
+Exploratory data analysis (EDA)
+EDA is conducted to profile the feature matrix, examine 
+feature relationships, analyze distributions, and search 
+for outliers. The insights gained from EDA help in han­
+dling class imbalance and feature selection for the mod­
+eling process [23]. EDA was conducted to estimate the 
+dataset’s structure, identify outliers, and examine variable 
+dependencies.
+i.	 Disease Distribution Analysis: The diagram shown in 
+Fig. 2 above demonstrates the significant imbalance 
+in the dataset, underscoring the importance of 
+using SMOTE to tackle this issue. By applying 
+SMOTE, one can generate synthetic samples for the 
+minority class, helping to create a more balanced 
+distribution. This process is essential for improving 
+model performance and ensuring it doesn’t favor 
+the majority class, thereby enhancing the overall 
+accuracy and fairness of the predictions [24]. This 
+step enhanced model performance by reducing bias 
+towards the majority class and improving prediction 
+quality.
+ii.	 Correlation Matrix: The correlation matrix as shown 
+in Fig. 3 highlighted significant relationships between 
+variables:
+From correlation matrix one can infer that systolic and 
+diastolic blood pressures showed high inter-correlation, 
+while biomarkers like C-reactive protein and choles­
+terol exhibited low R-values, indicating independence. 
+Fig. 1  Flow of methodology for healthcare prediction system
+ 
+
+Page 5 of 14
+Agrawal et al. Diagnostic Pathology          (2025) 20:105 
+Clusters of similar biomarkers (e.g., glucose, HbA1c, and 
+triglycerides) reflected their association with metabolic 
+health.
+iii.	Disease vs. Health Indicators: Boxplots Fig. 4 
+illustrate variations in health parameters across 
+diseases. These variations aligned with expected 
+indicators for each disease. This figure shows the 
+distribution of key health metrics across different 
+diseases. Diabetes shows a broader range of glucose 
+levels, with higher median values compared to 
+other diseases, suggesting glucose as a critical 
+factor in diabetes diagnosis [25]. Cholesterol levels 
+vary, with Heart Disease and Diabetes displaying 
+higher distributions, as expected, given the role of 
+cholesterol in cardiovascular health. Anemia has a 
+distinct spread in hemoglobin levels, with slightly 
+elevated medians, which aligns with its clinical 
+markers. Thrombocytopenia shows significantly 
+lower platelet levels, a defining feature of this disease. 
+No extreme deviations are visible across diseases, but 
+Thalassemia and Heart Disease show a wider spread 
+in creatinine levels.
+Training and testing
+The dataset is split into training and testing sets, with the 
+training set further divided for cross-validation.
+Table 3  Dataset description
+S.no
+Attribute Name
+Data Type, Description and Normal Range
+1
+Glucose
+Numeric This measures Blood Sugar Levels, significant for diagnosing Diabetes. Normal Range 70–140 mg/dL
+2
+Cholesterol
+Numeric: Measures total Cholesterol in Blood. High levels increase risk of cardiovascular disease. Desirable Range 
+125-200-mg/dL
+3
+Hemoglobin
+Numeric: Represents protein in RBC that carries oxygen. Low value indicates Anemia, whereas high signifies dehy­
+dration. Range 13.5–17.5 g/dl
+4
+Platelets
+Numeric: Helps in Clotting of Blood. Low level (thrombocytopenia) causing increase in risk of bleeding, while high 
+level (thrombocytosis) causes clot formation. Range 150,000-450,000 per µL
+5
+White Blood Cells
+Numeric: Vital for immune system Range 4000–11,000 per mm3
+6
+Red Blood Cells
+Numeric: Main function is to carry oxygen throughout the body. Abnormal levels indicate anemia. Range 
+4.2–5.4 million/ µL.
+7
+Hematocrit
+Numeric: This indicates percentage of RBC in blood. Range: 38–52%
+8
+Mean Corpuscular 
+Volume
+Numeric: Indicates a measure of average size of RBC. Low value indicates iron deficiency. Range:80–100 fL.
+9
+Mean Corpuscular 
+Hemoglobin
+Numeric: This shows average hemoglobin content per RBC. Range 27–33 pg
+10
+Mean Corpuscu­
+lar Hemoglobin 
+Concentration
+Numeric: Indicates Hemoglobin concentration in RBC. Range 32–36 g/dL.
+11
+Insulin
+Numeric: Information about the hormone that regulates blood glucose levels. Range 5–25 µU/mL
+12
+BMI
+Numeric: Body Mass Index, analyses weight status of a person. Higher values indicates overweight and vice versa. 
+Range 18.5–24.9 kg/m2
+13
+Systolic Blood 
+Pressure
+Numeric: Informs about pressure in arteries during heartbeats, high values indicates hypertension Range 90–120 
+mmHg.
+14
+Diastolic Blood 
+Pressure
+Numeric: Informs about pressure in arteries between heartbeats, low value suggests shock or dehydration Range: 
+60–80 mmHg.
+15
+Triglycerides
+Numeric: Indicates whether a person has fat in the blood or not. High level indicates risk of cardio disease. Range 
+50–150 mg/dL
+16
+HbA1c
+Numeric: Measures average blood sugar over 2–3 months, where values > 6.5% indicates diabetes. Range 4–6%
+17
+LDL Cholesterol
+Numeric: Indicates amount of ‘Bad’ cholesterol that causes artery blockage. Range 70-130 mg/dL
+18
+HDL Cholesterol
+Numeric: Indicates amount of ‘Good’ cholesterol that removes excess cholesterol from blood. Low level is undesir­
+able as it might cause heart disease. Range 40-60 mg/dL
+19
+ALT
+Numeric: Alanine Aminotransferase, a liver enzyme level, whose high value indicates liver damage. Range 10–40 U/L
+20
+AHT
+Numeric: Aspartate Aminotransferase, another liver enzyme level, whose high value indicates liver disease or muscle 
+damage. Range 10–40 U/L
+21
+Heart Rate
+Numeric: Number of heartbeats per minute. Both extreme low and high are undesirable. Range: 60-100 bpm.
+22
+Creatinine
+Numeric: Indicates level of waste product filtered by kidneys, where high level indicates abnormality in kidney 
+functioning. Range 0.6–1.2 mg/dL
+23
+Troponin
+Numeric: Indicates protein in heart muscle, where slight elevations indicate cardiac damage. Range: 0-0.04 ng/mL
+24
+C-Reactive Protein
+Numeric: Marker of inflammation. High level undesirable. Range: 0–3 mg/L
+
+Page 6 of 14
+Agrawal et al. Diagnostic Pathology          (2025) 20:105 
+ 	•
+Training: ML models such as Decision Tree, Naive 
+Bayes, Random Forest, and XGBoost are used to 
+train the system on the balanced dataset.
+ 	•
+Testing: The trained models are evaluated on the test 
+set to assess performance on unseen data.
+Different permutation of train-test split is done before 
+selecting model and the combination of split which gives 
+best results [26]. In the later stage, when SMOTE is lever­
+aged to balance data, only training samples are balanced 
+and test data remains unchanged.
+Handling class imbalance using SMOTE
+In the process of analyzing the first part of the dataset, 
+it was observed that there is an appreciative class imbal­
+ance for most of the diseases in the current dataset. Some 
+classes, like the Healthy and Thrombocytopenia catego­
+ries, had far fewer instances than diseases like Diabe­
+tes. This difference could lead to model bias, causing a 
+decrease in the total prediction rate for less-represented 
+categories [27]. This issue was resolved with the help of 
+SMOTE. SMOTE works by augmenting the minority 
+classes to generate new samples between existing ones 
+while maintaining the statistical properties of the original 
+dataset [28, 29]. Initially, there was a significant dispar­
+ity in the number of cases per disease category as shown 
+in Table 4. In the dataset, Diabetes had the highest inci­
+dence at 294 cases, whereas Healthy had the least, with 
+only 5 cases. This imbalance caused the model to predict 
+more frequently for diseases such as Diabetes and less 
+frequently for rare occurrence class as Healthy.
+After applying SMOTE, each category was increased to 
+the same number of instances as the largest category, 294 
+cases, as shown in Table 5. This up-sampling ensured that 
+all categories of illnesses were well-represented in the 
+dataset used to train the model.
+This augmentation technique was pivotal in enhancing 
+model generalization and fairness without compromising 
+the original data integrity.
+Model evaluation and selection
+Upon training multiple machine learning models on the 
+structured healthcare dataset, the selection of the most 
+suitable model was based on a combination of perfor­
+mance metrics—primarily accuracy—and the assess­
+ment of potential overfitting. A range of classification 
+algorithms commonly used for structured data was con­
+sidered, including Decision Trees, Naïve Bayes, Random 
+Forests, and XGBoost. Each model was evaluated using 
+cross-validation and tested on unseen data to ensure 
+generalizability. Among these, XGBoost (Extreme Gra­
+dient Boosting) emerged as the best-performing model. 
+Its superior accuracy, robustness against overfitting, and 
+ability to handle complex, nonlinear relationships made it 
+particularly well-suited for the dataset used in this study. 
+XGBoost’s regularization techniques, efficient handling 
+Fig. 2  Disease distribution analysis
+ 
+
+Page 7 of 14
+Agrawal et al. Diagnostic Pathology          (2025) 20:105 
+of missing data, and scalability further contributed to its 
+selection as the optimal model for predictive analysis in 
+this healthcare application.
+System integration with XAI
+LIME is used to make the model’s predictions interpre­
+table. - LIME generates perturbations (slightly modified 
+instances of the original data) to analyze the model’s 
+behavior. A locally accurate, interpretable model (usually 
+a linear regression) is derived to explain the predictions. 
+The system outputs:
+ 	•
+Feature Importance: The most important features 
+contributing to the prediction.
+ 	•
+Prediction: The final prediction made by the model 
+for a given instance.
+ 	•
+Local Model: A simplified, locally accurate model 
+around the current data point.
+A significant challenge addressed by XAI techniques is 
+understanding the manner and rationale behind specific
+
+--- END OF METHODOLOGY FROM: integrating explainable AI (XAI) with machine␊learning for enhanced disease prediction .pdf ---
+

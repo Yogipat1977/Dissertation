@@ -5,18 +5,18 @@ from pathlib import Path
 
 # Set the source path (your current training data location)
 # Note: Ensure there are no leading spaces in folder names
-source_path = Path("/home/yogipatel/Documents/Dissertation/data/BraTS2023_GLI/ASNR-MICCAI-BraTS2023-GLI-Challenge-TrainingData")
+source_path = Path("/home/yogipatel/Desktop/Dissertation/data/BraTS2023_GLI/ASNR-MICCAI-BraTS2023-GLI-Challenge-TrainingData")
 
 # Set the destination path for your prototype
-dest_path = Path("~/Documents/Dissertation/data/BraTS2023_GLI/Prototype_Data").expanduser()
+dest_path = Path("~/Desktop/Dissertation/data/Prototype_Data").expanduser()
 
 # List all subdirectories (patient folders) in the training directory
 all_patients = [f for f in source_path.iterdir() if f.is_dir()]
 
-# Check if there are enough patients to select 40
-if len(all_patients) >= 40:
+# Check if there are enough patients to select 50
+if len(all_patients) >= 45:
     # Randomly select 40 unique patient folders
-    selected_patients = random.sample(all_patients, 40)
+    selected_patients = random.sample(all_patients, 45)
 
     # Create the destination folder if it doesn't exist
     dest_path.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,5 @@
 ---
-title: "Prototype Data Engineering"
+title: " Model implementation Prototype"
 author: 
   - Yogi Patel
 format:
@@ -48,7 +48,7 @@ set_determinism(seed=0)
 
 ```{python}
 # Update this path to your exact directory
-data_dir = Path("/home/yogipatel/Documents/Dissertation/data/Prototype_Data")
+data_dir = Path("/home/yogipatel/Desktop/Dissertation/data/Prototype_Data")
 
 def get_brats_data_list(data_path):
     # Find all patient directories (folders starting with ASNR-MICCAI...)
@@ -107,37 +107,51 @@ class ConvertToMultiChannelBraTS2023d(MapTransform):
 # Define the ingestion pipeline
 
 from monai.transforms import SpatialPadd
+from monai.data import PersistentDataset
+from monai.transforms import RandCropByPosNegLabeld
 
 train_transform = Compose([
     LoadImaged(keys=["image", "label"]),
     EnsureChannelFirstd(keys=["image", "label"]),
     EnsureTyped(keys=["image", "label"]),
     
-    # 1. Crop empty space
+    # 1. Shrink to brain tissue
     CropForegroundd(keys=["image", "label"], source_key="image"),
     
-    # 2. Normalize Intensity
+    # 2. Normalize
     NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
     
-    # 3. Convert labels AFTER cropping but BEFORE spatial padding
+    # 3. Label conversion
     ConvertToMultiChannelBraTS2023d(keys="label"),
     
-    # 4. SAFETY PAD: Ensures minimum size of 128x128x128 
-    SpatialPadd(keys=["image", "label"], spatial_size=[128, 128, 128]),
+    # 4. SAFETY PAD: Must be at least the size of your ROI
+    # This ensures even a small 143-voxel brain becomes 160x160x160
+    SpatialPadd(keys=["image", "label"], spatial_size=[160, 160, 160]),
     
-    # 5. Final Spatial Crop to exact 128 size
-    RandSpatialCropd(
-        keys=["image", "label"], 
-        roi_size=[128, 128, 128], 
-        random_size=False
+    # 5. Label-Aware Crop
+    RandCropByPosNegLabeld(
+        keys=["image", "label"],
+        label_key="label",
+        spatial_size=[160, 160, 160], # Matches the padding above
+        pos=1, 
+        neg=1, 
+        num_samples=1,
     ),
     
     RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
     RandGaussianNoised(keys=["image"], prob=0.1, mean=0.0, std=0.1),
 ])
 
+
+
+cache_dir = Path("./persistent_cache")
+cache_dir.mkdir(exist_ok=True)
+
 # Re-run the dataset and loader check
-train_ds = Dataset(data=datalist, transform=train_transform)
+train_ds = PersistentDataset(
+    data=datalist, 
+    transform=train_transform, 
+    cache_dir=cache_dir)
 check_loader = DataLoader(train_ds, batch_size=1)
 sample_data = next(iter(check_loader))
 
@@ -145,69 +159,230 @@ print(f"Image shape: {sample_data['image'].shape}")  # Should be [1, 4, 128, 128
 print(f"Label shape: {sample_data['label'].shape}")  # Should be [1, 3, 128, 128, 128]
 
 
+# Define a folder where the 'preprocessed' chunks will live
+
+# Replace your current train_ds with this:
 ```
 
-
-```{python}
-# 1. Find a slice that actually contains the tumor for better visualization
-# We look at the Whole Tumor (channel 0) and find the slice with the most pixels
-label_data = sample_data["label"][0, 0, :, :, :].numpy()
-slice_idx = np.argmax(np.sum(label_data, axis=(0, 1))) 
-
-print(f"Visualizing Slice: {slice_idx} (Slice with maximum tumor area)")
-
-plt.figure("Verification", (20, 5))
-
-# Modality: FLAIR (Index 3) - Best for seeing Whole Tumor
-plt.subplot(1, 4, 1); plt.title(f"FLAIR (Slice {slice_idx})"); plt.axis('off')
-plt.imshow(sample_data["image"][0, 3, :, :, slice_idx], cmap="gray")
-
-# Sub-region: Whole Tumor (WT)
-plt.subplot(1, 4, 2); plt.title("WT (Labels 1+2+3)"); plt.axis('off')
-plt.imshow(sample_data["label"][0, 0, :, :, slice_idx], interpolation='nearest')
-
-# Sub-region: Tumor Core (TC)plt.rcParams['figure.figsize'] = (12, 3)
-plt.subplot(1, 4, 3); plt.title("TC (Labels 1+3)"); plt.axis('off')
-plt.imshow(sample_data["label"][0, 1, :, :, slice_idx], interpolation='nearest')
-
-# Sub-region: Enhancing Tumor (ET)
-plt.subplot(1, 4, 4); plt.title("ET (Label 3)"); plt.axis('off')
-plt.imshow(sample_data["label"][0, 2, :, :, slice_idx], interpolation='nearest')
-
-plt.tight_layout()
-plt.show()
-```
-
+## Export to Slicer
 
 ```{python}
 
+
+import os
+import nibabel as nib
+import numpy as np
+
+def export_to_slicer_complete(sample, original_affine, output_dir="slicer_export"):
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Extract data [Channels, H, W, D]
+    image_data = sample["image"][0].detach().cpu().numpy()
+    label_data = sample["label"][0].detach().cpu().numpy()
+    
+    # 1. Export MRI Modalities
+    mod_names = ["T1", "T1c", "T2", "FLAIR"]
+    for i, name in enumerate(mod_names):
+        img_nifti = nib.Nifti1Image(image_data[i], affine=original_affine)
+        nib.save(img_nifti, os.path.join(output_dir, f"{name}_proc.nii.gz"))
+        
+    # 2. Export Engineered Labels (The answer keys for your model)
+    # These are the ET, TC, and WT regions you created in Step 3
+    lbl_names = ["WT_mask", "TC_mask", "ET_mask"]
+    for i, name in enumerate(lbl_names):
+        # We use the same original_affine to ensure perfect overlap
+        lbl_nifti = nib.Nifti1Image(label_data[i], affine=original_affine)
+        nib.save(lbl_nifti, os.path.join(output_dir, f"{name}.nii.gz"))
+
+    print(f"Exported 4 images and 3 labels to {output_dir}")
+
+# Path to a raw file from your first patient
+raw_example_path = datalist[0]["image"][0] 
+original_affine = nib.load(raw_example_path).affine
+
+```
+
+## Model Implementation Prototype
+
+```{python}
+
+from monai.networks.nets import SegResNet
+from monai.losses import DiceLoss
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import CosineAnnealingLR
+
+# 1. Device Selection
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# 2. Model Initialization
+# in_channels=4 (T1, T1c, T2, FLAIR) [cite: 3]
+# out_channels=3 (WT, TC, ET) 
+model = SegResNet(
+    spatial_dims=3,
+    init_filters=32,
+    in_channels=4,      
+    out_channels=3,     
+    dropout_prob=0.2,   # Added regularization for your 40-case prototype
+).to(device)
+
+# 3. Loss Function: Dice Loss
+# Necessary for medical imaging to handle class imbalance 
+loss_function = DiceLoss(smooth_nr=1e-5, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=True)
+
+# 4. Optimizer: AdamW
+# Decouples weight decay for better regularization
+optimizer = AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
+
+# 5. Learning Rate Scheduler
+scheduler = CosineAnnealingLR(optimizer, T_max=100)
+
+
+```
+
+### Split the dataset
+
+```{python}
+
+# 1. Split the datalist
+train_files = datalist[:32]
+val_files = datalist[32:]
+
+# 2. Create Datasets (Using your PersistentDataset setup)
+train_ds = PersistentDataset(data=train_files, transform=train_transform, cache_dir=cache_dir)
+val_ds = PersistentDataset(data=val_files, transform=train_transform, cache_dir=cache_dir)
+
+# 3. Create Loaders
+train_loader = DataLoader(train_ds, batch_size=1, shuffle=True)
+val_loader = DataLoader(val_ds, batch_size=1, shuffle=False)
+
+print(f"Training on: {len(train_ds)} patients")
+print(f"Validating on: {len(val_ds)} patients")
+
+```
+
+### Training Loop
+
+```python
+
+from monai.metrics import DiceMetric
+from monai.transforms import AsDiscrete
 import torch
-import matplotlib.pyplot as plt
+from tqdm import tqdm
 
-# 1. Load a "Raw" image (no transforms)
-raw_ds = Dataset(data=datalist, transform=LoadImaged(keys=["image", "label"]))
-raw_data = raw_ds[0]
+# 1. Define missing parameters
+max_epochs = 20 
+best_metric = -1
 
-# 2. Grab your "Engineered" patch (from your existing train_loader)
-# Note: we use [0] to get the first image in the batch
-eng_data = next(iter(check_loader))
+# 2. Metrics for the 3 clinical regions (WT, TC, ET)
+dice_metric = DiceMetric(include_background=True, reduction="mean")
+post_trans = AsDiscrete(threshold=0.5) 
 
-# Visualization
-plt.figure("Comparison", (12, 6))
+for epoch in range(max_epochs):
+    # --- TRAINING PHASE ---
+    model.train()
+    epoch_loss = 0
+    # Note: Use train_loader (the 32-patient split)
+    for batch_data in tqdm(train_loader, desc=f"Epoch {epoch} [Train]"):
+        inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
+        
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = loss_function(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        
+        epoch_loss += loss.item()
+    
+    scheduler.step()
+    
+    # --- VALIDATION PHASE ---
+    model.eval()
+    with torch.no_grad():
+        for val_data in tqdm(val_loader, desc=f"Epoch {epoch} [Val]"):
+            val_inputs, val_labels = val_data["image"].to(device), val_data["label"].to(device)
+            val_outputs = model(val_inputs)
+            
+            # Prepare outputs: apply sigmoid (if not in model) and threshold
+            # SegResNet usually outputs raw logits, so we apply thresholding
+            val_outputs = [post_trans(torch.sigmoid(i)) for i in val_outputs]
+            dice_metric(y_pred=val_outputs, y=val_labels)
+        
+        metric = dice_metric.aggregate().item()
+        dice_metric.reset()
+        
+        if metric > best_metric:
+            best_metric = metric
+            torch.save(model.state_dict(), "best_metric_segresnet.pth")
+            print(f"✅ New Best Dice: {best_metric:.4f} (Model Saved)")
 
-# Subplot 1: Raw Full Brain (240x240)
-plt.subplot(1, 2, 1)
-plt.title(f"Raw Full Image\nSize: {raw_data['image'].shape[1:]}")
-plt.imshow(raw_data["image"][3, :, :, 75], cmap="gray") # FLAIR modality
-plt.axis('off')
+    print(f"Epoch {epoch} Result: Loss={epoch_loss/len(train_loader):.4f}, Dice={metric:.4f}")
 
-# Subplot 2: Engineered Patch (128x128)
-plt.subplot(1, 2, 2)
-plt.title(f"Engineered Patch\nSize: {eng_data['image'].shape[2:]}")
-plt.imshow(eng_data["image"][0, 3, :, :, 64], cmap="gray")
-plt.axis('off')
+```
 
-plt.tight_layout()
-plt.show()
+
+```{python}
+
+import os
+import torch
+from tqdm import tqdm
+from monai.metrics import DiceMetric
+from monai.transforms import AsDiscrete
+
+# 1. Hyperparameters for the Prototype
+max_epochs = 20  # Set between 10-20 as requested
+model_save_path = "prototype.pth"
+
+# 2. Load Existing Model (The "Use every time" logic)
+if os.path.exists(model_save_path):
+    print(f"📂 Loading existing model from {model_save_path}...")
+    model.load_state_dict(torch.load(model_save_path, map_location=device))
+else:
+    print("🆕 No saved model found. Starting training from scratch.")
+
+# 3. Setup Metrics
+dice_metric = DiceMetric(include_background=True, reduction="mean")
+post_trans = AsDiscrete(threshold=0.5)
+best_metric = -1 # We will compare the current run to this
+
+for epoch in range(max_epochs):
+    # --- TRAINING PHASE ---
+    model.train()
+    epoch_loss = 0
+    pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{max_epochs} [Training]")
+    
+    for batch_data in pbar:
+        inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = loss_function(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        epoch_loss += loss.item()
+        pbar.set_postfix({"loss": f"{loss.item():.4f}"})
+
+    scheduler.step()
+
+    # --- VALIDATION PHASE (The "Replace if better" logic) ---
+    model.eval()
+    with torch.no_grad():
+        for val_data in tqdm(val_loader, desc=f"Epoch {epoch+1}/{max_epochs} [Validation]"):
+            val_inputs, val_labels = val_data["image"].to(device), val_data["label"].to(device)
+            # Use sigmoid because SegResNet outputs raw logits
+            val_outputs = [post_trans(torch.sigmoid(i)) for i in model(val_inputs)]
+            dice_metric(y_pred=val_outputs, y=val_labels)
+        
+        current_dice = dice_metric.aggregate().item()
+        dice_metric.reset()
+
+        # Only replace the saved model if current performance is better
+        if current_dice > best_metric:
+            best_metric = current_dice
+            torch.save(model.state_dict(), model_save_path)
+            print(f" New Best Model! Dice: {best_metric:.4f}. Model saved to {model_save_path}")
+        else:
+            print(f" Current Dice: {current_dice:.4f} (Best was {best_metric:.4f}). Keeping previous version.")
+
+print("  Prototype Training Complete.")
+
 
 ```
