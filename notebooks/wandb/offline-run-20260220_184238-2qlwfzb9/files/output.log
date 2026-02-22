@@ -1,0 +1,34 @@
+Total Training Progress:   0%|                                                            | 0/30 [00:00<?, ?it/s]/home/yogipatel/Desktop/Dissertation/env/lib/python3.14/site-packages/monai/inferers/utils.py:226: UserWarning: Using a non-tuple sequence for multidimensional indexing is deprecated and will be changed in pytorch 2.9; use x[tuple(seq)] instead of x[seq]. In pytorch 2.9 this will be interpreted as tensor index, x[torch.tensor(seq)], which will result either in an error or a different result (Triggered internally at /pytorch/torch/csrc/autograd/python_variable_indexing.cpp:347.)
+  win_data = torch.cat([inputs[win_slice] for win_slice in unravel_slice]).to(sw_device)
+/home/yogipatel/Desktop/Dissertation/env/lib/python3.14/site-packages/monai/inferers/utils.py:370: UserWarning: Using a non-tuple sequence for multidimensional indexing is deprecated and will be changed in pytorch 2.9; use x[tuple(seq)] instead of x[seq]. In pytorch 2.9 this will be interpreted as tensor index, x[torch.tensor(seq)], which will result either in an error or a different result (Triggered internally at /pytorch/torch/csrc/autograd/python_variable_indexing.cpp:347.)
+  out[idx_zm] += p
+Total Training Progress: 100%|████████████████████████████████████████████████| 30/30 [4:27:12<00:00, 534.41s/it]
+Evaluating Train: 100%|███████████████████████████████████████████████████| 32/32 [02:23<00:00,  4.48s/it]
+Evaluating Val: 100%|███████████████████████████████████████████████████████| 8/8 [01:10<00:00,  8.77s/it]
+Evaluating Test: 100%|██████████████████████████████████████████████████████| 5/5 [00:35<00:00,  7.01s/it]
+ -> New Best Dice: 0.0840
+ -> New Best Dice: 0.1306
+ -> New Best Dice: 0.1727
+ -> New Best Dice: 0.1951
+ -> New Best Dice: 0.2188
+ -> New Best Dice: 0.2430
+ -> New Best Dice: 0.2502
+ -> New Best Dice: 0.2599
+ -> New Best Dice: 0.2611
+ -> New Best Dice: 0.2711
+ -> New Best Dice: 0.2724
+ -> New Best Dice: 0.2735
+ -> New Best Dice: 0.2741
+ -> New Best Dice: 0.2841
+ -> New Best Dice: 0.2876
+ -> New Best Dice: 0.2891
+ -> New Best Dice: 0.2898
+ -> New Best Dice: 0.2902
+--- Final Comparative Analysis ---
+==================================================
+Region          | Train    | Val      | Test
+--------------------------------------------------
+Whole Tumor     | 0.7834   | 0.6520   | 0.6215
+Tumor Core      | 0.0181   | 0.0190   | 0.0222
+Enhancing       | 0.2970   | 0.1997   | 0.0563
+==================================================

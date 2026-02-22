@@ -1,2 +1,5 @@
 data/
-
+persistent_cache/
+prototype_filter32.pth
+.ipynb_checkpoints/
+WandB_API.txt

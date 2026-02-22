@@ -1,0 +1,17 @@
+{
+  "os":  "Linux-6.18.9-zen1-2-zen-x86_64-with-glibc2.43",
+  "python":  "CPython 3.14.3",
+  "startedAt":  "2026-02-20T16:07:14.169280Z",
+  "program":  "/home/yogipatel/Desktop/Dissertation/notebooks/prototype.py",
+  "codePath":  "notebooks/prototype.py",
+  "codePathLocal":  "prototype.py",
+  "git":  {
+    "remote":  "https://github.com/Yogipat1977/Dissertation.git",
+    "commit":  "ba1e9e43cc289c2ba3d97851c692ce4d7c391f04"
+  },
+  "email":  "yogipatel27072004@gmail.com",
+  "root":  "/home/yogipatel/Desktop/Dissertation/notebooks",
+  "host":  "Lenovo",
+  "executable":  "/home/yogipatel/Desktop/Dissertation/env/bin/python",
+  "writerId":  "4eu4hbnvnbe6wgoam9ugun4pmp93ayjs"
+}

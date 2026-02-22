@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import nibabel as nib
 from pathlib import Path
 from tqdm import tqdm
-from torchsummary import summary
+import wandb
 
 # MONAI and Torch imports 
 import monai
@@ -53,13 +53,16 @@ class ConvertToMultiChannelBraTS2023d(MapTransform):
         d = dict(data)
         for key in self.keys:
             result = []
+            # Channel 1: Whole Tumor (WT) - Labels 1, 2, 3
             result.append(torch.logical_or(torch.logical_or(d[key] == 1, d[key] == 2), d[key] == 3))
+            # Channel 2: Tumor Core (TC) - Labels 1, 3
             result.append(torch.logical_or(d[key] == 1, d[key] == 3))
+            # Channel 3: Enhancing Tumor (ET) - Label 3
             result.append(d[key] == 3)
             d[key] = torch.cat(result, dim=0).float() 
         return d
 
-# --- 4. PREPROCESSING PIPELINE ---
+# --- 4. PREPROCESSING PIPELINES ---
 train_transform = Compose([
     LoadImaged(keys=["image", "label"]),
     EnsureChannelFirstd(keys=["image", "label"]),
@@ -69,15 +72,13 @@ train_transform = Compose([
     ConvertToMultiChannelBraTS2023d(keys="label"),
     SpatialPadd(keys=["image", "label"], spatial_size=[160, 160, 160]),
     RandCropByPosNegLabeld(
-        keys=["image", "label"],
-        label_key="label",
-        spatial_size=[160, 160, 160], 
-        pos=1, neg=1, num_samples=1,
+        keys=["image", "label"], label_key="label",
+        spatial_size=[160, 160, 160], pos=1, neg=1, num_samples=1,
     ),
     RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
     RandGaussianNoised(keys=["image"], prob=0.1, mean=0.0, std=0.1),
 ])
-# Validation/Testing needs consistency (No random crops, no noise)
+
 val_test_transform = Compose([
     LoadImaged(keys=["image", "label"]),
     EnsureChannelFirstd(keys=["image", "label"]),
@@ -92,53 +93,71 @@ val_test_transform = Compose([
 cache_dir = Path("./persistent_cache")
 cache_dir.mkdir(exist_ok=True)
 
-# Split data into train and validation
-train_files = datalist[:32] # Use the first 32 for training
-val_files = datalist[32:40]# Use the rest for validation
+train_files = datalist[:32]
+val_files = datalist[32:40]
 test_files = datalist[40:]
 
 train_ds = PersistentDataset(data=train_files, transform=train_transform, cache_dir=cache_dir)
-val_ds = PersistentDataset(data=val_files, transform=train_transform, cache_dir=cache_dir) 
+val_ds = PersistentDataset(data=val_files, transform=val_test_transform, cache_dir=cache_dir) 
 test_ds = PersistentDataset(data=test_files, transform=val_test_transform, cache_dir=cache_dir)
 
 train_loader = DataLoader(train_ds, batch_size=1, shuffle=True) 
 val_loader = DataLoader(val_ds, batch_size=1, shuffle=False)
 test_loader = DataLoader(test_ds, batch_size=1, shuffle=False)
 
+# --- 6. W&B INITIALIZATION ---
 
-# --- 6. MODEL, LOSS, & OPTIMIZER ---
+os.environ["WANDB_MODE"] = "offline"
+
+
+wandb.init(
+    project="BraTS-Dissertation-Prototype",
+    config={
+        "learning_rate": 1e-4,
+        "epochs": 30,
+        "upsample_mode": "deconv",
+        "blocks_down": [1, 2, 2, 4],
+        "blocks_up": [1,1,1],
+        "init_filters": 32, # Increased filters for better feature extraction
+        "dropout": 0.2,
+        "roi_size": (160, 160, 160),
+        "model_architecture": "SegResNet"
+    }
+)
+config = wandb.config
+
+# --- 7. MODEL, LOSS, & OPTIMIZER ---
 model = SegResNet(
     spatial_dims=3,
-    init_filters=32,
-    in_channels=4,      
-    out_channels=3,     
-    dropout_prob=0.2,   
+    init_filters=config.init_filters,
+    upsample_mode=config.upsample_mode,
+    blocks_up=config.blocks_up,
+    blocks_down=config.blocks_down,
+    in_channels=4,
+    out_channels=3,
+    dropout_prob=config.dropout,
 ).to(device)
 
-loss_function = DiceLoss(smooth_nr=1e-5, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=True)
-optimizer = AdamW(model.parameters(), lr=1e-4, weight_decay=1e-5)
-scheduler = CosineAnnealingLR(optimizer, T_max=100)
+wandb.watch(model, log_freq=100)
 
-# --- 7. PROGRESS TRACKING & REUSE LOGIC ---
-max_epochs = 20
+loss_function = DiceLoss(smooth_nr=1e-5, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=True)
+optimizer = AdamW(model.parameters(), lr=config.learning_rate, weight_decay=1e-5)
+scheduler = CosineAnnealingLR(optimizer, T_max=config.epochs) # T_max matches epochs for full annealing
+
+# --- 8. GLOBAL SETTINGS ---
 post_trans = AsDiscrete(threshold=0.5)
 dice_metric = DiceMetric(include_background=True, reduction="mean")
-model_save_path = "prototype.pth"
+model_save_path = "prototype-32.pth"
 best_metric = -1
-history = {"loss": [], "dice": []}
 
-
-model_save_path = "prototype.pth"
-
-# Check if a saved model already exists
+# --- 9. TRAINING LOOP ---
 if os.path.exists(model_save_path):
-    print(f"\n[INFO] Found {model_save_path}. Skipping training and loading weights...")
+    print(f"\n[INFO] Found {model_save_path}. Skipping training...")
     model.load_state_dict(torch.load(model_save_path, map_location=device))
 else:
-    print(f"\n[INFO] No saved model found. Starting training for {max_epochs} epochs...")
-    total_pbar = tqdm(total=max_epochs, desc="Total Training Progress", position=0)
+    total_pbar = tqdm(total=config.epochs, desc="Total Training Progress", position=0)
     
-    for epoch in range(max_epochs):
+    for epoch in range(config.epochs):
         model.train()
         epoch_loss = 0
         step_pbar = tqdm(train_loader, desc=f"↳ Epoch {epoch+1}", position=1, leave=False)
@@ -146,82 +165,79 @@ else:
         for batch_data in step_pbar:
             inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
             optimizer.zero_grad()
-            loss = loss_function(model(inputs), labels)
+            outputs = model(inputs)
+            loss = loss_function(outputs, labels)
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
+            step_pbar.set_postfix({"loss": f"{loss.item():.4f}"})
         
+        avg_loss = epoch_loss / len(train_loader)
         scheduler.step()
         
-        # Validation
+        # Validation Phase
         model.eval()
         with torch.no_grad():
             for val_data in val_loader:
                 v_in, v_lab = val_data["image"].to(device), val_data["label"].to(device)
-                roi_size = (160, 160, 160)
-                # Use sliding window for validation to match testing logic
-                v_out = monai.inferers.sliding_window_inference(v_in, roi_size, 4, model)
+                v_out = monai.inferers.sliding_window_inference(v_in, config.roi_size, 4, model)
                 v_out = [post_trans(torch.sigmoid(i)) for i in v_out]
                 dice_metric(y_pred=v_out, y=v_lab)
             
             curr_dice = dice_metric.aggregate().item()
             dice_metric.reset()
+            
+            # Log to W&B
+            wandb.log({
+                "epoch": epoch + 1,
+                "train_loss": avg_loss,
+                "val_dice": curr_dice,
+                "lr": optimizer.param_groups[0]['lr']
+            })
+
             if curr_dice > best_metric:
                 best_metric = curr_dice
                 torch.save(model.state_dict(), model_save_path)
+                print(f" -> New Best Dice: {best_metric:.4f}")
         
         total_pbar.update(1)
     total_pbar.close()
 
-
-# --- 8. FINAL TESTING PHASE ---
-print("\n--- Running Final Evaluation on Test Set ---")
-model.load_state_dict(torch.load(model_save_path)) # Ensure we have the best version
-model.eval()
-test_metric = DiceMetric(include_background=True, reduction="mean_batch")
-
-with torch.no_grad():
-    for test_data in tqdm(test_loader, desc="Testing"):
-        t_in, t_lab = test_data["image"].to(device), test_data["label"].to(device)
-        # Use sliding window to evaluate the WHOLE brain volume at once
-        t_out = monai.inferers.sliding_window_inference(t_in, (160, 160, 160), 4, model)
-        t_out = [post_trans(torch.sigmoid(i)) for i in t_out]
-        test_metric(y_pred=t_out, y=t_lab)
-
-    final_results = test_metric.aggregate()
-    print(f"\nTest Results (Dice):")
-    print(f"Whole Tumor: {final_results[0].item():.4f}")
-    print(f"Tumor Core:  {final_results[1].item():.4f}")
-    print(f"Enhancing:   {final_results[2].item():.4f}")
-    test_metric.reset()
-
-
-
+# --- 10. EVALUATION & COMPARATIVE ANALYSIS ---
 def evaluate_set(loader, name):
     model.eval()
     metric = DiceMetric(include_background=True, reduction="mean_batch")
     with torch.no_grad():
         for data in tqdm(loader, desc=f"Evaluating {name}"):
             inputs, labels = data["image"].to(device), data["label"].to(device)
-            # Use sliding window for fair comparison across all sets
-            outputs = monai.inferers.sliding_window_inference(inputs, (160, 160, 160), 4, model)
+            outputs = monai.inferers.sliding_window_inference(inputs, config.roi_size, 4, model)
             outputs = [post_trans(torch.sigmoid(i)) for i in outputs]
             metric(y_pred=outputs, y=labels)
     results = metric.aggregate()
     metric.reset()
     return [results[0].item(), results[1].item(), results[2].item()]
 
-# Execute evaluations
 print("\n--- Final Comparative Analysis ---")
-train_results = evaluate_set(train_loader, "Train")
-val_results = evaluate_set(val_loader, "Val")
-test_results = [final_results[0].item(), final_results[1].item(), final_results[2].item()] # From your previous run
+model.load_state_dict(torch.load(model_save_path))
 
-# --- 2. DISPLAY RESULTS TABLE ---
+train_res = evaluate_set(train_loader, "Train")
+val_res = evaluate_set(val_loader, "Val")
+test_res = evaluate_set(test_loader, "Test")
+
+# Create W&B Table
+report_table = wandb.Table(columns=["Region", "Train", "Val", "Test"])
+regions = ["Whole Tumor", "Tumor Core", "Enhancing"]
+for i, reg in enumerate(regions):
+    report_table.add_data(reg, train_res[i], val_res[i], test_res[i])
+wandb.log({"Evaluation_Summary": report_table})
+
+# Print console table
 print("\n" + "="*50)
 print(f"{'Region':<15} | {'Train':<8} | {'Val':<8} | {'Test':<8}")
 print("-" * 50)
-regions = ["Whole Tumor", "Tumor Core", "Enhancing"]
-for i, region in enumerate(regions):
-    print(f"{region:<15} | {train_results[i]:.4f}   | {val_results[i]:.4f}   | {test_results[i]:.4f}")
+for i, reg in enumerate(regions):
+    print(f"{reg:<15} | {train_res[i]:.4f}   | {val_res[i]:.4f}   | {test_res[i]:.4f}")
 print("="*50)
+
+wandb.finish()
+print("Process Complete.")

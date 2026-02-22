@@ -1,0 +1,184 @@
+2026-02-20 17:23:54 INFO open for scan: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/run-ba5nmoeh.wandb
+2026-02-20 17:23:55 INFO watching files in: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files
+2026-02-20 17:23:55 INFO run started: ba5nmoeh with start time 1771604107.112968
+2026-02-20 17:23:55 INFO saving file wandb-metadata.json with policy now
+2026-02-20 17:23:56 INFO saving file wandb-metadata.json with policy now
+2026-02-20 17:23:56 INFO saving file requirements.txt with policy now
+2026-02-20 17:23:56 INFO Uploaded file /tmp/tmpa0nrpjwfwandb/juboawpk-wandb-metadata.json
+2026-02-20 17:23:56 INFO Uploaded file /tmp/tmpa0nrpjwfwandb/3ma0vr2v-requirements.txt
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/config.yaml
+2026-02-20 17:23:56 INFO file/dir created: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/wandb-summary.json
+2026-02-20 17:23:56 INFO file/dir created: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/output.log
+2026-02-20 17:23:56 INFO file/dir created: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/wandb-metadata.json
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:23:56 INFO Uploaded file /tmp/tmpa0nrpjwfwandb/scajc18u-wandb-metadata.json
+2026-02-20 17:23:57 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/wandb-summary.json
+2026-02-20 17:23:58 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/output.log
+2026-02-20 17:24:03 INFO Uploaded file /home/yogipatel/.local/share/wandb/artifacts/staging/tmp7g69qqn1
+2026-02-20 17:24:04 INFO sent artifact run-ba5nmoeh-Evaluation_Summary - {'id': 'QXJ0aWZhY3Q6MjUwMzg4NDk5NQ==', 'state': 'PENDING', 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjkwNDI5MTkxNA==', 'latestArtifact': None}}
+2026-02-20 17:24:04 INFO saving file media/table/Evaluation_Summary_20_5d5ab97f99c0f620a326.table.json with policy now
+2026-02-20 17:24:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:24:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:24:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 17:24:04 INFO shutting down sender
+2026-02-20 17:24:04 INFO Uploaded file /tmp/tmpa0nrpjwfwandb/3t1zcni8-media/table/Evaluation_Summary_20_5d5ab97f99c0f620a326.table.json
+2026-02-20 17:24:04 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/config.yaml
+2026-02-20 17:24:04 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/wandb-summary.json
+2026-02-20 17:24:06 INFO shutting down directory watcher
+2026-02-20 17:24:06 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/output.log
+2026-02-20 17:24:06 INFO scan: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files
+2026-02-20 17:24:06 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/requirements.txt requirements.txt
+2026-02-20 17:24:06 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/config.yaml config.yaml
+2026-02-20 17:24:06 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/wandb-metadata.json wandb-metadata.json
+2026-02-20 17:24:06 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/output.log output.log
+2026-02-20 17:24:06 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/wandb-summary.json wandb-summary.json
+2026-02-20 17:24:06 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/media/table/Evaluation_Summary_20_5d5ab97f99c0f620a326.table.json media/table/Evaluation_Summary_20_5d5ab97f99c0f620a326.table.json
+2026-02-20 17:24:06 INFO shutting down file pusher
+2026-02-20 17:24:06 INFO waiting for file pusher
+2026-02-20 17:24:06 INFO Uploaded file /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/output.log
+2026-02-20 17:24:06 INFO Uploaded file /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/config.yaml
+2026-02-20 17:24:07 INFO Uploaded file /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_161506-ba5nmoeh/files/wandb-summary.json
+2026-02-20 17:24:07 INFO file stream finish called
+2026-02-20 17:24:09 INFO file stream finish is done
+2026-02-20 23:16:01 INFO open for scan: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/run-2qlwfzb9.wandb
+2026-02-20 23:16:02 INFO watching files in: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files
+2026-02-20 23:16:02 INFO run started: 2qlwfzb9 with start time 1771612958.802179
+2026-02-20 23:16:03 INFO saving file wandb-metadata.json with policy now
+2026-02-20 23:16:03 INFO saving file wandb-metadata.json with policy now
+2026-02-20 23:16:03 INFO saving file requirements.txt with policy now
+2026-02-20 23:16:03 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/config.yaml
+2026-02-20 23:16:03 INFO file/dir created: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/wandb-metadata.json
+2026-02-20 23:16:04 INFO Uploaded file /tmp/tmpf8pv8zccwandb/mbu9lobd-wandb-metadata.json
+2026-02-20 23:16:04 INFO Uploaded file /tmp/tmpf8pv8zccwandb/9gj53jf7-requirements.txt
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO Uploaded file /tmp/tmpf8pv8zccwandb/yrww706k-wandb-metadata.json
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:04 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/config.yaml
+2026-02-20 23:16:04 INFO file/dir created: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/output.log
+2026-02-20 23:16:04 INFO file/dir created: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/wandb-summary.json
+2026-02-20 23:16:04 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:05 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/wandb-summary.json
+2026-02-20 23:16:06 INFO Uploaded file /home/yogipatel/.local/share/wandb/artifacts/staging/tmpp5ygug9x
+2026-02-20 23:16:06 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/output.log
+2026-02-20 23:16:07 INFO sent artifact run-2qlwfzb9-Evaluation_Summary - {'id': 'QXJ0aWZhY3Q6MjUwNTE3MDUyNg==', 'state': 'PENDING', 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjkwNTE2NTE4OQ==', 'latestArtifact': None}}
+2026-02-20 23:16:07 INFO saving file media/table/Evaluation_Summary_30_248828e10ed26206392c.table.json with policy now
+2026-02-20 23:16:07 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:07 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:07 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/wandb-summary.json
+2026-02-20 23:16:08 INFO saving file wandb-summary.json with policy end
+2026-02-20 23:16:08 INFO shutting down sender
+2026-02-20 23:16:08 INFO Uploaded file /tmp/tmpf8pv8zccwandb/dnyu8bs0-media/table/Evaluation_Summary_30_248828e10ed26206392c.table.json
+2026-02-20 23:16:08 INFO shutting down directory watcher
+2026-02-20 23:16:08 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/output.log
+2026-02-20 23:16:08 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/wandb-summary.json
+2026-02-20 23:16:08 INFO file/dir modified: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/config.yaml
+2026-02-20 23:16:08 INFO scan: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files
+2026-02-20 23:16:08 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/requirements.txt requirements.txt
+2026-02-20 23:16:08 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/config.yaml config.yaml
+2026-02-20 23:16:08 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/wandb-metadata.json wandb-metadata.json
+2026-02-20 23:16:08 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/output.log output.log
+2026-02-20 23:16:08 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/wandb-summary.json wandb-summary.json
+2026-02-20 23:16:08 INFO scan save: /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/media/table/Evaluation_Summary_30_248828e10ed26206392c.table.json media/table/Evaluation_Summary_30_248828e10ed26206392c.table.json
+2026-02-20 23:16:08 INFO shutting down file pusher
+2026-02-20 23:16:08 INFO waiting for file pusher
+2026-02-20 23:16:09 INFO Uploaded file /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/config.yaml
+2026-02-20 23:16:09 INFO Uploaded file /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/output.log
+2026-02-20 23:16:10 INFO Uploaded file /home/yogipatel/Desktop/Dissertation/notebooks/wandb/offline-run-20260220_184238-2qlwfzb9/files/wandb-summary.json
+2026-02-20 23:16:10 INFO file stream finish called
+2026-02-20 23:16:12 INFO file stream finish is done

@@ -1,0 +1,52 @@
+_wandb:
+    value:
+        cli_version: 0.25.0
+        e:
+            4eu4hbnvnbe6wgoam9ugun4pmp93ayjs:
+                codePath: notebooks/prototype.py
+                codePathLocal: prototype.py
+                email: yogipatel27072004@gmail.com
+                executable: /home/yogipatel/Desktop/Dissertation/env/bin/python
+                git:
+                    commit: ba1e9e43cc289c2ba3d97851c692ce4d7c391f04
+                    remote: https://github.com/Yogipat1977/Dissertation.git
+                host: Lenovo
+                os: Linux-6.18.9-zen1-2-zen-x86_64-with-glibc2.43
+                program: /home/yogipatel/Desktop/Dissertation/notebooks/prototype.py
+                python: CPython 3.14.3
+                root: /home/yogipatel/Desktop/Dissertation/notebooks
+                startedAt: "2026-02-20T16:07:14.169280Z"
+                writerId: 4eu4hbnvnbe6wgoam9ugun4pmp93ayjs
+        m: []
+        python_version: 3.14.3
+        t:
+            "1":
+                - 1
+                - 41
+                - 48
+            "2":
+                - 1
+                - 41
+                - 48
+            "3":
+                - 1
+                - 16
+            "4": 3.14.3
+            "5": 0.25.0
+            "12": 0.25.0
+            "13": linux-x86_64
+dropout:
+    value: 0.2
+epochs:
+    value: 20
+init_filters:
+    value: 16
+learning_rate:
+    value: 0.0001
+model_architecture:
+    value: SegResNet
+roi_size:
+    value:
+        - 160
+        - 160
+        - 160

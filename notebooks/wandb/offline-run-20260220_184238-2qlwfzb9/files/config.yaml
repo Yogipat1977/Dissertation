@@ -1,0 +1,89 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    python_version: 3.14.3
+    cli_version: 0.25.0
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1771612958
+    t:
+      1:
+      - 1
+      - 41
+      - 48
+      2:
+      - 1
+      - 41
+      - 48
+      3:
+      - 1
+      - 2
+      - 4
+      - 16
+      - 42
+      4: 3.14.3
+      5: 0.25.0
+      13: linux-x86_64
+    e:
+      8hc7dbq8b7qarqdn0uus96vfsioera2s:
+        os: Linux-6.18.9-zen1-2-zen-x86_64-with-glibc2.43
+        python: CPython 3.14.3
+        started_at: '2026-02-20T18:42:38.575042Z'
+        program: /home/yogipatel/Desktop/Dissertation/notebooks/prototype.py
+        code_path: notebooks/prototype.py
+        code_path_local: prototype.py
+        git:
+          remote_url: https://github.com/Yogipat1977/Dissertation.git
+          commit: ba1e9e43cc289c2ba3d97851c692ce4d7c391f04
+        root: /home/yogipatel/Desktop/Dissertation/notebooks
+        host: Lenovo
+        executable: /home/yogipatel/Desktop/Dissertation/env/bin/python
+        cpu_count: 8
+        cpu_count_logical: 16
+        disk:
+          /:
+            total: '1023133351936'
+            used: '443408904192'
+        memory:
+          total: '32733130752'
+        writer_id: 8hc7dbq8b7qarqdn0uus96vfsioera2s
+learning_rate:
+  desc: null
+  value: 1.0e-05
+epochs:
+  desc: null
+  value: 30
+upsample_mode:
+  desc: null
+  value: deconv
+blocks_down:
+  desc: null
+  value:
+  - 1
+  - 2
+  - 2
+  - 4
+blocks_up:
+  desc: null
+  value:
+  - 1
+  - 1
+  - 1
+init_filters:
+  desc: null
+  value: 32
+dropout:
+  desc: null
+  value: 0.2
+roi_size:
+  desc: null
+  value:
+  - 160
+  - 160
+  - 160
+model_architecture:
+  desc: null
+  value: SegResNet
