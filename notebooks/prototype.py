@@ -18,6 +18,7 @@ from monai.data import PersistentDataset, DataLoader
 from monai.utils import set_determinism
 from monai.networks.nets import SegResNet
 from monai.losses import DiceLoss
+from monai.losses import DiceCELoss
 from monai.metrics import DiceMetric
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -73,7 +74,7 @@ train_transform = Compose([
     SpatialPadd(keys=["image", "label"], spatial_size=[160, 160, 160]),
     RandCropByPosNegLabeld(
         keys=["image", "label"], label_key="label",
-        spatial_size=[160, 160, 160], pos=1, neg=1, num_samples=1,
+        spatial_size=[160, 160, 160], pos=1, neg=1, num_samples=4,
     ),
     RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=0),
     RandGaussianNoised(keys=["image"], prob=0.1, mean=0.0, std=0.1),
@@ -114,12 +115,9 @@ wandb.init(
     project="BraTS-Dissertation-Prototype",
     config={
         "learning_rate": 1e-4,
-        "epochs": 30,
-        "upsample_mode": "deconv",
-        "blocks_down": [1, 2, 2, 4],
-        "blocks_up": [1,1,1],
+        "epochs": 100,
         "init_filters": 32, # Increased filters for better feature extraction
-        "dropout": 0.2,
+        "dropout": 0.1,
         "roi_size": (160, 160, 160),
         "model_architecture": "SegResNet"
     }
@@ -130,9 +128,6 @@ config = wandb.config
 model = SegResNet(
     spatial_dims=3,
     init_filters=config.init_filters,
-    upsample_mode=config.upsample_mode,
-    blocks_up=config.blocks_up,
-    blocks_down=config.blocks_down,
     in_channels=4,
     out_channels=3,
     dropout_prob=config.dropout,
@@ -140,14 +135,15 @@ model = SegResNet(
 
 wandb.watch(model, log_freq=100)
 
-loss_function = DiceLoss(smooth_nr=1e-5, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=True)
+# loss_function = DiceLoss(smooth_nr=1e-5, smooth_dr=1e-5, squared_pred=True, to_onehot_y=False, sigmoid=True)
+loss_function = DiceCELoss( to_onehot_y=False, sigmoid=True, squared_pred=True, smooth_nr=1e-5, smooth_dr=1e-5)
 optimizer = AdamW(model.parameters(), lr=config.learning_rate, weight_decay=1e-5)
-scheduler = CosineAnnealingLR(optimizer, T_max=config.epochs) # T_max matches epochs for full annealing
+scheduler = CosineAnnealingLR(optimizer, T_max=100) # T_max matches epochs for full annealing
 
 # --- 8. GLOBAL SETTINGS ---
 post_trans = AsDiscrete(threshold=0.5)
 dice_metric = DiceMetric(include_background=True, reduction="mean")
-model_save_path = "prototype-32.pth"
+model_save_path = "prototype-32-v1.pth"
 best_metric = -1
 
 # --- 9. TRAINING LOOP ---
