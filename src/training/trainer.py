@@ -59,7 +59,10 @@ class Trainer:
             # Checkpoint best model
             if val_dice > self.best_metric:
                 self.best_metric = val_dice
-                torch.save(self.model.state_dict(), self.best_model_path)
+                # Unwrap DataParallel so checkpoints are portable
+                state_dict = self.model.module.state_dict() \
+                    if hasattr(self.model, "module") else self.model.state_dict()
+                torch.save(state_dict, self.best_model_path)
                 tqdm.write(f"  → New Best Dice: {self.best_metric:.4f}")
 
             total_pbar.update(1)

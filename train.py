@@ -38,7 +38,8 @@ def main():
     # --- Reproducibility ---
     set_determinism(seed=cfg["project"]["seed"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device   : {device}")
+    num_gpus = torch.cuda.device_count()
+    print(f"Device   : {device} ({num_gpus} GPU{'s' if num_gpus > 1 else ''})")
 
     # --- Data ---
     print("\nLoading data...")
@@ -56,6 +57,11 @@ def main():
     print(f"  Loss         : {cfg['training']['loss']}")
     print(f"  LR           : {cfg['training']['learning_rate']}")
     print(f"  Epochs       : {cfg['training']['epochs']}")
+
+    # --- Multi-GPU ---
+    if num_gpus > 1:
+        model = torch.nn.DataParallel(model)
+        print(f"  Multi-GPU    : DataParallel across {num_gpus} GPUs")
 
     # --- W&B ---
     wandb_cfg = cfg["wandb"]
@@ -80,10 +86,11 @@ def main():
     print("Running evaluation...")
     print(f"{'='*60}")
 
-    model.load_state_dict(
-        torch.load(trainer.best_model_path, map_location=device, weights_only=True)
-    )
-    run_evaluation(model, loaders, cfg, device)
+    # Load best checkpoint (unwrap DataParallel if needed)
+    state_dict = torch.load(trainer.best_model_path, map_location=device, weights_only=True)
+    eval_model = create_model(cfg, device)
+    eval_model.load_state_dict(state_dict)
+    run_evaluation(eval_model, loaders, cfg, device)
 
     wandb.finish()
     print("\nDone.")
