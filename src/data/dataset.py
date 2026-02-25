@@ -4,7 +4,7 @@ dataset.py — BraTS data listing, train/val/test splitting, and DataLoader crea
 
 from pathlib import Path
 
-from monai.data import PersistentDataset, DataLoader
+from monai.data import PersistentDataset, Dataset, DataLoader
 
 from src.data.transforms import get_train_transforms, get_val_transforms
 
@@ -31,8 +31,17 @@ def get_brats_data_list(data_dir: str) -> list[dict]:
     return data_list
 
 
+def _make_dataset(data, transform, cache_dir):
+    """Create a PersistentDataset if cache_dir is set, otherwise a plain Dataset."""
+    if cache_dir:
+        cache_path = Path(cache_dir)
+        cache_path.mkdir(parents=True, exist_ok=True)
+        return PersistentDataset(data=data, transform=transform, cache_dir=cache_path)
+    return Dataset(data=data, transform=transform)
+
+
 def create_data_loaders(cfg: dict) -> dict:
-    """Create train/val/test PersistentDatasets and DataLoaders from config.
+    """Create train/val/test DataLoaders from config.
 
     Returns:
         dict with keys "train", "val", "test", each containing a DataLoader.
@@ -50,21 +59,14 @@ def create_data_loaders(cfg: dict) -> dict:
     print(f"  Val   : {len(val_files)} patients")
     print(f"  Test  : {len(test_files)} patients")
 
-    cache_dir = Path(cfg["data"]["cache_dir"])
-    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir = cfg["data"].get("cache_dir", "")
 
     train_transforms = get_train_transforms(cfg)
     val_transforms = get_val_transforms(cfg)
 
-    train_ds = PersistentDataset(
-        data=train_files, transform=train_transforms, cache_dir=cache_dir
-    )
-    val_ds = PersistentDataset(
-        data=val_files, transform=val_transforms, cache_dir=cache_dir
-    )
-    test_ds = PersistentDataset(
-        data=test_files, transform=val_transforms, cache_dir=cache_dir
-    )
+    train_ds = _make_dataset(train_files, train_transforms, cache_dir)
+    val_ds = _make_dataset(val_files, val_transforms, cache_dir)
+    test_ds = _make_dataset(test_files, val_transforms, cache_dir)
 
     batch_size = cfg["data"]["batch_size"]
     num_workers = cfg["data"]["num_workers"]
