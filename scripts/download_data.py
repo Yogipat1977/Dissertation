@@ -22,6 +22,7 @@ Usage:
 import argparse
 import os
 import sys
+import zipfile
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -98,6 +99,24 @@ def validate_patient_dir(patient_path: Path) -> list[str]:
     return problems
 
 
+def extract_zips(download_path: Path, keep_zip: bool = False):
+    """Find and extract any .zip files in the download directory."""
+    zip_files = list(download_path.rglob("*.zip"))
+    if not zip_files:
+        print("  No zip files found — data may already be extracted.")
+        return
+
+    for zf in zip_files:
+        print(f"  Extracting: {zf.name} ...")
+        with zipfile.ZipFile(zf, "r") as z:
+            z.extractall(download_path)
+        print(f"  Extracted to: {download_path}")
+
+        if not keep_zip:
+            zf.unlink()
+            print(f"  Removed zip: {zf.name}")
+
+
 def verify_download(data_path: Path):
     """Verify downloaded data integrity."""
     if not data_path.exists():
@@ -132,6 +151,7 @@ Examples:
   python scripts/download_data.py
   python scripts/download_data.py --token "your-token"
   python scripts/download_data.py --output /mnt/storage/brats
+  python scripts/download_data.py --keep-zip
   python scripts/download_data.py --dry-run
         """,
     )
@@ -143,6 +163,10 @@ Examples:
     parser.add_argument(
         "--output", type=str, default=None,
         help="Download directory (default: data/BraTS2023-Training/ in project root).",
+    )
+    parser.add_argument(
+        "--keep-zip", action="store_true",
+        help="Keep the zip file after extraction (default: remove it).",
     )
     parser.add_argument(
         "--dry-run", action="store_true",
@@ -162,8 +186,28 @@ Examples:
     print(f"Synapse folder : {SYNAPSE_TRAINING_ID}")
 
     if args.dry_run:
-        print("\n[DRY RUN] Would download training data to the path above.")
+        print("\n[DRY RUN] Would download and extract training data to the path above.")
         print("Exiting without changes.")
+        return
+
+    # Check if data already exists
+    existing_patients = list(download_path.glob("BraTS-GLI-*")) if download_path.exists() else []
+    existing_zips = list(download_path.rglob("*.zip")) if download_path.exists() else []
+
+    if existing_patients:
+        print(f"\n[SKIP] Found {len(existing_patients)} patient directories already in:")
+        print(f"  {download_path}")
+        print("  Data appears to be downloaded and extracted. Nothing to do.")
+        print("  (Delete the directory and re-run to force a fresh download.)\n")
+        return
+
+    if existing_zips:
+        print(f"\n[SKIP] Found zip file, skipping download. Extracting...")
+        extract_zips(download_path, keep_zip=args.keep_zip)
+        verify_download(download_path)
+        print(f"\n{'='*60}")
+        print(f"Training data is ready at: {download_path}")
+        print(f"{'='*60}\n")
         return
 
     # Get token and download
@@ -185,8 +229,13 @@ Examples:
     print("(This will take a while for ~1,250 patients.)\n")
 
     synapseutils.syncFromSynapse(syn, SYNAPSE_TRAINING_ID, path=str(download_path))
-
     print("\nDownload complete.")
+
+    # Extract zip files
+    print("\nExtracting downloaded archives...")
+    extract_zips(download_path, keep_zip=args.keep_zip)
+
+    # Verify
     verify_download(download_path)
 
     print(f"\n{'='*60}")
@@ -196,3 +245,4 @@ Examples:
 
 if __name__ == "__main__":
     main()
+
