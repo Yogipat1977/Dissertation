@@ -76,9 +76,9 @@ def create_data_loaders(cfg: dict) -> dict:
             train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers
         ),
         "val": DataLoader(
-            val_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers
+            val_ds, batch_size=1, shuffle=False, num_workers=num_workers
         ),
         "test": DataLoader(
-            test_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers
+            test_ds, batch_size=1, shuffle=False, num_workers=num_workers
         ),
     }
