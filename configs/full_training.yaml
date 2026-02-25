@@ -1,0 +1,41 @@
+project:
+  name: "BraTS-Dissertation-Full"
+  seed: 42
+
+data:
+  data_dir: "data/BraTS2023-Training"      # full training dataset
+  train_split: 1000
+  val_split: 125                            # remaining ~125 go to test
+  roi_size: [160, 160, 160]
+  batch_size: 1
+  num_workers: 4
+  num_samples: 4                            # RandCropByPosNegLabeld samples
+  cache_dir: "data/.cache"
+
+model:
+  architecture: "SegResNet"
+  spatial_dims: 3
+  in_channels: 4
+  out_channels: 3
+  init_filters: 32
+  dropout_prob: 0.1
+
+training:
+  epochs: 100
+  learning_rate: 0.0001
+  weight_decay: 0.00001
+  scheduler: "cosine"
+  loss: "DiceCELoss"
+  loss_params:
+    sigmoid: true
+    squared_pred: true
+    smooth_nr: 0.00001
+    smooth_dr: 0.00001
+
+wandb:
+  project: "BraTS-Dissertation"
+  mode: "online"                            # use online tracking for cloud runs
+
+paths:
+  models_dir: "models"
+  results_dir: "results"

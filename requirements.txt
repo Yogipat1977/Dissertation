@@ -8,3 +8,4 @@ scikit-image
 pandas
 pyyaml
 wandb
+synapseclient

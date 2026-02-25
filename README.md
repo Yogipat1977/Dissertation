@@ -12,7 +12,8 @@ This project develops a 3D Explainable AI (XAI) framework to interpret 3D CNN mo
 
 ```
 ├── configs/
-│   └── default.yaml             # All tuneable hyperparameters & paths
+│   ├── default.yaml             # Prototype config (45 patients)
+│   └── full_training.yaml       # Full dataset config (~1,250 patients)
 ├── src/                         # Core library
 │   ├── config.py                # YAML config loading & path resolution
 │   ├── data/
@@ -55,30 +56,41 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Data Acquisition
+### 2a. Prototype (Local Machine)
+
+Download the data, extract a subset, then train:
 
 ```bash
-# Download the full training dataset from Synapse:
+# Download full training data from Synapse (one-time):
 python scripts/download_data.py
 
-# Or create a small prototype subset for local testing:
+# Extract a 45-patient prototype subset:
 python scripts/extract_prototype.py
-python scripts/extract_prototype.py --num-patients 20 --seed 123  # custom
+
+# Train on the prototype:
+python train.py
 ```
 
-### 3. Training
+### 2b. Full Training (Cloud / GPU Server)
 
 ```bash
-# Train with default config:
-python train.py
+# Download full training data:
+python scripts/download_data.py
 
-# Train with custom hyperparameters:
+# Train on the entire dataset (~1,250 patients):
+python train.py --config configs/full_training.yaml
+```
+
+### 3. Custom Experiments
+
+```bash
+# Copy a config and tweak hyperparameters:
 cp configs/default.yaml configs/experiment.yaml
-# edit experiment.yaml (init_filters, dropout, lr, epochs, etc.)
+# edit: init_filters, dropout, lr, epochs, etc.
 python train.py --config configs/experiment.yaml
 ```
 
-Each run saves a checkpoint and a copy of its config to `models/<run_name>/` for full reproducibility.
+Each run saves a checkpoint and config copy to `models/<run_name>/` for reproducibility.
 
 ### 4. Evaluation
 
