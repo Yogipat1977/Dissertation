@@ -100,7 +100,13 @@ def validate_patient_dir(patient_path: Path) -> list[str]:
 
 
 def extract_zips(download_path: Path, keep_zip: bool = False):
-    """Find and extract any .zip files in the download directory."""
+    """Find and extract any .zip files in the download directory.
+
+    The BraTS zip contains a wrapper directory (e.g.
+    ASNR-MICCAI-BraTS2023-GLI-Challenge-TrainingData/) with patient
+    folders inside. After extraction we flatten so patients sit
+    directly in download_path.
+    """
     zip_files = list(download_path.rglob("*.zip"))
     if not zip_files:
         print("  No zip files found — data may already be extracted.")
@@ -110,11 +116,24 @@ def extract_zips(download_path: Path, keep_zip: bool = False):
         print(f"  Extracting: {zf.name} ...")
         with zipfile.ZipFile(zf, "r") as z:
             z.extractall(download_path)
-        print(f"  Extracted to: {download_path}")
 
         if not keep_zip:
             zf.unlink()
             print(f"  Removed zip: {zf.name}")
+
+    # Flatten: if extraction created a single wrapper directory,
+    # move its contents up one level
+    children = [d for d in download_path.iterdir() if d.is_dir()]
+    if len(children) == 1 and not children[0].name.startswith("BraTS-GLI-"):
+        wrapper = children[0]
+        print(f"  Flattening wrapper directory: {wrapper.name}/")
+        import shutil
+        for item in wrapper.iterdir():
+            dest = download_path / item.name
+            shutil.move(str(item), str(dest))
+        wrapper.rmdir()
+
+    print(f"  Extracted to: {download_path}")
 
 
 def verify_download(data_path: Path):
