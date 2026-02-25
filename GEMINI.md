@@ -9,47 +9,61 @@ This project focuses on developing a 3D Explainable AI (XAI) framework to interp
 
 ## Key Objectives
 1.  **3D XAI Framework:** Quantify 3D CNN segmentation predictions using voxel-based XAI (e.g., 3D Grad-CAM).
-2.  **Model Training:** Train 3D CNNs (U-Net) using **PyTorch** and **MONAI** on the BraTS 2021 dataset.
+2.  **Model Training:** Train 3D CNNs (SegResNet) using **PyTorch** and **MONAI** on the BraTS 2023 dataset.
 3.  **VR Visualization:** Create a pipeline using **3D Slicer** (SlicerVR) or **Unity3D** to view 3D MRI, segmentation masks, and XAI saliency volumes.
 4.  **Evaluation:** Assess the trade-off between model transparency and segmentation accuracy, and validate with clinical feedback.
 
 ## Directory Structure
 
+### Code & Training
+*   **`src/`**: Core modular library
+    *   `config.py`: YAML config loading & path resolution
+    *   `data/`: BraTS data listing, transforms, DataLoaders
+    *   `models/`: Model, loss, optimizer factory
+    *   `training/`: Training loop, validation, checkpointing
+    *   `evaluation/`: Metrics computation & results export
+*   **`configs/`**: YAML configuration files (hyperparameters, paths)
+    *   `default.yaml`: Default prototype config
+*   **`train.py`**: Main training entry point
+*   **`evaluate.py`**: Standalone evaluation entry point
+*   **`scripts/`**: Utility scripts
+    *   `download_data.py`: Download BraTS2023 training data from Synapse
+    *   `extract_prototype.py`: Create reproducible patient subset for local testing
+    *   `prototype_data.py`: Legacy data sampling script
+    *   `srcipt.py`: Legacy Synapse download script
+
+### Data & Models
+*   **`data/`**: Datasets (git-ignored)
+    *   `BraTS2023-Training/`: Full training dataset (~1,250 patients)
+    *   `Prototype_Data/`: 45-patient subset for prototyping
+*   **`models/`**: Saved model checkpoints (git-ignored)
+*   **`results/`**: Evaluation CSV files
+*   **`slicer_export/`**: Exported NIfTI volumes for 3D Slicer visualization
+
+### Prototyping & Reference
+*   **`prototype/`**: Legacy prototyping code (kept as reference)
+    *   `prototype.py`: Original monolithic training script
+    *   `01_data_engineering.qmd`: Data pipeline notebook (Quarto)
+
 ### Documentation & Writing
-*   **`project proposal/`**: Contains the formal project proposal.
-    *   `Final_Proposal.qmd`: Source file for the proposal (Quarto).
-    *   `Final_Proposal.pdf`: Rendered proposal.
-*   **`Lit Review/`**: Literature review materials.
-    *   `Lit.md` / `litReview.qmd`: Drafts and source text.
-    *   `references.bib`: Bibliography data.
-*   **`methodology/`**: Methodology drafts.
-    *   `main_structure.md`: Detailed outline of the methodology (Agile, System Arch, Research Approach).
-    *   `methodology.qmd`: Quarto source.
-*   **`dissertation Specific Materials /`**: Administrative forms, templates, and ethical approval docs.
-
-### Research & Resources
-*   **`Research papers /`**: Categorized PDF collection of academic papers.
-    *   `Exceptional Research papers/`: Key references.
-    *   `model specific papers/`: Technical details on architectures (U-Net, V-Net).
-    *   `Methods spacific papers/`: Papers on specific techniques + `extract_methods.py` script.
-*   **`Notes/`**: Research notes, diagrams, and Obsidian vault (`.obsidian/`).
-
-### Code & Data
-*   **`data/`**: Directory for datasets (BraTS 2021 subset).
-*   **`pdf_env/`**: Python environment (likely for processing PDFs or analysis).
+*   **`Final report/`**: Dissertation (Typst format)
+*   **`Lit Review/`**: Literature review materials (Quarto)
+*   **`methodology/`**: Methodology drafts
+*   **`project proposal/`**: Formal project proposal
+*   **`dissertation Specific Materials/`**: Admin forms, templates, ethics docs
+*   **`Research papers/`**: Reference papers (PDF)
+*   **`Notes/`**: Research notes and Obsidian vault
 
 ## Technical Stack
 *   **Deep Learning:** PyTorch, MONAI
-*   **Explainability:** SHAP, LIME, TorchCAM
-*   **Visualization:** 3D Slicer (SlicerVR extension), ITK-SNAP, potentially Unity3D (C#)
-*   **Documentation:** Quarto (`.qmd`), Markdown (`.md`), LaTeX (via Quarto)
-*   **Languages:** Python, C# (for Unity)
+*   **Model:** SegResNet (3D)
+*   **Explainability:** 3D Grad-CAM (planned)
+*   **Visualization:** 3D Slicer (SlicerVR extension)
+*   **Experiment Tracking:** Weights & Biases
+*   **Documentation:** Typst, Quarto, Markdown
+*   **Languages:** Python
 
 ## Usage Notes
-*   **Quarto:** The project uses Quarto for document generation. `.qmd` files are the source of truth for reports.
-*   **Research Focus:** The primary goal is the dissertation; code is the means to generate results for the report.
-*   **Environment:** A `pdf_env` exists, suggesting Python dependence for specific tasks (likely PDF processing or initial data scripts).
-
-## Recent Activity
-*   **Date:** January 21, 2026
-*   **Status:** Working on Methodology and Literature Review chapters. Proposal is finalized.
+*   **Config-driven:** All hyperparameters live in `configs/default.yaml`. Copy and edit for experiments.
+*   **Entry points:** `python train.py --config configs/default.yaml` to train, `python evaluate.py` to evaluate.
+*   **Research Focus:** The primary goal is the dissertation; code generates results for the report.

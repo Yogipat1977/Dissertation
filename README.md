@@ -36,8 +36,9 @@ This project develops a 3D Explainable AI (XAI) framework to interpret 3D CNN mo
 ├── data/                        # Datasets (git-ignored)
 │   ├── BraTS2023-Training/      # Full training data (~1,250 patients)
 │   └── Prototype_Data/          # 45-patient subset for prototyping
-├── notebooks/                   # Legacy prototyping
+├── prototype/                   # Legacy prototyping (reference)
 │   └── prototype.py             # Original monolithic training script
+├── slicer_export/               # Exported NIfTI volumes for 3D Slicer viz
 ├── results/                     # Evaluation CSVs
 ├── Final report/                # Dissertation (Typst)
 ├── Lit Review/                  # Literature review (Quarto)
