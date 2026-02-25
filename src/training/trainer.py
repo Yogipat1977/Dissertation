@@ -45,15 +45,19 @@ class Trainer:
 
         for epoch in range(self.epochs):
             train_loss = self._train_epoch(epoch)
-            val_dice = self._validate_epoch(epoch)
+            val_results = self._validate_epoch(epoch)
+            val_dice = val_results["mean"]
 
             self.scheduler.step()
 
-            # Log to W&B
+            # Log everything in one call so charts share the same x-axis
             wandb.log({
                 "epoch": epoch + 1,
                 "train_loss": train_loss,
                 "val_dice": val_dice,
+                "val_dice_WT": val_results["WT"],
+                "val_dice_TC": val_results["TC"],
+                "val_dice_ET": val_results["ET"],
                 "lr": self.optimizer.param_groups[0]["lr"],
             })
 
@@ -98,8 +102,8 @@ class Trainer:
 
         return epoch_loss / len(loader)
 
-    def _validate_epoch(self, epoch: int) -> float:
-        """Run validation with sliding window inference. Returns mean Dice."""
+    def _validate_epoch(self, epoch: int) -> dict:
+        """Run validation with sliding window inference. Returns dict of Dice scores."""
         self.model.eval()
         with torch.no_grad():
             for val_data in self.loaders["val"]:
@@ -114,8 +118,7 @@ class Trainer:
             results = self.dice_metric.aggregate()
             self.dice_metric.reset()
 
-        # Log per-region Dice
-        for i, region in enumerate(self.dice_regions):
-            wandb.log({f"val_dice_{region}": results[i].item()})
-
-        return results.mean().item()
+        return {
+            region: results[i].item()
+            for i, region in enumerate(self.dice_regions)
+        } | {"mean": results.mean().item()}
