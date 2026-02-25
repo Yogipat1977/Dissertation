@@ -31,7 +31,8 @@ class Trainer:
         self.run_dir = cfg["_run_dir"]
 
         self.post_trans = AsDiscrete(threshold=0.5)
-        self.dice_metric = DiceMetric(include_background=True, reduction="mean")
+        self.dice_metric = DiceMetric(include_background=True, reduction="mean_batch")
+        self.dice_regions = ["WT", "TC", "ET"]
         self.best_metric = -1
         self.best_model_path = os.path.join(self.run_dir, "best_model.pth")
 
@@ -93,6 +94,7 @@ class Trainer:
 
             epoch_loss += loss.item()
             step_pbar.set_postfix({"loss": f"{loss.item():.4f}"})
+            wandb.log({"batch_loss": loss.item()})
 
         return epoch_loss / len(loader)
 
@@ -109,7 +111,11 @@ class Trainer:
                 v_out = [self.post_trans(torch.sigmoid(i)) for i in v_out]
                 self.dice_metric(y_pred=v_out, y=v_lab)
 
-            dice = self.dice_metric.aggregate().item()
+            results = self.dice_metric.aggregate()
             self.dice_metric.reset()
 
-        return dice
+        # Log per-region Dice
+        for i, region in enumerate(self.dice_regions):
+            wandb.log({f"val_dice_{region}": results[i].item()})
+
+        return results.mean().item()
