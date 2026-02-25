@@ -27,14 +27,15 @@ This project develops a 3D Explainable AI (XAI) framework to interpret 3D CNN mo
 ├── train.py                     # Training entry point
 ├── evaluate.py                  # Standalone evaluation entry point
 ├── scripts/
-│   └── setup_data.py            # Automated data acquisition from Synapse
+│   ├── download_data.py         # Download training data from Synapse
+│   └── extract_prototype.py    # Create prototype subset for local testing
 ├── models/                      # Saved checkpoints (git-ignored)
 │   ├── prototype_v1/            # SegResNet, init_filters=8
 │   ├── prototype_32_v1/         # SegResNet, init_filters=32
 │   └── prototype_filters32_v1/  # SegResNet, init_filters=32 (v2)
 ├── data/                        # Datasets (git-ignored)
-│   ├── BraTS2023_GLI/           # Full BraTS2023 download
-│   └── Prototype_Data/          # 45-patient subset
+│   ├── BraTS2023-Training/      # Full training data (~1,250 patients)
+│   └── Prototype_Data/          # 45-patient subset for prototyping
 ├── notebooks/                   # Legacy prototyping
 │   └── prototype.py             # Original monolithic training script
 ├── results/                     # Evaluation CSVs
@@ -56,14 +57,12 @@ pip install -r requirements.txt
 ### 2. Data Acquisition
 
 ```bash
-# Set your Synapse token
-export SYNAPSE_AUTH_TOKEN="your-token"
+# Download the full training dataset from Synapse:
+python scripts/download_data.py
 
-# Full pipeline (download + create 45-patient subset):
-python scripts/setup_data.py --project-dir .
-
-# Or skip download if data is already present:
-python scripts/setup_data.py --skip-download --project-dir .
+# Or create a small prototype subset for local testing:
+python scripts/extract_prototype.py
+python scripts/extract_prototype.py --num-patients 20 --seed 123  # custom
 ```
 
 ### 3. Training
