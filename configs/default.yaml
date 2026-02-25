@@ -1,0 +1,41 @@
+project:
+  name: "BraTS-Dissertation"
+  seed: 42
+
+data:
+  data_dir: "data/Prototype_Data"          # relative to project root
+  train_split: 32
+  val_split: 8                              # remaining patients go to test
+  roi_size: [160, 160, 160]
+  batch_size: 1
+  num_workers: 0
+  num_samples: 4                            # RandCropByPosNegLabeld samples
+  cache_dir: "persistent_cache"
+
+model:
+  architecture: "SegResNet"
+  spatial_dims: 3
+  in_channels: 4
+  out_channels: 3
+  init_filters: 32
+  dropout_prob: 0.1
+
+training:
+  epochs: 100
+  learning_rate: 0.0001
+  weight_decay: 0.00001
+  scheduler: "cosine"
+  loss: "DiceCELoss"
+  loss_params:
+    sigmoid: true
+    squared_pred: true
+    smooth_nr: 0.00001
+    smooth_dr: 0.00001
+
+wandb:
+  project: "BraTS-Dissertation"
+  mode: "offline"                           # "online", "offline", or "disabled"
+
+paths:
+  models_dir: "models"                      # checkpoints saved here
+  results_dir: "results"

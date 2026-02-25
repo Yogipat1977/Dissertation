@@ -1,7 +1,18 @@
-data/
+/data/
 persistent_cache/
 prototype_filter32.pth
 .ipynb_checkpoints/
 WandB_API.txt
 prtotype-32.pth
 prtotype.pth
+env/
+
+# Credentials — never commit these
+.env
+data/api.txt
+
+# Generated files
+**/manifest.json
+/models/
+wandb/
+__pycache__/
