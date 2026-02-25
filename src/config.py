@@ -25,7 +25,10 @@ def load_config(config_path: str) -> dict:
 
     # Resolve relative paths against project root
     cfg["data"]["data_dir"] = str(project_root / cfg["data"]["data_dir"])
-    cfg["data"]["cache_dir"] = str(project_root / cfg["data"]["cache_dir"])
+    if cfg["data"].get("cache_dir"):
+        cfg["data"]["cache_dir"] = str(project_root / cfg["data"]["cache_dir"])
+    else:
+        cfg["data"]["cache_dir"] = ""
     cfg["paths"]["models_dir"] = str(project_root / cfg["paths"]["models_dir"])
     cfg["paths"]["results_dir"] = str(project_root / cfg["paths"]["results_dir"])
 
