@@ -56,20 +56,36 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. API Keys
+### 2. API Keys & Data Access
 
-Before downloading data or training, create a `.env` file with your API credentials:
+Before downloading data or training you need accounts on **Synapse** (data host) and **Weights & Biases** (experiment tracking).
+
+#### Synapse — BraTS 2023 Dataset
+
+1. **Create a free account** at [synapse.org](https://www.synapse.org/#!RegisterAccount:0).
+2. Navigate to the **BraTS 2023 GLI Challenge** page:
+   [synapse.org/Synapse:syn51156910](https://www.synapse.org/Synapse:syn51156910/wiki/622351).
+3. **Accept the dataset Terms & Conditions** — you will be prompted when you first access the data tab. Access is not granted until you accept.
+4. Once approved, go to **Account Settings → Personal Access Tokens**
+   ([direct link](https://www.synapse.org/#!PersonalAccessTokens:)) and generate a new token.
+
+#### Weights & Biases — Experiment Tracking
+
+1. **Create a free account** at [wandb.ai](https://wandb.ai/site).
+2. Go to [wandb.ai/authorize](https://wandb.ai/authorize) and copy your API key.
+
+#### Add keys to `.env`
 
 ```bash
 cp .env.example .env
 ```
 
-Then edit `.env` and fill in your keys:
+Then edit `.env` and paste in your keys:
 
-| Variable | Purpose | Where to get it |
-|----------|---------|-----------------|
-| `SYNAPSE_AUTH_TOKEN` | Download BraTS 2023 data from Synapse | [Synapse Personal Access Tokens](https://www.synapse.org/#!PersonalAccessTokens:) |
-| `WANDB_API_KEY` | Log training metrics to Weights & Biases | [wandb.ai/authorize](https://wandb.ai/authorize) |
+| Variable | Purpose |
+|----------|---------|
+| `SYNAPSE_AUTH_TOKEN` | Your Synapse personal access token |
+| `WANDB_API_KEY` | Your Weights & Biases API key |
 
 > **Note:** The `.env` file is git-ignored and will not be committed. Each user must create their own.
 
