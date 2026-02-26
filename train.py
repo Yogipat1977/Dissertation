@@ -8,6 +8,9 @@ Usage:
 
 import argparse
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 import torch
 import wandb
@@ -29,6 +32,9 @@ def main():
         help="Path to YAML config file (default: configs/default.yaml)",
     )
     args = parser.parse_args()
+
+    # --- Load .env (WANDB_API_KEY, etc.) ---
+    load_dotenv(Path(__file__).resolve().parent / ".env")
 
     # --- Load config ---
     cfg = load_config(args.config)

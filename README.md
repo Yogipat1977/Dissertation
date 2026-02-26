@@ -56,7 +56,24 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2a. Prototype (Local Machine)
+### 2. API Keys
+
+Before downloading data or training, create a `.env` file with your API credentials:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and fill in your keys:
+
+| Variable | Purpose | Where to get it |
+|----------|---------|-----------------|
+| `SYNAPSE_AUTH_TOKEN` | Download BraTS 2023 data from Synapse | [Synapse Personal Access Tokens](https://www.synapse.org/#!PersonalAccessTokens:) |
+| `WANDB_API_KEY` | Log training metrics to Weights & Biases | [wandb.ai/authorize](https://wandb.ai/authorize) |
+
+> **Note:** The `.env` file is git-ignored and will not be committed. Each user must create their own.
+
+### 3a. Prototype (Local Machine)
 
 Download the data, extract a subset, then train:
 
@@ -71,7 +88,7 @@ python scripts/extract_prototype.py
 python train.py
 ```
 
-### 2b. Full Training (Cloud / GPU Server)
+### 3b. Full Training (Cloud / GPU Server)
 
 ```bash
 # Download full training data:
@@ -81,7 +98,7 @@ python scripts/download_data.py
 python train.py --config configs/full_training.yaml
 ```
 
-### 3. Custom Experiments
+### 4. Custom Experiments
 
 ```bash
 # Copy a config and tweak hyperparameters:
@@ -92,7 +109,7 @@ python train.py --config configs/experiment.yaml
 
 Each run saves a checkpoint and config copy to `models/<run_name>/` for reproducibility.
 
-### 4. Evaluation
+### 5. Evaluation
 
 ```bash
 python evaluate.py --config configs/default.yaml --checkpoint models/<run_name>/best_model.pth
