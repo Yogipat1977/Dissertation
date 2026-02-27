@@ -72,6 +72,14 @@ def main():
     # --- W&B ---
     wandb_cfg = cfg["wandb"]
     os.environ["WANDB_MODE"] = wandb_cfg["mode"]
+
+    wandb_key = os.environ.get("WANDB_API_KEY")
+    if wandb_key:
+        wandb.login(key=wandb_key)
+    elif wandb_cfg["mode"] == "online":
+        print("[WARNING] WANDB_API_KEY not found in .env — "
+              "online logging will fail. Add it to your .env file.")
+
     wandb.init(
         project=wandb_cfg["project"],
         name=cfg["_run_name"],
