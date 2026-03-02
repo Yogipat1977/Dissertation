@@ -2,6 +2,7 @@
 dataset.py — BraTS data listing, train/val/test splitting, and DataLoader creation.
 """
 
+import random
 from pathlib import Path
 
 from monai.data import PersistentDataset, Dataset, DataLoader
@@ -47,6 +48,12 @@ def create_data_loaders(cfg: dict) -> dict:
         dict with keys "train", "val", "test", each containing a DataLoader.
     """
     datalist = get_brats_data_list(cfg["data"]["data_dir"])
+
+    # Shuffle patients before splitting to prevent distribution bias
+    # (ensures train/val/test share similar scanner/hospital distributions)
+    seed = cfg["project"].get("seed", 42)
+    random.seed(seed)
+    random.shuffle(datalist)
 
     train_split = cfg["data"]["train_split"]
     val_split = cfg["data"]["val_split"]

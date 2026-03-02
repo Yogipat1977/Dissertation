@@ -25,10 +25,10 @@ training:
   learning_rate: 0.0001
   weight_decay: 0.00001
   scheduler: "cosine"
-  loss: "DiceCELoss"
+  loss: "DiceFocalLoss"          # Focal loss downweights easy background voxels
   loss_params:
     sigmoid: true
-    squared_pred: true
+    gamma: 2.0                    # Focal factor: higher = more focus on hard examples (ET)
     smooth_nr: 0.00001
     smooth_dr: 0.00001
 

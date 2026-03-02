@@ -4,7 +4,7 @@ factory.py — Create model, loss function, optimizer, and scheduler from config
 
 import torch
 from monai.networks.nets import SegResNet
-from monai.losses import DiceCELoss, DiceLoss
+from monai.losses import DiceCELoss, DiceLoss, DiceFocalLoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
@@ -37,6 +37,8 @@ def create_loss(cfg: dict):
         return DiceCELoss(to_onehot_y=False, **params)
     elif loss_name == "DiceLoss":
         return DiceLoss(to_onehot_y=False, **params)
+    elif loss_name == "DiceFocalLoss":
+        return DiceFocalLoss(to_onehot_y=False, **params)
     else:
         raise ValueError(f"Unknown loss function: {loss_name}")
 
