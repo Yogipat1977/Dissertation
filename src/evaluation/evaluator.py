@@ -1,10 +1,15 @@
 """
 evaluator.py — Model evaluation and results reporting.
+
+Metrics computed per BraTS region (WT, TC, ET):
+  - Dice Score          : overlap-based similarity
+  - Hausdorff95 (HD95)  : 95th-percentile surface distance (mm)
+  - Sensitivity         : true positive rate (recall)
+  - Specificity         : true negative rate
 """
 
 import csv
 import os
-from pathlib import Path
 
 import torch
 import wandb
@@ -12,9 +17,37 @@ from tqdm import tqdm
 
 import monai
 from monai.transforms import AsDiscrete
-from monai.metrics import DiceMetric
+from monai.metrics import DiceMetric, HausdorffDistanceMetric, MeanIoU
 
 REGIONS = ["Whole Tumor", "Tumor Core", "Enhancing"]
+
+
+def _compute_sensitivity_specificity(y_pred: torch.Tensor, y: torch.Tensor):
+    """
+    Compute per-channel sensitivity and specificity.
+
+    Args:
+        y_pred: binary predictions, shape (B, C, ...)
+        y:      binary ground truth, shape (B, C, ...)
+
+    Returns:
+        sens: (C,) tensor — sensitivity per channel
+        spec: (C,) tensor — specificity per channel
+    """
+    eps = 1e-8
+    # Flatten spatial dims
+    pred_flat = y_pred.view(y_pred.shape[0], y_pred.shape[1], -1)  # (B, C, N)
+    true_flat = y.view(y.shape[0], y.shape[1], -1)                 # (B, C, N)
+
+    tp = (pred_flat * true_flat).sum(-1)        # (B, C)
+    fn = ((1 - pred_flat) * true_flat).sum(-1)  # (B, C)
+    tn = ((1 - pred_flat) * (1 - true_flat)).sum(-1)  # (B, C)
+    fp = (pred_flat * (1 - true_flat)).sum(-1)  # (B, C)
+
+    sens = (tp / (tp + fn + eps)).mean(0)  # mean over batch -> (C,)
+    spec = (tn / (tn + fp + eps)).mean(0)  # mean over batch -> (C,)
+
+    return sens, spec
 
 
 def evaluate_set(
@@ -23,30 +56,72 @@ def evaluate_set(
     cfg: dict,
     device: torch.device,
     name: str = "Test",
-) -> list[float]:
+) -> dict:
     """Evaluate a model on a single data split.
 
     Returns:
-        List of per-region Dice scores [WT, TC, ET].
+        dict with keys 'dice', 'hd95', 'sensitivity', 'specificity',
+        each a list of per-region floats [WT, TC, ET].
     """
     model.eval()
     roi_size = cfg["data"]["roi_size"]
     post_trans = AsDiscrete(threshold=0.5)
-    metric = DiceMetric(include_background=True, reduction="mean_batch")
+
+    dice_metric = DiceMetric(include_background=True, reduction="mean_batch")
+    hd95_metric = HausdorffDistanceMetric(
+        include_background=True, percentile=95, reduction="mean_batch"
+    )
+    iou_metric = MeanIoU(include_background=True, reduction="mean_batch")
+
+    # Accumulators for sensitivity / specificity (averaged across batches)
+    n_channels = cfg["model"]["out_channels"]
+    sens_acc = torch.zeros(n_channels)
+    spec_acc = torch.zeros(n_channels)
+    n_batches = 0
 
     with torch.no_grad():
         for data in tqdm(loader, desc=f"Evaluating {name}"):
             inputs = data["image"].to(device)
             labels = data["label"].to(device)
+
             outputs = monai.inferers.sliding_window_inference(
                 inputs, roi_size, 4, model
             )
-            outputs = [post_trans(torch.sigmoid(i)) for i in outputs]
-            metric(y_pred=outputs, y=labels)
 
-    results = metric.aggregate()
-    metric.reset()
-    return [results[i].item() for i in range(len(REGIONS))]
+            # Binarise predictions
+            preds = torch.stack(
+                [post_trans(torch.sigmoid(i)) for i in outputs]
+            )  # (B, C, ...)
+
+            dice_metric(y_pred=preds, y=labels)
+            hd95_metric(y_pred=preds, y=labels)
+            iou_metric(y_pred=preds, y=labels)
+
+            s, sp = _compute_sensitivity_specificity(preds, labels)
+            sens_acc += s.cpu()
+            spec_acc += sp.cpu()
+            n_batches += 1
+
+    dice_results = dice_metric.aggregate()
+    hd95_results = hd95_metric.aggregate()
+    iou_results  = iou_metric.aggregate()
+    dice_metric.reset()
+    hd95_metric.reset()
+    iou_metric.reset()
+
+    dice_list = [dice_results[i].item() for i in range(len(REGIONS))]
+    hd95_list = [hd95_results[i].item() for i in range(len(REGIONS))]
+    iou_list  = [iou_results[i].item()  for i in range(len(REGIONS))]
+    sens_list = [(sens_acc[i] / n_batches).item() for i in range(len(REGIONS))]
+    spec_list = [(spec_acc[i] / n_batches).item() for i in range(len(REGIONS))]
+
+    return {
+        "dice": dice_list,
+        "hd95": hd95_list,
+        "iou": iou_list,
+        "sensitivity": sens_list,
+        "specificity": spec_list,
+    }
 
 
 def run_evaluation(
@@ -59,35 +134,63 @@ def run_evaluation(
     print("\n--- Evaluation ---")
 
     train_res = evaluate_set(model, loaders["train"], cfg, device, "Train")
-    val_res = evaluate_set(model, loaders["val"], cfg, device, "Val")
-    test_res = evaluate_set(model, loaders["test"], cfg, device, "Test")
+    val_res   = evaluate_set(model, loaders["val"],   cfg, device, "Val")
+    test_res  = evaluate_set(model, loaders["test"],  cfg, device, "Test")
 
-    # Console table
-    print(f"\n{'='*55}")
-    print(f"  {'Region':<15} | {'Train':<8} | {'Val':<8} | {'Test':<8}")
-    print(f"  {'-'*51}")
-    for i, reg in enumerate(REGIONS):
-        print(
-            f"  {reg:<15} | {train_res[i]:.4f}   | {val_res[i]:.4f}   | {test_res[i]:.4f}"
-        )
-    print(f"{'='*55}")
+    metrics = ["dice", "hd95", "iou", "sensitivity", "specificity"]
+    metric_labels = {
+        "dice":        "Dice ↑",
+        "hd95":        "HD95 ↓ (mm)",
+        "iou":         "IoU (Jaccard) ↑",
+        "sensitivity": "Sensitivity ↑",
+        "specificity": "Specificity ↑",
+    }
 
-    # W&B table
-    table = wandb.Table(columns=["Region", "Train", "Val", "Test"])
-    for i, reg in enumerate(REGIONS):
-        table.add_data(reg, train_res[i], val_res[i], test_res[i])
-    wandb.log({"Evaluation_Summary": table})
+    # ── Console table ────────────────────────────────────────────────────────
+    for metric in metrics:
+        print(f"\n  {metric_labels[metric]}")
+        print(f"  {'Region':<17} | {'Train':<8} | {'Val':<8} | {'Test':<8}")
+        print(f"  {'-'*53}")
+        for i, reg in enumerate(REGIONS):
+            print(
+                f"  {reg:<17} | "
+                f"{train_res[metric][i]:<8.4f} | "
+                f"{val_res[metric][i]:<8.4f} | "
+                f"{test_res[metric][i]:<8.4f}"
+            )
 
-    # Save CSV
+    # ── W&B tables ───────────────────────────────────────────────────────────
+    log_payload = {}
+    for metric in metrics:
+        table = wandb.Table(columns=["Region", "Train", "Val", "Test"])
+        for i, reg in enumerate(REGIONS):
+            table.add_data(
+                reg,
+                train_res[metric][i],
+                val_res[metric][i],
+                test_res[metric][i],
+            )
+        log_payload[f"Evaluation/{metric_labels[metric]}"] = table
+
+    wandb.log(log_payload)
+
+    # ── Save CSV ─────────────────────────────────────────────────────────────
     results_dir = cfg["paths"]["results_dir"]
-    run_name = cfg["_run_name"]
-    csv_path = os.path.join(results_dir, f"{run_name}.csv")
+    run_name    = cfg["_run_name"]
+    csv_path    = os.path.join(results_dir, f"{run_name}.csv")
 
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["Region", "Train", "Val", "Test"])
-        for i, reg in enumerate(REGIONS):
-            writer.writerow([reg, train_res[i], val_res[i], test_res[i]])
+        writer.writerow(["Metric", "Region", "Train", "Val", "Test"])
+        for metric in metrics:
+            for i, reg in enumerate(REGIONS):
+                writer.writerow([
+                    metric,
+                    reg,
+                    train_res[metric][i],
+                    val_res[metric][i],
+                    test_res[metric][i],
+                ])
 
     print(f"\nResults saved to: {csv_path}")
     return {"train": train_res, "val": val_res, "test": test_res}
