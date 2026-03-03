@@ -2,6 +2,7 @@
 trainer.py — Training loop with validation, checkpointing, and W&B logging.
 
 Supports:
+  - Automatic Mixed Precision (AMP) for ~2× speedup and ~50% less VRAM
   - Best-model checkpointing (saves when val Dice improves)
   - Last-checkpoint saving (saves every epoch for crash recovery)
   - Resume from last checkpoint (restore model, optimizer, scheduler, epoch)
@@ -43,6 +44,10 @@ class Trainer:
         self.best_model_path = os.path.join(self.run_dir, "best_model.pth")
         self.last_checkpoint_path = os.path.join(self.run_dir, "last_checkpoint.pth")
 
+        # Automatic Mixed Precision
+        self.scaler = torch.amp.GradScaler("cuda")
+        self.use_amp = device.type == "cuda"
+
     def save_last_checkpoint(self, epoch: int):
         """Save a full training snapshot for resume capability."""
         # Unwrap DataParallel so checkpoints are portable
@@ -56,6 +61,7 @@ class Trainer:
             "model_state_dict": state_dict,
             "optimizer_state_dict": self.optimizer.state_dict(),
             "scheduler_state_dict": self.scheduler.state_dict(),
+            "scaler_state_dict": self.scaler.state_dict(),
             "best_metric": self.best_metric,
         }
         torch.save(checkpoint, self.last_checkpoint_path)
@@ -82,6 +88,8 @@ class Trainer:
 
         self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        if "scaler_state_dict" in checkpoint:
+            self.scaler.load_state_dict(checkpoint["scaler_state_dict"])
         self.best_metric = checkpoint["best_metric"]
         self.start_epoch = checkpoint["epoch"] + 1  # resume from next epoch
 
@@ -153,10 +161,16 @@ class Trainer:
             labels = batch_data["label"].to(self.device)
 
             self.optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = self.loss_fn(outputs, labels)
-            loss.backward()
-            self.optimizer.step()
+
+            # Forward pass with AMP
+            with torch.amp.autocast("cuda", enabled=self.use_amp):
+                outputs = self.model(inputs)
+                loss = self.loss_fn(outputs, labels)
+
+            # Backward pass with gradient scaling
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
 
             epoch_loss += loss.item()
             step_pbar.set_postfix({"loss": f"{loss.item():.4f}"})
@@ -167,7 +181,7 @@ class Trainer:
     def _validate_epoch(self, epoch: int) -> dict:
         """Run validation with sliding window inference. Returns dict of Dice scores."""
         self.model.eval()
-        with torch.no_grad():
+        with torch.no_grad(), torch.amp.autocast("cuda", enabled=self.use_amp):
             for val_data in self.loaders["val"]:
                 v_in = val_data["image"].to(self.device)
                 v_lab = val_data["label"].to(self.device)

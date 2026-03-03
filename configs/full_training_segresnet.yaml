@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Full Training Config — SegResNet
+# Target: 1× RTX 5880 Ada (48 GB), AMP enabled
+# Dataset: ~1,250 patients (1,000 train / 125 val / ~125 test)
+# ─────────────────────────────────────────────────────────────────────────────
+
+project:
+  name: "BraTS-Dissertation-Full-SegResNet"
+  seed: 42
+
+data:
+  data_dir: "data/BraTS2023-Training"       # full training dataset
+  train_split: 1000
+  val_split: 125                             # remaining ~125 go to test
+  roi_size: [160, 160, 160]                  # 160³ — larger spatial context
+  batch_size: 4                              # ~38 GB on single GPU with AMP
+  num_workers: 8                             # keeps data pipeline saturated
+  num_samples: 4                             # RandCropByPosNegLabeld samples
+  cache_dir: ""                              # disabled for cloud (saves disk)
+
+model:
+  architecture: "SegResNet"
+  spatial_dims: 3
+  in_channels: 4
+  out_channels: 3
+  init_filters: 32
+  dropout_prob: 0.1
+
+training:
+  epochs: 50                                 # ~50 epochs typical for full BraTS dataset
+  learning_rate: 0.0002                      # √-scaled from 1e-4 (base batch=2 → batch=4)
+  weight_decay: 0.00001
+  scheduler: "cosine"
+  loss: "DiceFocalLoss"
+  loss_params:
+    sigmoid: true
+    gamma: 2.0                               # Focal factor: higher = more focus on hard examples (ET)
+    smooth_nr: 0.00001
+    smooth_dr: 0.00001
+
+wandb:
+  project: "BraTS-Dissertation"
+  mode: "online"                             # online tracking for cloud runs
+
+paths:
+  models_dir: "models"
+  results_dir: "results"
