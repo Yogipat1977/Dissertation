@@ -2,6 +2,7 @@ torch
 torchvision
 torchaudio
 monai[nibabel, tqdm]
+einops
 numpy
 matplotlib
 scikit-image

@@ -3,7 +3,7 @@ factory.py — Create model, loss function, optimizer, and scheduler from config
 """
 
 import torch
-from monai.networks.nets import SegResNet
+from monai.networks.nets import AttentionUnet, SegResNet, SwinUNETR
 from monai.losses import DiceCELoss, DiceLoss, DiceFocalLoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -21,6 +21,23 @@ def create_model(cfg: dict, device: torch.device) -> torch.nn.Module:
             in_channels=model_cfg["in_channels"],
             out_channels=model_cfg["out_channels"],
             dropout_prob=model_cfg["dropout_prob"],
+        )
+    elif arch == "AttentionUnet":
+        model = AttentionUnet(
+            spatial_dims=model_cfg["spatial_dims"],
+            in_channels=model_cfg["in_channels"],
+            out_channels=model_cfg["out_channels"],
+            channels=model_cfg["channels"],
+            strides=model_cfg["strides"],
+            dropout=model_cfg.get("dropout", 0.0),
+        )
+    elif arch == "SwinUNETR":
+        model = SwinUNETR(
+            spatial_dims=model_cfg["spatial_dims"],
+            in_channels=model_cfg["in_channels"],
+            out_channels=model_cfg["out_channels"],
+            feature_size=model_cfg.get("feature_size", 48),
+            drop_rate=model_cfg.get("drop_rate", 0.0),
         )
     else:
         raise ValueError(f"Unknown architecture: {arch}")
