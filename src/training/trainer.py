@@ -1,5 +1,10 @@
 """
 trainer.py — Training loop with validation, checkpointing, and W&B logging.
+
+Supports:
+  - Best-model checkpointing (saves when val Dice improves)
+  - Last-checkpoint saving (saves every epoch for crash recovery)
+  - Resume from last checkpoint (restore model, optimizer, scheduler, epoch)
 """
 
 import os
@@ -34,16 +39,70 @@ class Trainer:
         self.dice_metric = DiceMetric(include_background=True, reduction="mean_batch")
         self.dice_regions = ["WT", "TC", "ET"]
         self.best_metric = -1
+        self.start_epoch = 0
         self.best_model_path = os.path.join(self.run_dir, "best_model.pth")
+        self.last_checkpoint_path = os.path.join(self.run_dir, "last_checkpoint.pth")
+
+    def save_last_checkpoint(self, epoch: int):
+        """Save a full training snapshot for resume capability."""
+        # Unwrap DataParallel so checkpoints are portable
+        state_dict = (
+            self.model.module.state_dict()
+            if hasattr(self.model, "module")
+            else self.model.state_dict()
+        )
+        checkpoint = {
+            "epoch": epoch,
+            "model_state_dict": state_dict,
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "scheduler_state_dict": self.scheduler.state_dict(),
+            "best_metric": self.best_metric,
+        }
+        torch.save(checkpoint, self.last_checkpoint_path)
+
+    def resume(self):
+        """Load training state from last checkpoint. Call before fit().
+
+        Returns True if checkpoint was loaded, False otherwise.
+        """
+        if not os.path.exists(self.last_checkpoint_path):
+            print("[Resume] No checkpoint found — training from scratch.")
+            return False
+
+        print(f"[Resume] Loading checkpoint: {self.last_checkpoint_path}")
+        checkpoint = torch.load(
+            self.last_checkpoint_path, map_location=self.device, weights_only=True
+        )
+
+        # Restore model weights (handle DataParallel)
+        if hasattr(self.model, "module"):
+            self.model.module.load_state_dict(checkpoint["model_state_dict"])
+        else:
+            self.model.load_state_dict(checkpoint["model_state_dict"])
+
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        self.best_metric = checkpoint["best_metric"]
+        self.start_epoch = checkpoint["epoch"] + 1  # resume from next epoch
+
+        print(f"[Resume] Resuming from epoch {self.start_epoch + 1}/{self.epochs}")
+        print(f"[Resume] Best Dice so far: {self.best_metric:.4f}")
+        return True
 
     def fit(self):
         """Run the full training loop."""
         # Save config alongside checkpoints
         save_config(self.cfg, self.run_dir)
 
-        total_pbar = tqdm(total=self.epochs, desc="Training", position=0)
+        remaining = self.epochs - self.start_epoch
+        total_pbar = tqdm(
+            total=remaining,
+            desc="Training",
+            position=0,
+            initial=0,
+        )
 
-        for epoch in range(self.epochs):
+        for epoch in range(self.start_epoch, self.epochs):
             train_loss = self._train_epoch(epoch)
             val_results = self._validate_epoch(epoch)
             val_dice = val_results["mean"]
@@ -69,6 +128,9 @@ class Trainer:
                     if hasattr(self.model, "module") else self.model.state_dict()
                 torch.save(state_dict, self.best_model_path)
                 tqdm.write(f"  → New Best Dice: {self.best_metric:.4f}")
+
+            # Save last checkpoint every epoch (for crash recovery)
+            self.save_last_checkpoint(epoch)
 
             total_pbar.update(1)
 

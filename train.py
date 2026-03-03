@@ -4,6 +4,7 @@ train.py — Main entry point for training.
 
 Usage:
     python train.py --config configs/default.yaml
+    python train.py --config configs/default.yaml --resume   # resume from last checkpoint
 """
 
 import argparse
@@ -30,6 +31,11 @@ def main():
         type=str,
         default="configs/default.yaml",
         help="Path to YAML config file (default: configs/default.yaml)",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume training from last checkpoint in the run directory.",
     )
     args = parser.parse_args()
 
@@ -58,8 +64,6 @@ def main():
     optimizer, scheduler = create_optimizer(model, cfg)
 
     print(f"  Architecture : {cfg['model']['architecture']}")
-    print(f"  Init filters : {cfg['model']['init_filters']}")
-    print(f"  Dropout      : {cfg['model']['dropout_prob']}")
     print(f"  Loss         : {cfg['training']['loss']}")
     print(f"  LR           : {cfg['training']['learning_rate']}")
     print(f"  Epochs       : {cfg['training']['epochs']}")
@@ -93,6 +97,11 @@ def main():
     print(f"{'='*60}\n")
 
     trainer = Trainer(model, loaders, loss_fn, optimizer, scheduler, cfg, device)
+
+    # --- Resume from checkpoint (if requested) ---
+    if args.resume:
+        trainer.resume()
+
     trainer.fit()
 
     # --- Evaluate ---
