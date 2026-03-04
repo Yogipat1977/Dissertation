@@ -113,7 +113,11 @@ def main():
     state_dict = torch.load(trainer.best_model_path, map_location=device, weights_only=True)
     eval_model = create_model(cfg, device)
     eval_model.load_state_dict(state_dict)
-    run_evaluation(eval_model, loaders, cfg, device)
+
+    # Recreate loaders with num_workers=0 to avoid file descriptor exhaustion
+    eval_cfg = {**cfg, "data": {**cfg["data"], "num_workers": 0}}
+    eval_loaders = create_data_loaders(eval_cfg)
+    run_evaluation(eval_model, eval_loaders, eval_cfg, device)
 
     wandb.finish()
     print("\nDone.")

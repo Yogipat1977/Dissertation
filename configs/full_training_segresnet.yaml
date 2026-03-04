@@ -13,7 +13,7 @@ data:
   train_split: 1000
   val_split: 125                             # remaining ~125 go to test
   roi_size: [160, 160, 160]                  # 160³ — larger spatial context
-  batch_size: 2                              # ~22 GB on single 48 GB GPU with AMP
+  batch_size: 1                              # ~38 GB on single GPU with AMP
   num_workers: 8                             # keeps data pipeline saturated
   num_samples: 4                             # RandCropByPosNegLabeld samples
   cache_dir: ""                              # disabled for cloud (saves disk)
@@ -27,8 +27,8 @@ model:
   dropout_prob: 0.1
 
 training:
-  epochs: 50                                 # ~50 epochs typical for full BraTS dataset
-  learning_rate: 0.0001                      # base LR for batch=2
+  epochs: 35                                 # ~50 epochs typical for full BraTS dataset
+  learning_rate: 0.00005                      # √-scaled from 1e-4 (base batch=2 → batch=4)
   weight_decay: 0.00001
   scheduler: "cosine"
   loss: "DiceFocalLoss"
