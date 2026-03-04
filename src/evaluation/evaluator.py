@@ -79,13 +79,15 @@ def evaluate_set(
     spec_acc = torch.zeros(n_channels)
     n_batches = 0
 
-    with torch.no_grad():
+    use_amp = device.type == "cuda"
+
+    with torch.no_grad(), torch.amp.autocast("cuda", enabled=use_amp):
         for data in tqdm(loader, desc=f"Evaluating {name}"):
             inputs = data["image"].to(device)
             labels = data["label"].to(device)
 
             outputs = monai.inferers.sliding_window_inference(
-                inputs, roi_size, 4, model
+                inputs, roi_size, 1, model        # sw_batch_size=1 to avoid OOM
             )
 
             # Binarise predictions
