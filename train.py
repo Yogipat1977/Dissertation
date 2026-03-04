@@ -4,7 +4,7 @@ train.py — Main entry point for training.
 
 Usage:
     python train.py --config configs/default.yaml
-    python train.py --config configs/default.yaml --resume   # resume from last checkpoint
+    python train.py --config configs/default.yaml --resume --run-dir models/SegResNet_f32_...
 """
 
 import argparse
@@ -37,6 +37,12 @@ def main():
         action="store_true",
         help="Resume training from last checkpoint in the run directory.",
     )
+    parser.add_argument(
+        "--run-dir",
+        type=str,
+        default=None,
+        help="Path to existing run directory (required for --resume).",
+    )
     args = parser.parse_args()
 
     # --- Load .env (WANDB_API_KEY, etc.) ---
@@ -44,6 +50,15 @@ def main():
 
     # --- Load config ---
     cfg = load_config(args.config)
+
+    # Override run directory if resuming from an existing run
+    if args.run_dir:
+        run_dir = Path(args.run_dir)
+        if not run_dir.is_absolute():
+            run_dir = cfg["_project_root"] / run_dir
+        cfg["_run_dir"] = str(run_dir)
+        cfg["_run_name"] = run_dir.name
+
     print(f"Run name : {cfg['_run_name']}")
     print(f"Run dir  : {cfg['_run_dir']}")
 
