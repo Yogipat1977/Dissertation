@@ -2,6 +2,7 @@
 dataset.py — BraTS data listing, train/val/test splitting, and DataLoader creation.
 """
 
+import json
 import random
 from pathlib import Path
 
@@ -65,6 +66,27 @@ def create_data_loaders(cfg: dict) -> dict:
     print(f"  Train : {len(train_files)} patients")
     print(f"  Val   : {len(val_files)} patients")
     print(f"  Test  : {len(test_files)} patients")
+
+    # Save manifest so we always know which patients went where (once only)
+    run_dir = cfg.get("_run_dir")
+    if run_dir:
+        manifest_path = Path(run_dir) / "manifest.json"
+        if not manifest_path.exists():
+            manifest = {
+                "seed": seed,
+                "total_patients": len(datalist),
+                "train_count": len(train_files),
+                "val_count": len(val_files),
+                "test_count": len(test_files),
+                "train": [Path(f["label"]).parent.name for f in train_files],
+                "val":   [Path(f["label"]).parent.name for f in val_files],
+                "test":  [Path(f["label"]).parent.name for f in test_files],
+            }
+            with open(manifest_path, "w") as f:
+                json.dump(manifest, f, indent=2)
+            print(f"  Manifest saved to: {manifest_path}")
+        else:
+            print(f"  Manifest exists: {manifest_path} (skipped)")
 
     cache_dir = cfg["data"].get("cache_dir", "")
 
