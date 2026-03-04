@@ -104,6 +104,10 @@ def evaluate_set(
             spec_acc += sp.cpu()
             n_batches += 1
 
+            # Free GPU memory between patients to prevent accumulation
+            del inputs, labels, outputs, preds
+            torch.cuda.empty_cache()
+
     dice_results = dice_metric.aggregate()
     hd95_results = hd95_metric.aggregate()
     iou_results  = iou_metric.aggregate()
@@ -132,43 +136,40 @@ def run_evaluation(
     cfg: dict,
     device: torch.device,
 ):
-    """Evaluate on all splits, print results, log to W&B, and save CSV."""
+    """Evaluate on val and test splits, print results, log to W&B, and save CSV."""
     print("\n--- Evaluation ---")
 
-    train_res = evaluate_set(model, loaders["train"], cfg, device, "Train")
     val_res   = evaluate_set(model, loaders["val"],   cfg, device, "Val")
     test_res  = evaluate_set(model, loaders["test"],  cfg, device, "Test")
 
     metrics = ["dice", "hd95", "iou", "sensitivity", "specificity"]
     metric_labels = {
-        "dice":        "Dice ↑",
-        "hd95":        "HD95 ↓ (mm)",
-        "iou":         "IoU (Jaccard) ↑",
-        "sensitivity": "Sensitivity ↑",
-        "specificity": "Specificity ↑",
+        "dice":        "Dice \u2191",
+        "hd95":        "HD95 \u2193 (mm)",
+        "iou":         "IoU (Jaccard) \u2191",
+        "sensitivity": "Sensitivity \u2191",
+        "specificity": "Specificity \u2191",
     }
 
-    # ── Console table ────────────────────────────────────────────────────────
+    # \u2500\u2500 Console table \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     for metric in metrics:
         print(f"\n  {metric_labels[metric]}")
-        print(f"  {'Region':<17} | {'Train':<8} | {'Val':<8} | {'Test':<8}")
-        print(f"  {'-'*53}")
+        print(f"  {'Region':<17} | {'Val':<8} | {'Test':<8}")
+        print(f"  {'-'*40}")
         for i, reg in enumerate(REGIONS):
             print(
                 f"  {reg:<17} | "
-                f"{train_res[metric][i]:<8.4f} | "
                 f"{val_res[metric][i]:<8.4f} | "
                 f"{test_res[metric][i]:<8.4f}"
             )
 
-    # ── W&B tables ───────────────────────────────────────────────────────────
+    # \u2500\u2500 W&B tables \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     log_payload = {}
     for metric in metrics:
-        table = wandb.Table(columns=["Region", "Train", "Val", "Test"])
+        table = wandb.Table(columns=["Region", "Val", "Test"])
         for i, reg in enumerate(REGIONS):
             table.add_data(
                 reg,
-                train_res[metric][i],
                 val_res[metric][i],
                 test_res[metric][i],
             )
@@ -176,23 +177,22 @@ def run_evaluation(
 
     wandb.log(log_payload)
 
-    # ── Save CSV ─────────────────────────────────────────────────────────────
+    # \u2500\u2500 Save CSV \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     results_dir = cfg["paths"]["results_dir"]
     run_name    = cfg["_run_name"]
     csv_path    = os.path.join(results_dir, f"{run_name}.csv")
 
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["Metric", "Region", "Train", "Val", "Test"])
+        writer.writerow(["Metric", "Region", "Val", "Test"])
         for metric in metrics:
             for i, reg in enumerate(REGIONS):
                 writer.writerow([
                     metric,
                     reg,
-                    train_res[metric][i],
                     val_res[metric][i],
                     test_res[metric][i],
                 ])
 
     print(f"\nResults saved to: {csv_path}")
-    return {"train": train_res, "val": val_res, "test": test_res}
+    return {"val": val_res, "test": test_res}
