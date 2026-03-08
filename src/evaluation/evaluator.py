@@ -151,7 +151,6 @@ def run_evaluation(
         "specificity": "Specificity \u2191",
     }
 
-    # \u2500\u2500 Console table \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     for metric in metrics:
         print(f"\n  {metric_labels[metric]}")
         print(f"  {'Region':<17} | {'Val':<8} | {'Test':<8}")
@@ -163,7 +162,6 @@ def run_evaluation(
                 f"{test_res[metric][i]:<8.4f}"
             )
 
-    # \u2500\u2500 W&B tables \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     log_payload = {}
     for metric in metrics:
         table = wandb.Table(columns=["Region", "Val", "Test"])
@@ -177,8 +175,8 @@ def run_evaluation(
 
     wandb.log(log_payload)
 
-    # \u2500\u2500 Save CSV \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-    results_dir = cfg["paths"]["results_dir"]
+    results_dir = Path(cfg["paths"]["results_dir"]) / "CSVs"
+    results_dir.mkdir(parents=True, exist_ok=True)
     run_name    = cfg["_run_name"]
     csv_path    = os.path.join(results_dir, f"{run_name}.csv")
 

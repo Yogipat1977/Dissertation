@@ -79,6 +79,7 @@ def main():
     optimizer, scheduler = create_optimizer(model, cfg)
 
     print(f"  Architecture : {cfg['model']['architecture']}")
+    print(f"  Parameters   : {sum(p.numel() for p in model.parameters()):,}")
     print(f"  Loss         : {cfg['training']['loss']}")
     print(f"  LR           : {cfg['training']['learning_rate']}")
     print(f"  Epochs       : {cfg['training']['epochs']}")
