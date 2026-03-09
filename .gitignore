@@ -8,5 +8,6 @@ env/
 # Generated files
 **/manifest.json
 /models/
+/slicer_export/
 wandb/
 __pycache__/
