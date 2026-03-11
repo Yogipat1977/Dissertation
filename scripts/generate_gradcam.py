@@ -3,16 +3,20 @@
 generate_gradcam.py — Generate 3D Grad-CAM saliency volumes for test patients.
 
 For each patient, produces three NIfTI heatmaps (WT, TC, ET) that can be
-overlaid on MRI scans in 3D Slicer / SlicerVR.
+overlaid on MRI scans in 3D Slicer / SlicerVR.  Also computes XAI evaluation
+metrics (Pointing Game, Saliency Coverage, Saliency IoU, Weighted Dice)
+by comparing the saliency maps against the ground truth labels — both in
+the same MONAI-preprocessed coordinate space to ensure alignment.
 
 Usage:
-    python scripts/generate_gradcam.py \
-        --config configs/full_training_segresnet.yaml \
-        --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+    python scripts/generate_gradcam.py \\
+        --config configs/full_training_segresnet.yaml \\
+        --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \\
         --limit 1
 """
 
 import argparse
+import csv
 import os
 from pathlib import Path
 
@@ -31,11 +35,11 @@ from src.config import load_config
 from src.data.dataset import create_data_loaders
 from src.models.factory import create_model
 from src.xai.grad_cam import GradCAM3D
+from src.xai.metrics import evaluate_saliency
 
 # BraTS region names matching our 3 output channels
 REGIONS = {0: "wt", 1: "tc", 2: "et"}
 REGION_NAMES = {0: "Whole Tumor", 1: "Tumor Core", 2: "Enhancing Tumor"}
-
 
 
 def _get_target_layer(model, layer_name: str):
@@ -102,6 +106,8 @@ def main():
                         choices=["bottleneck", "encoder3", "encoder2",
                                  "encoder1", "decoder1"],
                         help="Which layer to hook for Grad-CAM (default: bottleneck)")
+    parser.add_argument("--iou_threshold", type=float, default=0.5,
+                        help="Saliency threshold for IoU metric (default: 0.5)")
     args = parser.parse_args()
 
     # ── Setup ───────────────────────────────────────────────────────────
@@ -113,6 +119,9 @@ def main():
 
     export_dir = Path(cfg["project"].get("project_root", os.getcwd())) / "slicer_export" / "XAI" / "Grad_CAM"
     export_dir.mkdir(parents=True, exist_ok=True)
+
+    results_dir = Path(cfg["project"].get("project_root", os.getcwd())) / "results" / "CSVs"
+    results_dir.mkdir(parents=True, exist_ok=True)
 
     # ── Data ────────────────────────────────────────────────────────────
     print(f"\nLoading data (split: {args.split})...")
@@ -143,7 +152,16 @@ def main():
     processed = 0
     skipped = 0
 
+    # ── CSV for XAI evaluation metrics ──────────────────────────────────
+    csv_path = results_dir / "xai_gradcam_metrics.csv"
+    csv_fieldnames = [
+        "Patient", "Region",
+        "Pointing_Game", "Saliency_Coverage", "Saliency_IoU", "Weighted_Dice",
+    ]
+    metric_rows = []
+
     print(f"\nGenerating Grad-CAM volumes → {export_dir}")
+    print(f"XAI metrics will be saved to → {csv_path}")
     print("Checking for already-exported patients to resume...\n")
 
     for data in tqdm(loader, desc="Grad-CAM"):
@@ -181,16 +199,12 @@ def main():
             skipped += 1
             continue
 
-        # ── Get the transform-aware affine for spatial alignment ──────────
-        # MONAI's CropForeground updates the affine to reflect the new
-        # origin in world space.  By saving with THIS affine at the
-        # preprocessed dimensions, 3D Slicer can align the heatmap with
-        # the raw MRI using world coordinates automatically.
+        # ── Get the transform-aware affine for spatial alignment ────────
         if isinstance(data["image"], monai.data.MetaTensor):
             affine = data["image"].meta.get("affine", None)
             if affine is not None:
                 affine = np.array(affine)
-                if affine.ndim == 3:        # batched (1, 4, 4)
+                if affine.ndim == 3:
                     affine = affine[0]
             else:
                 affine = np.eye(4)
@@ -201,6 +215,11 @@ def main():
         else:
             affine = np.eye(4)
 
+        # ── Get the ground truth label (already in preprocessed space) ──
+        # The label has 3 channels: [WT, TC, ET] after
+        # ConvertToMultiChannelBraTS2023d, same spatial dims as the image.
+        gt_label = data["label"].cpu().numpy()  # (1, 3, D, H, W)
+
         # ── Prepare input (requires grad for Grad-CAM backward) ────────
         inputs = data["image"].to(device)
         inputs.requires_grad_(True)
@@ -209,29 +228,94 @@ def main():
         for ch_idx, tag in REGIONS.items():
             heatmap = gcam.generate(inputs, target_class=ch_idx, upsample=True)
 
-            # Scale to [0, 255] uint8 for compact NIfTI storage
+            # Save NIfTI heatmap
             heatmap_uint8 = (heatmap * 255).astype(np.uint8)
-
             nifti_img = nib.Nifti1Image(heatmap_uint8, affine)
             out_path = patient_export_dir / f"{patient_id}_gradcam_{tag}.nii.gz"
             nib.save(nifti_img, out_path)
 
+            # ── Compute XAI evaluation metrics ──────────────────────────
+            # Both heatmap and gt_channel are in the same preprocessed
+            # coordinate space — no alignment issues!
+            gt_channel = gt_label[0, ch_idx]  # (D, H, W), binary
+
+            if gt_channel.sum() == 0:
+                # No tumor present for this region
+                metric_rows.append({
+                    "Patient": patient_id,
+                    "Region": REGION_NAMES[ch_idx],
+                    "Pointing_Game": "N/A",
+                    "Saliency_Coverage": "N/A",
+                    "Saliency_IoU": "N/A",
+                    "Weighted_Dice": "N/A",
+                })
+            else:
+                metrics = evaluate_saliency(
+                    heatmap, gt_channel, threshold=args.iou_threshold
+                )
+                metric_rows.append({
+                    "Patient": patient_id,
+                    "Region": REGION_NAMES[ch_idx],
+                    "Pointing_Game": metrics["pointing_game"],
+                    "Saliency_Coverage": round(metrics["coverage"], 4),
+                    "Saliency_IoU": round(metrics["iou"], 4),
+                    "Weighted_Dice": round(metrics["weighted_dice"], 4),
+                })
+
         processed += 1
-        tqdm.write(f"  ✓ {patient_id} — 3 Grad-CAM volumes saved")
+        tqdm.write(f"  ✓ {patient_id} — 3 Grad-CAM volumes + metrics saved")
 
         # Clean up memory
-        del inputs
+        del inputs, gt_label
         torch.cuda.empty_cache()
 
     gcam.remove_hooks()
 
+    # ── Write metrics CSV ───────────────────────────────────────────────
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=csv_fieldnames)
+        writer.writeheader()
+        writer.writerows(metric_rows)
+
+    # ── Print summary ───────────────────────────────────────────────────
     print(f"\n✅ Completed: {processed} new + {skipped} skipped (already exported)")
-    print(f"   Output: {export_dir}")
-    print("   Each patient folder contains:")
-    print("     <patient>_gradcam_wt.nii.gz  (Whole Tumor heatmap)")
-    print("     <patient>_gradcam_tc.nii.gz  (Tumor Core heatmap)")
-    print("     <patient>_gradcam_et.nii.gz  (Enhancing Tumor heatmap)")
-    print("\n   Load the patient's MRI from data/BraTS2023-Training/ in 3D Slicer to overlay.")
+    print(f"   Grad-CAM volumes: {export_dir}")
+    print(f"   XAI metrics CSV:  {csv_path}")
+
+    if metric_rows:
+        print("\n" + "=" * 65)
+        print("  SUMMARY: Saliency vs Ground Truth Alignment (Grad-CAM)")
+        print("=" * 65)
+
+        for ch_idx, region_name in REGION_NAMES.items():
+            region_rows = [
+                r for r in metric_rows
+                if r["Region"] == region_name and r["Pointing_Game"] != "N/A"
+            ]
+            if not region_rows:
+                print(f"\n  {region_name}: No valid samples")
+                continue
+
+            n = len(region_rows)
+            pg_acc = np.mean([r["Pointing_Game"] for r in region_rows]) * 100
+            cov_mean = np.mean([r["Saliency_Coverage"] for r in region_rows])
+            cov_std = np.std([r["Saliency_Coverage"] for r in region_rows])
+            iou_mean = np.mean([r["Saliency_IoU"] for r in region_rows])
+            iou_std = np.std([r["Saliency_IoU"] for r in region_rows])
+            dice_mean = np.mean([r["Weighted_Dice"] for r in region_rows])
+            dice_std = np.std([r["Weighted_Dice"] for r in region_rows])
+
+            print(f"\n  {region_name} (n={n})")
+            print(f"    Pointing Game Accuracy : {pg_acc:6.1f}%")
+            print(f"    Saliency Coverage      : {cov_mean:.4f} ± {cov_std:.4f}")
+            print(f"    Saliency IoU (τ={args.iou_threshold})   : {iou_mean:.4f} ± {iou_std:.4f}")
+            print(f"    Weighted Dice          : {dice_mean:.4f} ± {dice_std:.4f}")
+
+        na_count = sum(1 for r in metric_rows if r["Pointing_Game"] == "N/A")
+        if na_count > 0:
+            print(f"\n  Note: {na_count} region evaluations skipped (no tumor in GT)")
+
+        print("\n" + "=" * 65)
 
 
 if __name__ == "__main__":
