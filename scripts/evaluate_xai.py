@@ -108,7 +108,7 @@ def main():
     # ── CSV setup ───────────────────────────────────────────────────────
     fieldnames = [
         "Patient", "Region",
-        "Pointing_Game", "Saliency_Coverage", "Saliency_IoU",
+        "Pointing_Game", "Saliency_Coverage", "Saliency_IoU", "Weighted_Dice",
     ]
 
     rows = []
@@ -152,6 +152,7 @@ def main():
                     "Pointing_Game": "N/A",
                     "Saliency_Coverage": "N/A",
                     "Saliency_IoU": "N/A",
+                    "Weighted_Dice": "N/A",
                 })
                 continue
 
@@ -164,6 +165,7 @@ def main():
                 "Pointing_Game": metrics["pointing_game"],
                 "Saliency_Coverage": round(metrics["coverage"], 4),
                 "Saliency_IoU": round(metrics["iou"], 4),
+                "Weighted_Dice": round(metrics["weighted_dice"], 4),
             })
 
     # ── Write CSV ───────────────────────────────────────────────────────
@@ -193,6 +195,7 @@ def main():
         pg_vals = [r["Pointing_Game"] for r in region_rows]
         cov_vals = [r["Saliency_Coverage"] for r in region_rows]
         iou_vals = [r["Saliency_IoU"] for r in region_rows]
+        dice_vals = [r["Weighted_Dice"] for r in region_rows]
 
         n = len(region_rows)
         pg_acc = np.mean(pg_vals) * 100
@@ -200,11 +203,14 @@ def main():
         cov_std = np.std(cov_vals)
         iou_mean = np.mean(iou_vals)
         iou_std = np.std(iou_vals)
+        dice_mean = np.mean(dice_vals)
+        dice_std = np.std(dice_vals)
 
         print(f"\n  {region_info['name']} (n={n})")
         print(f"    Pointing Game Accuracy : {pg_acc:6.1f}%")
         print(f"    Saliency Coverage      : {cov_mean:.4f} ± {cov_std:.4f}")
         print(f"    Saliency IoU (τ={args.threshold})   : {iou_mean:.4f} ± {iou_std:.4f}")
+        print(f"    Weighted Dice          : {dice_mean:.4f} ± {dice_std:.4f}")
 
     # Count patients with N/A (no tumor in that region)
     na_count = sum(1 for r in rows if r["Pointing_Game"] == "N/A")

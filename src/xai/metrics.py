@@ -83,6 +83,37 @@ def saliency_iou(
     return float(intersection / union)
 
 
+def weighted_dice(
+    saliency: np.ndarray,
+    ground_truth: np.ndarray,
+) -> float:
+    """
+    Weighted (Soft) Dice between continuous saliency and binary GT mask.
+
+    Unlike standard Dice (which compares two binary masks), this treats
+    the saliency as soft membership values [0, 1] and computes overlap
+    with the binary ground truth.  This rewards saliency maps that not
+    only cover the tumor but also match its shape.
+
+    Formula:
+        Weighted_Dice = 2 * Σ(S · G) / (Σ S + Σ G)
+
+    where S ∈ [0,1] is the normalised saliency and G ∈ {0,1} is the GT.
+
+    Args:
+        saliency:     3D array (D, H, W) with values in [0, 1].
+        ground_truth: 3D binary array (D, H, W), 1 = tumor, 0 = background.
+
+    Returns:
+        Float in [0, 1].  1.0 = perfect soft overlap.
+    """
+    numerator = 2.0 * (saliency * ground_truth).sum()
+    denominator = saliency.sum() + ground_truth.sum()
+    if denominator < 1e-8:
+        return 0.0
+    return float(numerator / denominator)
+
+
 def evaluate_saliency(
     saliency: np.ndarray,
     ground_truth: np.ndarray,
@@ -103,4 +134,5 @@ def evaluate_saliency(
         "pointing_game": float(pointing_game(saliency, ground_truth)),
         "coverage": saliency_coverage(saliency, ground_truth),
         "iou": saliency_iou(saliency, ground_truth, threshold),
+        "weighted_dice": weighted_dice(saliency, ground_truth),
     }
