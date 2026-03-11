@@ -21,6 +21,7 @@ import os
 from pathlib import Path
 
 import torch
+import torch.nn.functional as F
 import numpy as np
 import nibabel as nib
 from tqdm import tqdm
@@ -220,13 +221,30 @@ def main():
         # ConvertToMultiChannelBraTS2023d, same spatial dims as the image.
         gt_label = data["label"].cpu().numpy()  # (1, 3, D, H, W)
 
-        # ── Prepare input (requires grad for Grad-CAM backward) ────────
-        inputs = data["image"].to(device)
+        # ── Prepare input ───────────────────────────────────────────────
+        # Pad spatial dims to be divisible by 16 (2^4 for 4 encoder levels)
+        # so the encoder downsampling/upsampling doesn't cause size mismatches.
+        raw_input = data["image"].to(device)
+        orig_shape = raw_input.shape[2:]  # (D, H, W) before padding
+        divisor = 16
+        pad_d = (divisor - orig_shape[0] % divisor) % divisor
+        pad_h = (divisor - orig_shape[1] % divisor) % divisor
+        pad_w = (divisor - orig_shape[2] % divisor) % divisor
+
+        if pad_d > 0 or pad_h > 0 or pad_w > 0:
+            # F.pad expects (w_left, w_right, h_left, h_right, d_left, d_right)
+            inputs = F.pad(raw_input, (0, pad_w, 0, pad_h, 0, pad_d), mode="constant", value=0)
+        else:
+            inputs = raw_input
+
         inputs.requires_grad_(True)
 
         # ── Generate Grad-CAM for each region ───────────────────────────
         for ch_idx, tag in REGIONS.items():
             heatmap = gcam.generate(inputs, target_class=ch_idx, upsample=True)
+
+            # Crop back to original preprocessed size (remove padding)
+            heatmap = heatmap[:orig_shape[0], :orig_shape[1], :orig_shape[2]]
 
             # Save NIfTI heatmap
             heatmap_uint8 = (heatmap * 255).astype(np.uint8)
