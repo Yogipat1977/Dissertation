@@ -48,12 +48,14 @@ def _get_target_layer(model, layer_name: str):
     """
     Resolve a target layer from the SegResNet model.
 
-    SegResNet architecture (MONAI):
-        model.down_layers  — list of encoder blocks [level1, level2, level3]
-        model.down_samples — list of downsampling ops
-        model.bottleneck   — the deepest encoder block (256 filters)
-        model.up_layers    — list of decoder blocks
-        model.up_samples   — list of upsampling ops
+    MONAI SegResNet architecture (with blocks_down=(1,2,2,4), init_filters=32):
+        model.convInit        — initial convolution (4 → 32 filters)
+        model.down_layers[0]  — encoder level 1:  32 filters, 160³
+        model.down_layers[1]  — encoder level 2:  64 filters,  80³
+        model.down_layers[2]  — encoder level 3: 128 filters,  40³
+        model.down_layers[3]  — encoder level 4: 256 filters,  20³  (deepest/"bottleneck")
+        model.up_layers[0..2] — decoder blocks
+        model.conv_final      — final 1×1×1 conv → out_channels
 
     Args:
         model:      The loaded SegResNet model.
@@ -63,29 +65,23 @@ def _get_target_layer(model, layer_name: str):
     Returns:
         The nn.Module to hook into.
     """
-    layer_map = {
-        "bottleneck": "bottleneck",
-        "encoder3": None,   # down_layers[-1]
-        "encoder2": None,   # down_layers[-2]
-        "encoder1": None,   # down_layers[0]
-        "decoder1": None,   # up_layers[0]
-    }
-
     if layer_name == "bottleneck":
-        return model.bottleneck
-    elif layer_name == "encoder3":
+        # Deepest encoder block (256 filters at 20³ for init_filters=32)
         return model.down_layers[-1]
-    elif layer_name == "encoder2":
+    elif layer_name == "encoder3":
+        # Third encoder block (128 filters at 40³)
         return model.down_layers[-2]
+    elif layer_name == "encoder2":
+        # Second encoder block (64 filters at 80³)
+        return model.down_layers[-3]
     elif layer_name == "encoder1":
+        # First encoder block (32 filters at 160³)
         return model.down_layers[0]
     elif layer_name == "decoder1":
         return model.up_layers[0]
     else:
-        raise ValueError(
-            f"Unknown layer '{layer_name}'. "
-            f"Choose from: {list(layer_map.keys())}"
-        )
+        valid = ["bottleneck", "encoder3", "encoder2", "encoder1", "decoder1"]
+        raise ValueError(f"Unknown layer '{layer_name}'. Choose from: {valid}")
 
 
 def _patient_gradcam_done(patient_dir: Path, patient_id: str) -> bool:
