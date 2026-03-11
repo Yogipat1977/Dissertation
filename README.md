@@ -32,7 +32,9 @@ This project develops a 3D Explainable AI (XAI) framework to interpret 3D CNN mo
 ├── evaluate.py                  # Standalone evaluation entry point
 ├── scripts/
 │   ├── download_data.py         # Download training data from Synapse
-│   └── extract_prototype.py    # Create prototype subset for local testing
+│   ├── extract_prototype.py    # Create prototype subset for local testing
+│   ├── export_predictions.py   # Export NIfTI predictions for 3D Slicer / VR
+│   └── evaluate_per_patient.py # Per-patient metrics (CSV + summary stats)
 ├── models/                      # Saved checkpoints (git-ignored)
 │   ├── prototype_v1/            # SegResNet, init_filters=8
 │   ├── prototype_32_v1/         # SegResNet, init_filters=32
@@ -148,6 +150,62 @@ python train.py --config configs/experiment.yaml
 ```bash
 python evaluate.py --config configs/segresnet.yaml --checkpoint models/<run_name>/best_model.pth
 ```
+
+### 7. Export Predictions for 3D Slicer / VR
+
+`scripts/export_predictions.py` runs sliding-window inference on the test set and saves each patient's predicted segmentation as a discrete-label NIfTI file (labels 0–3, same format as `seg.nii.gz`). It also copies the original structural MRI scans and ground-truth segmentation into a per-patient folder, ready to be dragged directly into **3D Slicer** or **SlicerVR**.
+
+```bash
+python scripts/export_predictions.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/<run_name>/best_model.pth
+```
+
+| Argument | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `--config` | Yes | — | Path to YAML config file |
+| `--checkpoint` | Yes | — | Path to saved model weights (`.pth`) |
+| `--limit` | No | `0` (all) | Process only the first *N* patients |
+| `--split` | No | `test` | Dataset split to export (`train`, `val`, `test`) |
+
+**Output (`slicer_export/`):**
+
+```
+slicer_export/
+└── BraTS-GLI-00123-000/
+    ├── BraTS-GLI-00123-000_pred.nii.gz   # Model prediction (discrete labels)
+    ├── BraTS-GLI-00123-000-seg.nii.gz    # Ground-truth segmentation
+    ├── BraTS-GLI-00123-000-t1c.nii.gz    # T1-contrast MRI
+    ├── BraTS-GLI-00123-000-t1n.nii.gz    # T1-native MRI
+    ├── BraTS-GLI-00123-000-t2f.nii.gz    # T2-FLAIR MRI
+    └── BraTS-GLI-00123-000-t2w.nii.gz    # T2-weighted MRI
+```
+
+> The script supports **resuming** — patients that already have a `_pred.nii.gz` file are automatically skipped.
+
+### 8. Per-Patient Evaluation
+
+`scripts/evaluate_per_patient.py` evaluates the model on each test patient individually and exports granular metrics. It computes **Dice, HD95, IoU, Sensitivity, and Specificity** for every patient across the three BraTS regions (Whole Tumor, Tumor Core, Enhancing Tumor).
+
+```bash
+python scripts/evaluate_per_patient.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/<run_name>/best_model.pth
+```
+
+| Argument | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `--config` | Yes | — | Path to YAML config file |
+| `--checkpoint` | Yes | — | Path to saved model weights (`.pth`) |
+| `--split` | No | `test` | Split to evaluate (`train`, `val`, `test`) |
+| `--output_name` | No | `per_patient_metrics.csv` | Filename for the detailed CSV |
+
+**Output (`results/CSVs/`):**
+
+| File | Contents |
+|------|----------|
+| `per_patient_metrics.csv` | One row per patient × region with Dice, HD95, IoU, Sensitivity, Specificity |
+| `summary_per_patient_metrics.csv` | Mean ± Std aggregated by region — ready for the dissertation report |
 
 ---
 
