@@ -17,7 +17,6 @@ import os
 from pathlib import Path
 
 import torch
-import torch.nn.functional as F
 import numpy as np
 import nibabel as nib
 from tqdm import tqdm
@@ -182,13 +181,25 @@ def main():
             skipped += 1
             continue
 
-        # ── Get original NIfTI affine & shape for spatial alignment ──────
-        # The dataloader applies transforms (CropForeground, SpatialPad)
-        # that change the spatial dimensions. We need to save the Grad-CAM
-        # in the ORIGINAL image space so it aligns with raw MRI in Slicer.
-        original_nifti = nib.load(str(first_img_path))
-        original_affine = original_nifti.affine
-        original_shape = original_nifti.shape[:3]  # (D, H, W) or (H, W, D)
+        # ── Get the transform-aware affine for spatial alignment ──────────
+        # MONAI's CropForeground updates the affine to reflect the new
+        # origin in world space.  By saving with THIS affine at the
+        # preprocessed dimensions, 3D Slicer can align the heatmap with
+        # the raw MRI using world coordinates automatically.
+        if isinstance(data["image"], monai.data.MetaTensor):
+            affine = data["image"].meta.get("affine", None)
+            if affine is not None:
+                affine = np.array(affine)
+                if affine.ndim == 3:        # batched (1, 4, 4)
+                    affine = affine[0]
+            else:
+                affine = np.eye(4)
+        elif "image_meta_dict" in data and "affine" in data["image_meta_dict"]:
+            affine = np.array(data["image_meta_dict"]["affine"])
+            if affine.ndim == 3:
+                affine = affine[0]
+        else:
+            affine = np.eye(4)
 
         # ── Prepare input (requires grad for Grad-CAM backward) ────────
         inputs = data["image"].to(device)
@@ -198,22 +209,10 @@ def main():
         for ch_idx, tag in REGIONS.items():
             heatmap = gcam.generate(inputs, target_class=ch_idx, upsample=True)
 
-            # Resample from preprocessed space → original image space
-            # heatmap is (D', H', W') from preprocessed; resize to original
-            heatmap_tensor = torch.tensor(heatmap, dtype=torch.float32)
-            heatmap_tensor = heatmap_tensor.unsqueeze(0).unsqueeze(0)  # (1,1,D',H',W')
-            heatmap_resampled = F.interpolate(
-                heatmap_tensor,
-                size=original_shape,
-                mode="trilinear",
-                align_corners=False,
-            )
-            heatmap_np = heatmap_resampled.squeeze().numpy()
-
             # Scale to [0, 255] uint8 for compact NIfTI storage
-            heatmap_uint8 = (heatmap_np * 255).astype(np.uint8)
+            heatmap_uint8 = (heatmap * 255).astype(np.uint8)
 
-            nifti_img = nib.Nifti1Image(heatmap_uint8, original_affine)
+            nifti_img = nib.Nifti1Image(heatmap_uint8, affine)
             out_path = patient_export_dir / f"{patient_id}_gradcam_{tag}.nii.gz"
             nib.save(nifti_img, out_path)
 
