@@ -121,7 +121,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
 
-    export_dir = Path(cfg["project"].get("project_root", os.getcwd())) / "slicer_export"
+    export_dir = Path(cfg["project"].get("project_root", os.getcwd())) / "slicer_export" / "XAI" / "Grad_CAM"
     export_dir.mkdir(parents=True, exist_ok=True)
 
     # ── Data ────────────────────────────────────────────────────────────

@@ -76,16 +76,9 @@ def convert_multichannel_to_discrete(pred_tensor: torch.Tensor) -> np.ndarray:
     
     return discrete_mask.cpu().numpy()
 
-# Descriptive region names for the 3 output channels
-# These become the NIfTI filenames visible in 3D Slicer's hierarchy
-REGION_NAMES = ["Whole_Tumor", "Tumor_Core", "Enhancing_Tumor"]
-
 def _patient_fully_exported(patient_export_dir: Path, patient_id: str) -> bool:
-    """Return True if all 3 per-region prediction NIfTIs already exist."""
-    return all(
-        (patient_export_dir / f"{patient_id}_pred_{r}.nii.gz").exists()
-        for r in REGION_NAMES
-    )
+    """Return True if the prediction NIfTI already exists."""
+    return (patient_export_dir / f"{patient_id}_pred.nii.gz").exists()
 
 def main():
     parser = argparse.ArgumentParser(description="Export test predictions to NIfTI for 3D Slicer.")
@@ -102,7 +95,7 @@ def main():
     print(f"Device: {device}")
 
     # Create root export directory
-    export_dir = Path(cfg["project"].get("project_root", os.getcwd())) / "slicer_export"
+    export_dir = Path(cfg["project"].get("project_root", os.getcwd())) / "slicer_export" / "Model_Test_Results"
     export_dir.mkdir(parents=True, exist_ok=True)
     
     # Loading Data
@@ -137,10 +130,8 @@ def main():
                 break
                 
             inputs = data["image"].to(device)
-            # labels = data["label"].to(device) # not strictly needed for export, but loaded
             
             # Extract patient ID and original file paths
-            # The MetaTensor usually holds the original file paths under "filename_or_obj"
             if "image_meta_dict" in data and "filename_or_obj" in data["image_meta_dict"]:
                 img_paths = data["image_meta_dict"]["filename_or_obj"]
             elif isinstance(data["image"], monai.data.MetaTensor) and "filename_or_obj" in data["image"].meta:
@@ -149,8 +140,6 @@ def main():
                 print("Warning: Could not find original filename in dataloader. Skipping.")
                 continue
             
-            # Since batch_size=1, img_paths is a list of tuples or lists containing the 4 modalities
-            # img_paths for a single batch might look like: [('/path/t1n.nii.gz', '/path/t1c.nii.gz', ...)]
             if isinstance(img_paths, (list, tuple)) and len(img_paths) > 0 and isinstance(img_paths[0], (list, tuple)):
                 patient_modality_paths = img_paths[0]
             elif isinstance(img_paths, (list, tuple)):
@@ -165,7 +154,7 @@ def main():
             patient_export_dir = export_dir / patient_id
             patient_export_dir.mkdir(parents=True, exist_ok=True)
             
-            # Resume check: skip if all region files already exist
+            # Resume check: skip if prediction already exists
             if _patient_fully_exported(patient_export_dir, patient_id):
                 skipped += 1
                 continue
@@ -173,30 +162,30 @@ def main():
             # 1. Inference
             outputs = monai.inferers.sliding_window_inference(inputs, roi_size, 4, model)
             
-            # Binarize outputs: Shape becomes (C, H, W, D) due to post_trans over batch
+            # Binarize outputs: (B, C, H, W, D) → take first item → (3, H, W, D)
             pred_batch = torch.stack([post_trans(torch.sigmoid(i)) for i in outputs])
-            pred_single = pred_batch[0] # (3, H, W, D)
+            pred_single = pred_batch[0]
 
-            # 2. Retrieve affine metadata from one of the original images to ensure proper alignment
+            # 2. Convert multi-channel prediction to discrete labels (0, 1, 2, 3)
+            #    Same format as seg.nii.gz so Slicer shows both identically
+            #    Label 1 = NCR/NET, Label 2 = Edema, Label 3 = Enhancing Tumor
+            discrete_pred = convert_multichannel_to_discrete(pred_single)
+            
+            # 3. Get affine from original image for spatial alignment
             if "image_meta_dict" in data:
                 affine = get_affine_from_meta(data["image_meta_dict"])
             elif isinstance(data["image"], monai.data.MetaTensor):
                 affine = get_affine_from_meta(data["image"].meta)
             else:
                 affine = np.eye(4)
-                
-            # If batching caused an extra dimension on affine, take the first item
             if len(affine.shape) == 3 and affine.shape[0] == 1:
                 affine = affine[0]
 
-            # 3. Save per-region binary NIfTIs with descriptive names for 3D Slicer
-            for ch_idx, region_name in enumerate(REGION_NAMES):
-                region_mask = (pred_single[ch_idx] > 0.5).cpu().numpy().astype(np.uint8)
-                region_nifti = nib.Nifti1Image(region_mask, affine)
-                region_path = patient_export_dir / f"{patient_id}_pred_{region_name}.nii.gz"
-                nib.save(region_nifti, region_path)
+            # 4. Save prediction as discrete label NIfTI (same format as seg.nii.gz)
+            pred_nifti = nib.Nifti1Image(discrete_pred, affine)
+            nib.save(pred_nifti, patient_export_dir / f"{patient_id}_pred.nii.gz")
             
-            # 4. Copy the source structural scans and ground truth for side-by-side comparison
+            # 5. Copy source structural scans and ground truth
             source_dir = first_img_path.parent
             for file in source_dir.glob("*.nii.gz"):
                 dst_file = patient_export_dir / file.name
@@ -206,7 +195,7 @@ def main():
             processed += 1
             
             # Clean up memory
-            del inputs, outputs, pred_batch, pred_single
+            del inputs, outputs, pred_batch, pred_single, discrete_pred
             torch.cuda.empty_cache()
 
     print(f"\n Completed: {processed} new + {skipped} skipped (already exported)")
