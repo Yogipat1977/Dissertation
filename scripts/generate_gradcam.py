@@ -14,7 +14,6 @@ Usage:
 
 import argparse
 import os
-import shutil
 from pathlib import Path
 
 import torch
@@ -214,17 +213,7 @@ def main():
             nib.save(nifti_img, out_path)
 
         processed += 1
-
-        # ── Copy source structural MRI scans & ground truth ─────────────
-        source_dir = first_img_path.parent
-        copied_count = 0
-        for file in source_dir.glob("*.nii.gz"):
-            dst_file = patient_export_dir / file.name
-            if not dst_file.exists():
-                shutil.copy2(file, dst_file)
-                copied_count += 1
-
-        tqdm.write(f"  ✓ {patient_id} — 3 Grad-CAM + {copied_count} source volumes saved")
+        tqdm.write(f"  ✓ {patient_id} — 3 Grad-CAM volumes saved")
 
         # Clean up memory
         del inputs
@@ -234,13 +223,11 @@ def main():
 
     print(f"\n✅ Completed: {processed} new + {skipped} skipped (already exported)")
     print(f"   Output: {export_dir}")
-    print("   Each patient folder now contains:")
-    print("     <patient>-t1c/t1n/t2f/t2w.nii.gz  (structural MRI)")
-    print("     <patient>-seg.nii.gz               (ground truth)")
-    print("     <patient>_gradcam_wt.nii.gz        (Whole Tumor heatmap)")
-    print("     <patient>_gradcam_tc.nii.gz        (Tumor Core heatmap)")
-    print("     <patient>_gradcam_et.nii.gz        (Enhancing Tumor heatmap)")
-    print("\n   Drag the patient folder into 3D Slicer to visualise overlays.")
+    print("   Each patient folder contains:")
+    print("     <patient>_gradcam_wt.nii.gz  (Whole Tumor heatmap)")
+    print("     <patient>_gradcam_tc.nii.gz  (Tumor Core heatmap)")
+    print("     <patient>_gradcam_et.nii.gz  (Enhancing Tumor heatmap)")
+    print("\n   Load the patient's MRI from data/BraTS2023-Training/ in 3D Slicer to overlay.")
 
 
 if __name__ == "__main__":
