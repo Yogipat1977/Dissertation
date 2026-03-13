@@ -14,9 +14,9 @@ Three XAI methods are implemented:
 
 | Method | Resolution | Class-Specific? | Sharpness |
 |--------|-----------|-----------------|-----------|
-| **Grad-CAM** | Coarse (20³ → 160³) | ✅ Yes | Low (blurry blob) |
-| **Guided Backpropagation (GBP)** | Full (160³) | ❌ No | High (sharp edges) |
-| **Guided Grad-CAM** | Full (160³) | ✅ Yes | High (best of both) |
+| **Grad-CAM** | Coarse (20³ → 160³) |  Yes | Low (blurry blob) |
+| **Guided Backpropagation (GBP)** | Full (160³) | No | High (sharp edges) |
+| **Guided Grad-CAM** | Full (160³) |  Yes | High (best of both) |
 
 All methods are evaluated against ground truth using four quantitative metrics (see `Notes/XAI/XAI_Evaluation_Metrics.md`).
 
@@ -90,12 +90,23 @@ score = output[0, target_class].mean()   # scalar
 score.backward()                          # standard backprop
 ```
 
-### 2.4 Related Files
+### 2.4 Script Usage & Run Commands
 
-| File | Purpose |
-|------|---------|
-| `src/xai/grad_cam.py` | `GradCAM3D` class — hooks, forward/backward, heatmap generation |
-| `scripts/generate_gradcam.py` | Batch generation + inline metrics computation |
+The `generate_gradcam.py` script computes Grad-CAM heatmaps and inline metrics for each patient.
+
+**Command:**
+```bash
+python scripts/generate_gradcam.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --limit 5
+```
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--limit` | `0` (all) | Number of patients to process (useful for testing) |
+| `--layer` | `bottleneck` | Target layer for gradients |
+| `--split` | `test` | Dataset split to evaluate |
 
 ### 2.5 Output
 
@@ -159,12 +170,22 @@ Then normalise to [0, 1].
 - **NOT class-discriminative** — highlights all visually salient features, regardless of which class
 - **Sharp edges** — shows fine-grained detail at individual voxel level
 
-### 3.4 Related Files
+### 3.4 Script Usage & Run Commands
 
-| File | Purpose |
-|------|---------|
-| `src/xai/guided_backprop.py` | `GuidedBackprop3D` class — ReLU hook overrides, gradient extraction |
-| `scripts/generate_gbp.py` | Batch generation + inline metrics (also supports Guided Grad-CAM) |
+The `generate_gbp.py` script computes Guided Backpropagation saliency maps and inline metrics.
+
+**Command (GBP only):**
+```bash
+python scripts/generate_gbp.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --limit 5
+```
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--limit` | `0` (all) | Number of patients to process |
+| `--split` | `test` | Dataset split to evaluate |
 
 ### 3.5 Output
 
@@ -217,13 +238,23 @@ Because Guided Grad-CAM produces tight, sharp saliency that hugs tumor boundarie
 | Saliency IoU | Low (~0.05) | Significantly higher |
 | Weighted Dice | Low (~0.15) | Significantly higher |
 
-### 4.4 Related Files
+### 4.4 Script Usage & Run Commands
 
-| File | Purpose |
-|------|---------|
-| `src/xai/grad_cam.py` | Grad-CAM component |
-| `src/xai/guided_backprop.py` | GBP component |
-| `scripts/generate_gbp.py` | Combined generation (use `--guided_gradcam` flag) |
+Guided Grad-CAM uses the same `generate_gbp.py` script, but with the `--guided_gradcam` flag. This flag tells the script to generate *both* GBP and Grad-CAM, and then multiply them together.
+
+**Command:**
+```bash
+python scripts/generate_gbp.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --limit 5 \
+  --guided_gradcam
+```
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--guided_gradcam` | `False` | Enables computation of Guided Grad-CAM |
+| `--layer` | `bottleneck` | Target layer for the Grad-CAM component |
 
 ### 4.5 Output
 

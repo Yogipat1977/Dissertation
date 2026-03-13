@@ -68,11 +68,20 @@ class GuidedBackprop3D:
         Recursively find all ReLU/PReLU layers and register backward hooks
         that implement the guided backprop gradient gating.
 
+        Also disables inplace=True on ReLU layers to prevent conflicts
+        when both GBP and Grad-CAM hooks are active on the same model
+        (even though we isolate them per-patient, inplace ops can still
+        cause issues with autograd).
+
         For MONAI SegResNet, ReLU activations are inside residual blocks
         as nn.ReLU or act layers.
         """
         for name, child in module.named_children():
             if isinstance(child, (torch.nn.ReLU, torch.nn.PReLU, torch.nn.LeakyReLU)):
+                # Disable inplace to avoid potential autograd conflicts
+                if hasattr(child, 'inplace') and child.inplace:
+                    self._original_relus.append((child, 'inplace', True))
+                    child.inplace = False
                 # Register backward hook on this ReLU
                 hook = child.register_backward_hook(self._guided_relu_hook)
                 self._hooks.append(hook)
@@ -136,10 +145,14 @@ class GuidedBackprop3D:
     # ── Cleanup ─────────────────────────────────────────────────────────
 
     def restore_relus(self):
-        """Remove all registered backward hooks. Call this when done."""
+        """Remove all registered backward hooks and restore inplace state."""
         for hook in self._hooks:
             hook.remove()
         self._hooks.clear()
+        # Restore original inplace=True on ReLUs
+        for module, attr, original_value in self._original_relus:
+            setattr(module, attr, original_value)
+        self._original_relus.clear()
 
     def __del__(self):
         """Safety net: remove hooks on garbage collection."""

@@ -139,17 +139,15 @@ def main():
     )
     model.eval()
 
-    # ── Create GBP engine ───────────────────────────────────────────────
-    gbp = GuidedBackprop3D(model)
-    print("Guided Backpropagation engine initialised")
+    # NOTE: We do NOT create GBP or Grad-CAM engines here.
+    # When running --guided_gradcam, both hook systems interfere if
+    # active simultaneously. Instead, we create them per-patient in
+    # sequence: Grad-CAM first (clean model) → GBP second (GBP hooks only).
 
-    # ── Create Grad-CAM engine if doing Guided Grad-CAM ─────────────────
-    gcam = None
     if args.guided_gradcam:
         from src.xai.grad_cam import GradCAM3D
         target_layer = _get_target_layer(model, args.layer)
-        gcam = GradCAM3D(model, target_layer)
-        print(f"Grad-CAM engine initialised (layer: {args.layer})")
+        print(f"Guided Grad-CAM mode (Grad-CAM layer: {args.layer})")
 
     processed = 0
     skipped = 0
@@ -250,12 +248,29 @@ def main():
         else:
             inputs = raw_input
 
-        # ── Generate saliency for each region ───────────────────────────
-        for ch_idx, tag in REGIONS.items():
+        # ════════════════════════════════════════════════════════════════
+        # STEP 1: Grad-CAM (clean model, NO GBP hooks)
+        # ════════════════════════════════════════════════════════════════
+        gradcam_heatmaps = {}
+        if args.guided_gradcam:
+            gcam = GradCAM3D(model, target_layer)
+            for ch_idx, tag in REGIONS.items():
+                heatmap = gcam.generate(
+                    inputs, target_class=ch_idx, upsample=True
+                )
+                gradcam_heatmaps[ch_idx] = heatmap[
+                    :orig_shape[0], :orig_shape[1], :orig_shape[2]
+                ]
+            gcam.remove_hooks()
+            del gcam
 
-            # ── GBP saliency ────────────────────────────────────────────
+        # ════════════════════════════════════════════════════════════════
+        # STEP 2: GBP (install GBP hooks, NO Grad-CAM hooks)
+        # ════════════════════════════════════════════════════════════════
+        gbp = GuidedBackprop3D(model)
+
+        for ch_idx, tag in REGIONS.items():
             gbp_saliency = gbp.generate(inputs, target_class=ch_idx)
-            # Crop back to original preprocessed size
             gbp_saliency = gbp_saliency[:orig_shape[0], :orig_shape[1], :orig_shape[2]]
 
             # Save GBP NIfTI
@@ -289,19 +304,11 @@ def main():
                     "Weighted_Dice": round(metrics["weighted_dice"], 4),
                 })
 
-            # ── Guided Grad-CAM (if requested) ──────────────────────────
-            if args.guided_gradcam and gcam is not None:
-                # Generate Grad-CAM heatmap (upsampled to input size)
-                gradcam_heatmap = gcam.generate(
-                    inputs, target_class=ch_idx, upsample=True
-                )
-                # Crop Grad-CAM back to original preprocessed size
-                gradcam_heatmap = gradcam_heatmap[
-                    :orig_shape[0], :orig_shape[1], :orig_shape[2]
-                ]
-
-                # Guided Grad-CAM = GBP ⊙ Grad-CAM (element-wise multiply)
-                guided_gradcam = gbp_saliency * gradcam_heatmap
+            # ════════════════════════════════════════════════════════════
+            # STEP 3: Guided Grad-CAM = GBP × Grad-CAM
+            # ════════════════════════════════════════════════════════════
+            if args.guided_gradcam and ch_idx in gradcam_heatmaps:
+                guided_gradcam = gbp_saliency * gradcam_heatmaps[ch_idx]
 
                 # Re-normalise to [0, 1]
                 gg_min = guided_gradcam.min()
@@ -340,16 +347,16 @@ def main():
                         "Weighted_Dice": round(gg_metrics["weighted_dice"], 4),
                     })
 
+        # Remove GBP hooks before next patient
+        gbp.restore_relus()
+        del gbp
+
         processed += 1
         tqdm.write(f"  ✓ {patient_id} — {methods_str} saliency saved")
 
         # Clean up memory
-        del inputs, raw_input, gt_label
+        del inputs, raw_input, gt_label, gradcam_heatmaps
         torch.cuda.empty_cache()
-
-    gbp.restore_relus()
-    if gcam is not None:
-        gcam.remove_hooks()
 
     # ── Write GBP metrics CSV ───────────────────────────────────────────
     with open(gbp_csv_path, "w", newline="") as f:
