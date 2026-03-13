@@ -5,10 +5,12 @@ Provides post-hoc explanation techniques for 3D CNN models.
 """
 
 from src.xai.grad_cam import GradCAM3D
+from src.xai.guided_backprop import GuidedBackprop3D
 from src.xai.metrics import evaluate_saliency, pointing_game, saliency_coverage, saliency_iou, weighted_dice
 
 __all__ = [
     "GradCAM3D",
+    "GuidedBackprop3D",
     "evaluate_saliency",
     "pointing_game",
     "saliency_coverage",
