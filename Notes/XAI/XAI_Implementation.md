@@ -2,7 +2,7 @@
 
 **Author:** Yogi Amitkumar Patel  
 **Project:** Illuminating the Black Box — Explainable AI Framework for Brain Tumor Segmentation  
-**Last Updated:** 13 March 2026
+**Last Updated:** 14 March 2026
 
 ---
 
@@ -115,7 +115,15 @@ python scripts/generate_gradcam.py \
 | NIfTI heatmaps | `slicer_export/XAI/Grad_CAM/<patient>/<patient>_gradcam_{wt,tc,et}.nii.gz` |
 | Metrics CSV | `results/CSVs/xai_gradcam_metrics.csv` |
 
-### 2.6 Reference
+### 2.6 Related Files
+
+| File | Purpose |
+|------|---------|
+| `src/xai/grad_cam.py` | `GradCAM3D` class — hooks, forward/backward, heatmap generation |
+| `scripts/generate_gradcam.py` | Batch generation + inline metrics computation |
+| `scripts/evaluate_gradcam_coarse.py` | Coarse-resolution evaluation (GT downsampled to feature map size) |
+
+### 2.7 Reference
 
 Selvaraju et al., "Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization", IJCV 2020.
 
@@ -194,7 +202,14 @@ python scripts/generate_gbp.py \
 | NIfTI heatmaps | `slicer_export/XAI/GBP/<patient>/<patient>_gbp_{wt,tc,et}.nii.gz` |
 | Metrics CSV | `results/CSVs/xai_gbp_metrics.csv` |
 
-### 3.6 Reference
+### 3.6 Related Files
+
+| File | Purpose |
+|------|---------|
+| `src/xai/guided_backprop.py` | `GuidedBackprop3D` class — ReLU hook overrides, gradient extraction |
+| `scripts/generate_gbp.py` | Batch generation + inline metrics (also supports Guided Grad-CAM) |
+
+### 3.7 Reference
 
 Springenberg et al., "Striving for Simplicity: The All Convolutional Net", ICLR Workshop 2015.
 
@@ -227,16 +242,27 @@ After multiplication, the result is re-normalised to [0, 1]:
 S_norm = (S - min(S)) / (max(S) - min(S))
 ```
 
-### 4.3 Expected Improvement over Grad-CAM
+### 4.3 Actual Results (10 test patients, encoder3 layer)
 
-Because Guided Grad-CAM produces tight, sharp saliency that hugs tumor boundaries (instead of Grad-CAM's blurry blob that leaks into healthy tissue), the following metric improvements are expected:
+| Metric (WT) | Grad-CAM (bottleneck) | GBP | Guided Grad-CAM (encoder3) |
+|-------------|:---:|:---:|:---:|
+| Pointing Game | 93% | **100%** | **100%** |
+| Coverage | 0.75 | 0.22 | **0.93** |
+| IoU | 0.05 | 0.008 | 0.004 |
+| Weighted Dice | 0.15 | 0.13 | 0.13 |
 
-| Metric | Grad-CAM (expected) | Guided Grad-CAM (expected) |
-|--------|---------------------|---------------------------|
-| Pointing Game | High (~90%+) | Similar or higher |
-| Coverage | High (~75%+) | Similar |
-| Saliency IoU | Low (~0.05) | Significantly higher |
-| Weighted Dice | Low (~0.15) | Significantly higher |
+| Metric (ET) | Grad-CAM (bottleneck) | GBP | Guided Grad-CAM (encoder3) |
+|-------------|:---:|:---:|:---:|
+| Pointing Game | 93% | **100%** | **100%** |
+| Coverage | 0.51 | 0.15 | **0.57** |
+| IoU | 0.05 | 0.07 | **0.06** |
+| Weighted Dice | 0.15 | 0.14 | **0.22** |
+
+**Key findings:**
+- Guided Grad-CAM achieves **93% Coverage** for WT — meaning 93% of model attention is inside the tumor
+- Enhancing Tumor Weighted Dice improves from 0.15 (Grad-CAM) to **0.22** (Guided Grad-CAM)
+- GBP alone has low Coverage (0.22) confirming it is NOT class-discriminative
+- All methods achieve 100% Pointing Game except standalone Grad-CAM (93%)
 
 ### 4.4 Script Usage & Run Commands
 
@@ -263,7 +289,15 @@ python scripts/generate_gbp.py \
 | NIfTI heatmaps | `slicer_export/XAI/Guided_Grad_CAM/<patient>/<patient>_guided_gradcam_{wt,tc,et}.nii.gz` |
 | Metrics CSV | `results/CSVs/xai_guided_gradcam_metrics.csv` |
 
-### 4.6 Reference
+### 4.6 Related Files
+
+| File | Purpose |
+|------|---------|
+| `src/xai/grad_cam.py` | Grad-CAM component |
+| `src/xai/guided_backprop.py` | GBP component |
+| `scripts/generate_gbp.py` | Combined generation (use `--guided_gradcam` flag) |
+
+### 4.7 Reference
 
 Selvaraju et al., "Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization", IJCV 2020 (Section 4.1: Guided Grad-CAM).
 
@@ -295,3 +329,77 @@ If computed separately (e.g. loading saved NIfTI files), the affine transformati
 SegResNet uses 4 encoder levels with stride-2 downsampling. The input spatial dimensions must be divisible by `2^4 = 16` for the encoder-decoder path to produce matching dimensions. After `CropForeground`, some patients have odd dimensions (e.g. 157 × 193 × 141).
 
 To handle this, both `generate_gradcam.py` and `generate_gbp.py` pad the input to the next multiple of 16 before inference, then crop the saliency map back to the original preprocessed size. This prevents `RuntimeError`s from dimension mismatches in the skip connections.
+
+---
+
+## 8. Hook Isolation Design Decision (Guided Grad-CAM)
+
+When computing Guided Grad-CAM, both GBP backward hooks (on every ReLU) and Grad-CAM hooks (on the target layer) must coexist on the same model. If both hook systems are active simultaneously, they **corrupt each other's gradients**:
+
+- GBP hooks gate negative gradients at every ReLU, altering the gradient signal that Grad-CAM captures
+- Grad-CAM hooks intercept gradients at the bottleneck, modifying the flow that GBP relies on
+
+**Observed impact:** GBP Pointing Game dropped from 100% to 80%, and Weighted Dice halved when hooks were active simultaneously.
+
+**Solution:** Per-patient sequential hook isolation:
+1. **STEP 1:** Create Grad-CAM hooks on clean model → compute heatmaps → remove hooks
+2. **STEP 2:** Create GBP hooks (no Grad-CAM hooks active) → compute GBP saliency → remove hooks
+3. **STEP 3:** Multiply stored results: `Guided_Grad-CAM = GBP × Grad-CAM`
+
+Additionally, MONAI SegResNet uses `inplace=True` ReLU operations. These conflict with PyTorch backward hooks, so GBP disables `inplace` before registering hooks and restores it on cleanup.
+
+---
+
+## 9. Coarse-Resolution Evaluation (Downsampled GT)
+
+Grad-CAM produces heatmaps at native feature map resolution (e.g. 20³ for bottleneck). Upsampling to 160³ introduces blur which penalises IoU and Weighted Dice. To test whether the model's **coarse spatial attention** genuinely aligns with the tumor:
+
+**Approach:** Instead of upsampling saliency, **downsample the ground truth** to match the native resolution.
+
+```
+Standard:  Saliency 20³ → upsample → 160³  vs  GT 160³     (blur penalty)
+Coarse:    Saliency 20³              vs  GT 160³ → downsample → 20³  (fair comparison)
+```
+
+GT downsampling uses trilinear interpolation followed by thresholding at ≥0.5 (a block is tumor if >50% of its voxels are tumor).
+
+### 9.1 Run Command
+
+```bash
+python scripts/evaluate_gradcam_coarse.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --limit 10 --layer bottleneck
+```
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--layer` | `bottleneck` | Target layer (bottleneck=20³, encoder3=40³) |
+| `--limit` | `0` (all) | Number of patients to process |
+
+### 9.2 Output
+
+| Output | Location |
+|--------|----------|
+| Metrics CSV | `results/CSVs/xai_gradcam_coarse_<layer>_metrics.csv` |
+
+### 9.3 Related Files
+
+| File | Purpose |
+|------|---------|
+| `scripts/evaluate_gradcam_coarse.py` | Coarse-resolution Grad-CAM evaluation script |
+
+> **Note:** This evaluation applies only to Grad-CAM. GBP and Guided Grad-CAM already operate at full input resolution (160³), so downsampling GT would lose information unnecessarily.
+
+---
+
+## 10. Summary of All Output Files
+
+| File | Method | Resolution | Contents |
+|------|--------|-----------|----------|
+| `xai_gradcam_metrics.csv` | Grad-CAM | Full (160³) | Per-patient metrics |
+| `xai_gradcam_coarse_bottleneck_metrics.csv` | Grad-CAM | Native (20³) | Coarse metrics (downsampled GT) |
+| `xai_gradcam_coarse_encoder3_metrics.csv` | Grad-CAM | Native (40³) | Coarse metrics (downsampled GT) |
+| `xai_gbp_metrics.csv` | GBP | Full (160³) | Per-patient metrics |
+| `xai_guided_gradcam_metrics.csv` | Guided Grad-CAM | Full (160³) | Per-patient metrics |
+| `xai_summary_comparison.csv` | All methods | Full (160³) | Aggregated comparison table |

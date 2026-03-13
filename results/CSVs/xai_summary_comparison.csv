@@ -1,0 +1,7 @@
+Method,Layer,Region,Pointing_Game_%,Saliency_Coverage_Mean,Saliency_Coverage_Std,Saliency_IoU_Mean,Saliency_IoU_Std,Weighted_Dice_Mean,Weighted_Dice_Std
+GBP,N/A,Whole Tumor,100.0,0.2225,0.0550,0.0078,0.0087,0.1301,0.0344
+GBP,N/A,Tumor Core,100.0,0.2820,0.1051,0.0154,0.0155,0.1387,0.0383
+GBP,N/A,Enhancing Tumor,100.0,0.1488,0.0770,0.0693,0.1104,0.1396,0.0542
+Guided Grad-CAM,encoder3,Whole Tumor,100.0,0.9301,0.0723,0.0041,0.0042,0.1325,0.0714
+Guided Grad-CAM,encoder3,Tumor Core,100.0,0.8493,0.1218,0.0107,0.0123,0.1533,0.0712
+Guided Grad-CAM,encoder3,Enhancing Tumor,100.0,0.5698,0.2374,0.0590,0.0832,0.2235,0.0659
