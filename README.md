@@ -204,8 +204,68 @@ python scripts/evaluate_per_patient.py \
 
 | File | Contents |
 |------|----------|
-| `per_patient_metrics.csv` | One row per patient × region with Dice, HD95, IoU, Sensitivity, Specificity |
-| `summary_per_patient_metrics.csv` | Mean ± Std aggregated by region — ready for the dissertation report |
+| `per_patient_SegResNet_metrics.csv` | One row per patient × region with Dice, HD95, IoU, Sensitivity, Specificity |
+| `summary_SegResNet_metrics.csv` | Mean ± Std aggregated by region — ready for the dissertation report |
+
+### 9. Explainable AI (XAI) — Saliency Map Generation
+
+The XAI pipeline generates saliency maps that show *where* the model looks when making segmentation decisions. Three XAI methods are implemented:
+
+#### 9a. Grad-CAM
+
+Produces coarse, class-discriminative heatmaps from the bottleneck layer.
+
+```bash
+python scripts/generate_gradcam.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/<run_name>/best_model.pth \
+  --limit 5
+```
+
+| Argument | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `--config` | Yes | — | Path to YAML config file |
+| `--checkpoint` | Yes | — | Path to saved model weights (`.pth`) |
+| `--limit` | No | `0` (all) | Process only the first *N* patients |
+| `--layer` | No | `bottleneck` | Target layer (`bottleneck`, `encoder3`, `encoder2`, `encoder1`, `decoder1`) |
+
+**Output:** `slicer_export/XAI/Grad_CAM/<patient>/` + `results/CSVs/xai_gradcam_metrics.csv`
+
+#### 9b. Guided Backpropagation (GBP) & Guided Grad-CAM
+
+GBP produces full-resolution saliency maps. Guided Grad-CAM combines GBP × Grad-CAM for sharp, class-specific maps.
+
+```bash
+# GBP only
+python scripts/generate_gbp.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/<run_name>/best_model.pth \
+  --limit 5
+
+# GBP + Guided Grad-CAM
+python scripts/generate_gbp.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/<run_name>/best_model.pth \
+  --limit 5 --guided_gradcam
+```
+
+**Output:**
+
+| Method | NIfTI Heatmaps | Metrics CSV |
+|--------|----------------|-------------|
+| GBP | `slicer_export/XAI/GBP/<patient>/` | `results/CSVs/xai_gbp_metrics.csv` |
+| Guided Grad-CAM | `slicer_export/XAI/Guided_Grad_CAM/<patient>/` | `results/CSVs/xai_guided_gradcam_metrics.csv` |
+
+#### XAI Evaluation Metrics
+
+All XAI methods are evaluated against ground truth using four quantitative metrics:
+
+| Metric | Range | Description |
+|--------|-------|-------------|
+| **Pointing Game** | 0 or 1 | Does the peak saliency voxel fall inside the tumor? |
+| **Saliency Coverage** | [0, 1] | Fraction of total saliency mass inside the tumor |
+| **Saliency IoU** | [0, 1] | Overlap between thresholded saliency and GT mask |
+| **Weighted Dice** | [0, 1] | Soft Dice between continuous saliency and binary GT |
 
 ---
 
@@ -298,7 +358,9 @@ All tuneable parameters live in `configs/*.yaml`:
 |------|-------|
 | Deep Learning | PyTorch, MONAI |
 | Models | SegResNet, Attention U-Net, Swin UNETR |
-| Explainability | 3D Grad-CAM (planned) |
+| Explainability | 3D Grad-CAM, Guided Backpropagation, Guided Grad-CAM |
+| XAI Metrics | Pointing Game, Saliency Coverage, Saliency IoU, Weighted Dice |
 | Visualisation | 3D Slicer / SlicerVR |
 | Experiment Tracking | Weights & Biases |
 | Documentation | Typst, Quarto |
+
