@@ -296,7 +296,7 @@ def main():
         writer.writerows(metric_rows)
 
     # ── Print summary ───────────────────────────────────────────────────
-    print(f"\n✅ Completed: {processed} new + {skipped} skipped (already exported)")
+    print(f"\nCompleted: {processed} new + {skipped} skipped (already exported)")
     print(f"   Grad-CAM volumes: {export_dir}")
     print(f"   XAI metrics CSV:  {csv_path}")
 
