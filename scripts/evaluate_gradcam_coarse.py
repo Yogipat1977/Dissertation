@@ -8,14 +8,19 @@ resolution (e.g. 20³ for bottleneck, 40³ for encoder3). This eliminates
 the upsampling blur penalty and measures whether the model's coarse
 spatial attention genuinely aligns with the tumor region.
 
-This is a separate, complementary evaluation to the standard full-resolution
-metrics computed in generate_gradcam.py.
+Optionally apply Top-K% thresholding with --topk flag.
 
 Usage:
     python scripts/evaluate_gradcam_coarse.py \\
         --config configs/full_training_segresnet.yaml \\
         --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \\
         --limit 10 --layer bottleneck
+
+    # With Top-K thresholding
+    python scripts/evaluate_gradcam_coarse.py \\
+        --config configs/full_training_segresnet.yaml \\
+        --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \\
+        --limit 10 --layer bottleneck --topk 15
 """
 
 import argparse
@@ -90,6 +95,26 @@ def downsample_gt(gt_channel: np.ndarray, target_shape: tuple) -> np.ndarray:
     return gt_coarse_binary
 
 
+def topk_threshold(heatmap: np.ndarray, k_percent: float) -> np.ndarray:
+    """
+    Apply Top-K% thresholding to a saliency heatmap.
+
+    Keeps only the top K% of voxels by intensity, setting the rest to zero.
+    The retained voxels keep their original values (not binarised).
+
+    Args:
+        heatmap:   3D numpy array with values in [0, 1].
+        k_percent: Percentage of voxels to retain (e.g. 15 = top 15%).
+
+    Returns:
+        Thresholded heatmap with bottom (100-K)% voxels set to zero.
+    """
+    threshold = np.percentile(heatmap, 100 - k_percent)
+    thresholded = heatmap.copy()
+    thresholded[heatmap < threshold] = 0.0
+    return thresholded
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Evaluate Grad-CAM at native feature map resolution "
@@ -109,6 +134,11 @@ def main():
                         help="Grad-CAM target layer (default: bottleneck)")
     parser.add_argument("--iou_threshold", type=float, default=0.5,
                         help="Saliency threshold for IoU metric (default: 0.5)")
+    parser.add_argument("--topk", type=float, default=0,
+                        help="Top-K%% thresholding: keep only the top K%% of "
+                             "saliency voxels before computing metrics. "
+                             "Saves a separate Weighted Dice CSV. "
+                             "Set to 0 to disable (default: 0).")
     args = parser.parse_args()
 
     # ── Setup ───────────────────────────────────────────────────────────
@@ -151,9 +181,24 @@ def main():
     ]
     metric_rows = []
 
+    # Top-K threshold setup
+    do_topk = args.topk > 0
+    if do_topk:
+        topk_pct = args.topk
+        topk_csv_path = results_dir / \
+            f"xai_gradcam_coarse_{args.layer}_topk{int(topk_pct)}_weighted_dice.csv"
+        topk_fieldnames = [
+            "Patient", "Region", "Native_Resolution",
+            "TopK_Percent", "Weighted_Dice",
+        ]
+        topk_rows = []
+
     print(f"\nEvaluating Grad-CAM at native resolution (layer: {args.layer})")
     print(f"  Strategy: downsample GT to match feature map size")
-    print(f"  Output:   {csv_path}\n")
+    print(f"  Output:   {csv_path}")
+    if do_topk:
+        print(f"  Top-K:    {topk_pct}% → {topk_csv_path}")
+    print()
 
     processed = 0
 
@@ -238,11 +283,41 @@ def main():
                     "Weighted_Dice": round(metrics["weighted_dice"], 4),
                 })
 
+            # ── Top-K on coarse heatmap (if enabled) ───────────────────
+            if do_topk:
+                cam_topk = topk_threshold(cam_native, topk_pct)
+
+                if gt_coarse.sum() == 0:
+                    topk_rows.append({
+                        "Patient": patient_id,
+                        "Region": REGION_NAMES[ch_idx],
+                        "Native_Resolution": resolution_str,
+                        "TopK_Percent": topk_pct,
+                        "Weighted_Dice": "N/A",
+                    })
+                else:
+                    topk_metrics = evaluate_saliency(
+                        cam_topk, gt_coarse,
+                        threshold=args.iou_threshold
+                    )
+                    topk_rows.append({
+                        "Patient": patient_id,
+                        "Region": REGION_NAMES[ch_idx],
+                        "Native_Resolution": resolution_str,
+                        "TopK_Percent": topk_pct,
+                        "Weighted_Dice": round(
+                            topk_metrics["weighted_dice"], 4
+                        ),
+                    })
+
         gcam.remove_hooks()
         del gcam
 
         processed += 1
-        tqdm.write(f"  ✓ {patient_id} — evaluated at {resolution_str}")
+        msg = f"  ✓ {patient_id} — evaluated at {resolution_str}"
+        if do_topk:
+            msg += f" + Top-{int(topk_pct)}%"
+        tqdm.write(msg)
 
         del inputs, raw_input, gt_label
         torch.cuda.empty_cache()
@@ -253,9 +328,18 @@ def main():
         writer.writeheader()
         writer.writerows(metric_rows)
 
+    # ── Write Top-K CSV (if enabled) ────────────────────────────────
+    if do_topk and topk_rows:
+        with open(topk_csv_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=topk_fieldnames)
+            writer.writeheader()
+            writer.writerows(topk_rows)
+
     # ── Print summary ───────────────────────────────────────────────────
     print(f"\nCompleted: {processed} patients")
     print(f"  Metrics: {csv_path}")
+    if do_topk:
+        print(f"  Top-K:   {topk_csv_path}")
 
     print(f"\n{'=' * 65}")
     print(f"  SUMMARY: Grad-CAM Coarse ({args.layer}) — Downsampled GT")
@@ -291,6 +375,35 @@ def main():
         print(f"\n  Note: {na_count} region evaluations skipped (no tumor in GT)")
 
     print(f"\n{'=' * 65}")
+
+    # ── Top-K summary ───────────────────────────────────────────────────
+    if do_topk and topk_rows:
+        print(f"\n{'=' * 65}")
+        print(f"  SUMMARY: Coarse Grad-CAM Top-{int(topk_pct)}% — Weighted Dice")
+        print(f"{'=' * 65}")
+
+        for ch_idx, region_name in REGION_NAMES.items():
+            region_rows = [
+                r for r in topk_rows
+                if r["Region"] == region_name and r["Weighted_Dice"] != "N/A"
+            ]
+            if not region_rows:
+                print(f"\n  {region_name}: No valid samples")
+                continue
+
+            n = len(region_rows)
+            dice_mean = np.mean([r["Weighted_Dice"] for r in region_rows])
+            dice_std = np.std([r["Weighted_Dice"] for r in region_rows])
+
+            print(f"\n  {region_name} (n={n})")
+            print(f"    Native resolution      : {region_rows[0]['Native_Resolution']}")
+            print(f"    Weighted Dice          : {dice_mean:.4f} ± {dice_std:.4f}")
+
+        na_count = sum(1 for r in topk_rows if r["Weighted_Dice"] == "N/A")
+        if na_count > 0:
+            print(f"\n  Note: {na_count} region evaluations skipped (no tumor in GT)")
+
+        print(f"\n{'=' * 65}")
 
 
 if __name__ == "__main__":
