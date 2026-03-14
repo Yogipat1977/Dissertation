@@ -428,6 +428,14 @@ python scripts/evaluate_gradcam_coarse.py \
   --limit 10 --layer bottleneck --topk 15
 ```
 
+**On Guided Grad-CAM (`generate_gbp.py`):**
+```bash
+python scripts/generate_gbp.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --limit 10 --guided_gradcam --topk 15
+```
+
 ### 10.4 Output
 
 | Script | Output File |
@@ -435,6 +443,8 @@ python scripts/evaluate_gradcam_coarse.py \
 | `generate_gradcam.py --topk 15` | `results/CSVs/xai_gradcam_topk15_weighted_dice.csv` |
 | `generate_gradcam.py --topk 15` | `slicer_export/XAI/Grad_CAM_TopK/<patient>/` (NIfTI) |
 | `evaluate_gradcam_coarse.py --topk 15` | `results/CSVs/xai_gradcam_coarse_<layer>_topk15_weighted_dice.csv` |
+| `generate_gbp.py --guided_gradcam --topk 15` | `results/CSVs/xai_guided_gradcam_topk15_weighted_dice.csv` |
+| `generate_gbp.py --guided_gradcam --topk 15` | `slicer_export/XAI/Guided_Grad_CAM_TopK/<patient>/` (NIfTI) |
 
 > **Note:** Standard (non-Top-K) exports and CSVs are always generated alongside. Top-K outputs go to separate files/folders.
 
@@ -451,4 +461,5 @@ python scripts/evaluate_gradcam_coarse.py \
 | `xai_gradcam_coarse_<layer>_topk<K>_weighted_dice.csv` | Grad-CAM + Top-K | Native | Coarse Weighted Dice only |
 | `xai_gbp_metrics.csv` | GBP | Full (160³) | Per-patient metrics |
 | `xai_guided_gradcam_metrics.csv` | Guided Grad-CAM | Full (160³) | Per-patient metrics |
+| `xai_guided_gradcam_topk<K>_weighted_dice.csv` | Guided Grad-CAM + Top-K | Full (160³) | Weighted Dice only |
 | `xai_summary_comparison.csv` | All methods | Full (160³) | Aggregated comparison table |
