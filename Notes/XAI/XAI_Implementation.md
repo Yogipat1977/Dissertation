@@ -450,7 +450,29 @@ python scripts/generate_gbp.py \
 
 ---
 
-## 11. Summary of All Output Files
+## 11. Layer-wise Relevance Propagation (LRP)
+
+### 11.1 Concept
+Unlike gradient-based methods which measure sensitivity, LRP attributes exactly which input voxels contributed to the final output prediction score. By redistributing the output score backward using the **Input ✕ Gradient** proxy (mathematically equivalent to $\epsilon$-LRP in ReLU networks), LRP provides an ultra-high resolution positive relevance map identifying explicit structural evidence for the tumor.
+
+### 11.2 Run Command
+```bash
+python scripts/generate_lrp.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --limit 10
+```
+
+### 11.3 Output
+| Output | Location |
+|--------|----------|
+| NIfTI Volumes | `slicer_export/XAI/LRP/<patient>/` |
+
+> **Note:** LRP export intentionally skips the quantitative metric calculation to focus solely on high-resolution clinical visualisations.
+
+---
+
+## 12. Summary of All Output Files
 
 | File | Method | Resolution | Contents |
 |------|--------|-----------|----------|
@@ -462,4 +484,5 @@ python scripts/generate_gbp.py \
 | `xai_gbp_metrics.csv` | GBP | Full (160³) | Per-patient metrics |
 | `xai_guided_gradcam_metrics.csv` | Guided Grad-CAM | Full (160³) | Per-patient metrics |
 | `xai_guided_gradcam_topk<K>_weighted_dice.csv` | Guided Grad-CAM + Top-K | Full (160³) | Weighted Dice only |
+| `slicer_export/XAI/LRP/<patient>/` | LRP | Full (160³) | NIfTI Export Only |
 | `xai_summary_comparison.csv` | All methods | Full (160³) | Aggregated comparison table |
