@@ -120,6 +120,20 @@ This document describes every script and source module in the project.
 
 ---
 
+### `scripts/generate_lrp.py`
+
+**Purpose:** Generate high-resolution Layer-wise Relevance Propagation (LRP) relevance maps for test patients via the Input ✕ Gradient proxy rule. Strict visual export (skips metrics).
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--config` | required | YAML config file |
+| `--checkpoint` | required | Model weights |
+| `--limit` | `0` (all) | Process N patients only |
+
+**Output:** `slicer_export/XAI/LRP/<patient>/<patient>_lrp_{wt,tc,et}.nii.gz`
+
+---
+
 ### `scripts/generate_manifest.py`
 
 **Purpose:** Generate a JSON manifest showing train/val/test patient split.  
@@ -247,6 +261,19 @@ This document describes every script and source module in the project.
 
 ---
 
+### `src/xai/lrp.py`
+
+**Purpose:** 3D Layer-wise Relevance Propagation proxy using Input ✕ Gradient calculation.
+
+**Class: `LRP3D`**
+
+| Method | Description |
+|--------|-------------|
+| `__init__(model)` | Store Model |
+| `generate(input, target_class)` | Returns full-resolution positive relevance map |
+
+---
+
 ### `src/xai/metrics.py`
 
 **Purpose:** Quantitative XAI evaluation metrics (saliency vs ground truth).
@@ -266,4 +293,4 @@ This document describes every script and source module in the project.
 
 **Purpose:** Package exports for the XAI module.
 
-**Exports:** `GradCAM3D`, `GuidedBackprop3D`, `evaluate_saliency`, `pointing_game`, `saliency_coverage`, `saliency_iou`, `weighted_dice`
+**Exports:** `GradCAM3D`, `GuidedBackprop3D`, `LRP3D`, `evaluate_saliency`, `pointing_game`, `saliency_coverage`, `saliency_iou`, `weighted_dice`

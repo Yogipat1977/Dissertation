@@ -140,6 +140,20 @@ Used in: `scripts/generate_gbp.py` (with `--guided_gradcam` flag)
 Guided_Grad-CAM = GBP ⊙ upsample(Grad-CAM)
 ```
 
+### 3.4 Layer-wise Relevance Propagation (LRP)
+
+Used in: `src/xai/lrp.py`
+
+**Input ✕ Gradient Proxy (equivalent to $\epsilon$-LRP for ReLU):**
+```
+R_i = x_i × ∂f(x) / ∂x_i
+```
+
+Where:
+- `x_i` = Input voxel
+- `f(x)` = Model output score for target class
+- `R_i` = Relevance score for voxel `i`
+
 ---
 
 ## 4. XAI Evaluation Metrics
