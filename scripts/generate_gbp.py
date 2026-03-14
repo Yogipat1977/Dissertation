@@ -70,13 +70,6 @@ def _get_target_layer(model, layer_name: str):
         raise ValueError(f"Unknown layer '{layer_name}'. Choose from: {valid}")
 
 
-def _patient_done(patient_dir: Path, patient_id: str, prefix: str) -> bool:
-    """Return True if all 3 saliency NIfTIs already exist for this patient."""
-    return all(
-        (patient_dir / f"{patient_id}_{prefix}_{tag}.nii.gz").exists()
-        for tag in REGIONS.values()
-    )
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -150,8 +143,6 @@ def main():
         print(f"Guided Grad-CAM mode (Grad-CAM layer: {args.layer})")
 
     processed = 0
-    skipped = 0
-
     # ── CSV setup ───────────────────────────────────────────────────────
     gbp_csv_path = results_dir / "xai_gbp_metrics.csv"
     csv_fieldnames = [
@@ -206,14 +197,6 @@ def main():
         if args.guided_gradcam:
             ggcam_patient_dir = ggcam_export_dir / patient_id
             ggcam_patient_dir.mkdir(parents=True, exist_ok=True)
-
-        # Resume check
-        gbp_done = _patient_done(gbp_patient_dir, patient_id, "gbp")
-        ggcam_done = (not args.guided_gradcam) or \
-                     _patient_done(ggcam_patient_dir, patient_id, "guided_gradcam")
-        if gbp_done and ggcam_done:
-            skipped += 1
-            continue
 
         # ── Get the transform-aware affine ──────────────────────────────
         if isinstance(data["image"], monai.data.MetaTensor):
@@ -372,7 +355,7 @@ def main():
             writer.writerows(ggcam_metric_rows)
 
     # ── Print summary ───────────────────────────────────────────────────
-    print(f"\nCompleted: {processed} new + {skipped} skipped (already exported)")
+    print(f"\nCompleted: {processed} patients")
     print(f"   GBP volumes:  {gbp_export_dir}")
     print(f"   GBP metrics:  {gbp_csv_path}")
     if args.guided_gradcam:

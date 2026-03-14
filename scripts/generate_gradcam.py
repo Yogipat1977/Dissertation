@@ -94,12 +94,7 @@ def _get_target_layer(model, layer_name: str):
         raise ValueError(f"Unknown layer '{layer_name}'. Choose from: {valid}")
 
 
-def _patient_gradcam_done(patient_dir: Path, patient_id: str) -> bool:
-    """Return True if all 3 Grad-CAM NIfTIs already exist for this patient."""
-    return all(
-        (patient_dir / f"{patient_id}_gradcam_{tag}.nii.gz").exists()
-        for tag in REGIONS.values()
-    )
+
 
 
 def topk_threshold(heatmap: np.ndarray, k_percent: float) -> np.ndarray:
@@ -209,7 +204,6 @@ def main():
     roi_size = cfg["data"]["roi_size"]
 
     processed = 0
-    skipped = 0
 
     # ── CSV for XAI evaluation metrics ──────────────────────────────────
     csv_path = results_dir / "xai_gradcam_metrics.csv"
@@ -225,7 +219,7 @@ def main():
         print(f"Top-K threshold enabled (K={topk_pct}%)")
         print(f"  Top-K exports → {topk_export_dir}")
         print(f"  Top-K metrics → {topk_csv_path}")
-    print("Checking for already-exported patients to resume...\n")
+    print()
 
     for data in tqdm(loader, desc="Grad-CAM"):
 
@@ -256,11 +250,6 @@ def main():
         # ── Per-patient export directory ────────────────────────────────
         patient_export_dir = export_dir / patient_id
         patient_export_dir.mkdir(parents=True, exist_ok=True)
-
-        # Resume check
-        if _patient_gradcam_done(patient_export_dir, patient_id):
-            skipped += 1
-            continue
 
         # ── Get the transform-aware affine for spatial alignment ────────
         if isinstance(data["image"], monai.data.MetaTensor):
@@ -403,7 +392,7 @@ def main():
             writer.writerows(topk_rows)
 
     # ── Print summary ───────────────────────────────────────────────────
-    print(f"\nCompleted: {processed} new + {skipped} skipped (already exported)")
+    print(f"\nCompleted: {processed} patients")
     print(f"   Grad-CAM volumes: {export_dir}")
     print(f"   XAI metrics CSV:  {csv_path}")
     if do_topk:
