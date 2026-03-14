@@ -2,7 +2,7 @@
 
 **Author:** Yogi Amitkumar Patel  
 **Implementation:** `src/xai/metrics.py`  
-**Last Updated:** 13 March 2026
+**Last Updated:** 14 March 2026
 
 ---
 
@@ -296,3 +296,51 @@ from src.xai.metrics import evaluate_saliency
 results = evaluate_saliency(saliency_map, ground_truth, threshold=0.5)
 # Returns: {'pointing_game': 1.0, 'coverage': 0.75, 'iou': 0.05, 'weighted_dice': 0.26}
 ```
+
+---
+
+## Top-K% Threshold Technique
+
+### Motivation
+
+The fixed threshold (τ=0.5) used for Saliency IoU can be too rigid — it doesn't adapt to the varying intensity distributions of different heatmaps. Some heatmaps may have very few voxels above 0.5, while others may have many.
+
+### Formula
+
+```
+threshold = percentile(S, 100 - K)
+S_topk(i) = S(i)  if S(i) ≥ threshold
+             0     otherwise
+```
+
+For example, `K = 15` keeps only the top 15% of saliency voxels (by intensity), zeroing out the bottom 85%.
+
+### Key Properties
+
+| Property | Fixed Threshold (τ=0.5) | Top-K% |
+|----------|:---:|:---:|
+| Adaptive to heatmap distribution | ✗ | ✓ |
+| Consistent number of active voxels | ✗ | ✓ |
+| Retains original saliency values | Depends on usage | ✓ |
+| Best evaluated with | Saliency IoU | Weighted Dice |
+
+### How It Affects Weighted Dice
+
+Top-K removes low-intensity saliency "leakage" outside the tumor region. This reduces the denominator `Σ(S)` while preserving the numerator `Σ(S × G)` (since the top-K voxels are typically inside the tumor if the model is correct). The result is a **higher Weighted Dice** that more accurately reflects the model's true spatial alignment.
+
+### Implementation
+
+```python
+def topk_threshold(heatmap, k_percent):
+    threshold = np.percentile(heatmap, 100 - k_percent)
+    thresholded = heatmap.copy()
+    thresholded[heatmap < threshold] = 0.0
+    return thresholded
+```
+
+### Scripts Supporting Top-K
+
+| Script | Flag | Output |
+|--------|------|--------|
+| `generate_gradcam.py` | `--topk 15` | `xai_gradcam_topk15_weighted_dice.csv` + NIfTI exports |
+| `evaluate_gradcam_coarse.py` | `--topk 15` | `xai_gradcam_coarse_<layer>_topk15_weighted_dice.csv` |

@@ -106,6 +106,7 @@ python scripts/generate_gradcam.py \
 |----------|---------|-------------|
 | `--limit` | `0` (all) | Number of patients to process (useful for testing) |
 | `--layer` | `bottleneck` | Target layer for gradients |
+| `--topk` | `0` (disabled) | Top-K% thresholding (e.g. `15` for top 15%) |
 | `--split` | `test` | Dataset split to evaluate |
 
 ### 2.5 Output
@@ -393,13 +394,61 @@ python scripts/evaluate_gradcam_coarse.py \
 
 ---
 
-## 10. Summary of All Output Files
+## 10. Top-K% Threshold Technique
+
+### 10.1 Concept
+
+Instead of using a fixed threshold (τ=0.5) to binarise the saliency heatmap, Top-K% thresholding **adaptively** retains only the top K% of saliency voxels by intensity and zeros out the rest. This is more robust because it adjusts to each heatmap's unique intensity distribution.
+
+### 10.2 Formula
+
+```
+threshold = percentile(S, 100 - K)
+S_topk(i) = S(i)  if S(i) ≥ threshold
+             0     otherwise
+```
+
+The retained voxels keep their original continuous values (not binarised). Only Weighted Dice is evaluated on the thresholded map, as it measures soft overlap.
+
+### 10.3 Run Commands
+
+**On full-resolution Grad-CAM (`generate_gradcam.py`):**
+```bash
+python scripts/generate_gradcam.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --limit 10 --topk 15
+```
+
+**On coarse-resolution Grad-CAM (`evaluate_gradcam_coarse.py`):**
+```bash
+python scripts/evaluate_gradcam_coarse.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --limit 10 --layer bottleneck --topk 15
+```
+
+### 10.4 Output
+
+| Script | Output File |
+|--------|-----------|
+| `generate_gradcam.py --topk 15` | `results/CSVs/xai_gradcam_topk15_weighted_dice.csv` |
+| `generate_gradcam.py --topk 15` | `slicer_export/XAI/Grad_CAM_TopK/<patient>/` (NIfTI) |
+| `evaluate_gradcam_coarse.py --topk 15` | `results/CSVs/xai_gradcam_coarse_<layer>_topk15_weighted_dice.csv` |
+
+> **Note:** Standard (non-Top-K) exports and CSVs are always generated alongside. Top-K outputs go to separate files/folders.
+
+---
+
+## 11. Summary of All Output Files
 
 | File | Method | Resolution | Contents |
 |------|--------|-----------|----------|
 | `xai_gradcam_metrics.csv` | Grad-CAM | Full (160³) | Per-patient metrics |
+| `xai_gradcam_topk<K>_weighted_dice.csv` | Grad-CAM + Top-K | Full (160³) | Weighted Dice only |
 | `xai_gradcam_coarse_bottleneck_metrics.csv` | Grad-CAM | Native (20³) | Coarse metrics (downsampled GT) |
 | `xai_gradcam_coarse_encoder3_metrics.csv` | Grad-CAM | Native (40³) | Coarse metrics (downsampled GT) |
+| `xai_gradcam_coarse_<layer>_topk<K>_weighted_dice.csv` | Grad-CAM + Top-K | Native | Coarse Weighted Dice only |
 | `xai_gbp_metrics.csv` | GBP | Full (160³) | Per-patient metrics |
 | `xai_guided_gradcam_metrics.csv` | Guided Grad-CAM | Full (160³) | Per-patient metrics |
 | `xai_summary_comparison.csv` | All methods | Full (160³) | Aggregated comparison table |
