@@ -85,11 +85,12 @@ def main():
     loaders = create_data_loaders(cfg)
     loader = loaders[args.split]
 
-    if loader.batch_size != 1:
-        loader = monai.data.DataLoader(
-            loader.dataset, batch_size=1, shuffle=False,
-            num_workers=cfg["data"]["num_workers"]
-        )
+    # Force batch_size=1 and num_workers=0 to prevent multiprocessing 
+    # crashes on rented instances (often due to limited shared memory /dev/shm)
+    loader = monai.data.DataLoader(
+        loader.dataset, batch_size=1, shuffle=False,
+        num_workers=0
+    )
 
     # ── Model ───────────────────────────────────────────────────────────
     print("\nLoading model...")
