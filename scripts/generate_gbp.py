@@ -23,6 +23,12 @@ Usage:
         --config configs/full_training_segresnet.yaml \\
         --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \\
         --limit 1 --guided_gradcam
+
+    # GBP + Guided Grad-CAM with Top-K thresholding
+    python scripts/generate_gbp.py \\
+        --config configs/full_training_segresnet.yaml \\
+        --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \\
+        --limit 1 --guided_gradcam --topk 15
 """
 
 import argparse
@@ -70,6 +76,25 @@ def _get_target_layer(model, layer_name: str):
         raise ValueError(f"Unknown layer '{layer_name}'. Choose from: {valid}")
 
 
+def topk_threshold(heatmap: np.ndarray, k_percent: float) -> np.ndarray:
+    """
+    Apply Top-K% thresholding to a saliency heatmap.
+
+    Keeps only the top K% of voxels by intensity, setting the rest to zero.
+    The retained voxels keep their original values (not binarised).
+
+    Args:
+        heatmap:   3D numpy array with values in [0, 1].
+        k_percent: Percentage of voxels to retain (e.g. 15 = top 15%).
+
+    Returns:
+        Thresholded heatmap with bottom (100-K)% voxels set to zero.
+    """
+    threshold = np.percentile(heatmap, 100 - k_percent)
+    thresholded = heatmap.copy()
+    thresholded[heatmap < threshold] = 0.0
+    return thresholded
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -93,6 +118,11 @@ def main():
                                  "encoder1", "decoder1"],
                         help="Grad-CAM target layer for Guided Grad-CAM "
                               "(default: bottleneck)")
+    parser.add_argument("--topk", type=float, default=0,
+                        help="Top-K%% thresholding for Guided Grad-CAM: keep "
+                             "only the top K%% of saliency voxels "
+                             "(e.g. --topk 15). Saves separate exports and CSV. "
+                             "Set to 0 to disable (default: 0).")
     args = parser.parse_args()
 
     # ── Setup ───────────────────────────────────────────────────────────
@@ -112,6 +142,15 @@ def main():
     if args.guided_gradcam:
         ggcam_export_dir = project_root / "slicer_export" / "XAI" / "Guided_Grad_CAM"
         ggcam_export_dir.mkdir(parents=True, exist_ok=True)
+
+        do_topk = args.topk > 0
+        if do_topk:
+            topk_pct = args.topk
+            topk_tag = f"topk{int(topk_pct)}"
+            topk_export_dir = project_root / "slicer_export" / "XAI" / "Guided_Grad_CAM_TopK"
+            topk_export_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        do_topk = False
 
     # ── Data ────────────────────────────────────────────────────────────
     print(f"\nLoading data (split: {args.split})...")
@@ -154,6 +193,13 @@ def main():
     ggcam_csv_path = results_dir / "xai_guided_gradcam_metrics.csv"
     ggcam_metric_rows = []
 
+    if do_topk:
+        topk_csv_path = results_dir / f"xai_guided_gradcam_{topk_tag}_weighted_dice.csv"
+        topk_fieldnames = [
+            "Patient", "Region", "TopK_Percent", "Weighted_Dice",
+        ]
+        topk_rows = []
+
     methods_str = "GBP" + (" + Guided Grad-CAM" if args.guided_gradcam else "")
     print(f"\nGenerating {methods_str} saliency volumes")
     print(f"  GBP output    → {gbp_export_dir}")
@@ -162,6 +208,10 @@ def main():
     print(f"  GBP metrics   → {gbp_csv_path}")
     if args.guided_gradcam:
         print(f"  G-GradCAM met → {ggcam_csv_path}")
+    if do_topk:
+        print(f"Top-K threshold enabled for Guided Grad-CAM (K={topk_pct}%)")
+        print(f"  Top-K exports → {topk_export_dir}")
+        print(f"  Top-K metrics → {topk_csv_path}")
     print()
 
     for data in tqdm(loader, desc=methods_str):
@@ -330,12 +380,50 @@ def main():
                         "Weighted_Dice": round(gg_metrics["weighted_dice"], 4),
                     })
 
+                # ── Top-K thresholding on Guided Grad-CAM (if enabled) ──
+                if do_topk:
+                    gg_topk = topk_threshold(guided_gradcam, topk_pct)
+
+                    # Save thresholded NIfTI
+                    topk_patient_dir = topk_export_dir / patient_id
+                    topk_patient_dir.mkdir(parents=True, exist_ok=True)
+                    topk_uint8 = (gg_topk * 255).astype(np.uint8)
+                    topk_nifti = nib.Nifti1Image(topk_uint8, affine)
+                    topk_path = topk_patient_dir / \
+                        f"{patient_id}_guided_gradcam_{topk_tag}_{tag}.nii.gz"
+                    nib.save(topk_nifti, topk_path)
+
+                    # Compute Weighted Dice on thresholded heatmap
+                    if gt_channel.sum() == 0:
+                        topk_rows.append({
+                            "Patient": patient_id,
+                            "Region": REGION_NAMES[ch_idx],
+                            "TopK_Percent": topk_pct,
+                            "Weighted_Dice": "N/A",
+                        })
+                    else:
+                        topk_metrics = evaluate_saliency(
+                            gg_topk, gt_channel,
+                            threshold=args.iou_threshold
+                        )
+                        topk_rows.append({
+                            "Patient": patient_id,
+                            "Region": REGION_NAMES[ch_idx],
+                            "TopK_Percent": topk_pct,
+                            "Weighted_Dice": round(
+                                topk_metrics["weighted_dice"], 4
+                            ),
+                        })
+
         # Remove GBP hooks before next patient
         gbp.restore_relus()
         del gbp
 
         processed += 1
-        tqdm.write(f"  ✓ {patient_id} — {methods_str} saliency saved")
+        msg = f"  ✓ {patient_id} — {methods_str} saliency saved"
+        if do_topk:
+            msg += f" + Top-{int(topk_pct)}% exports"
+        tqdm.write(msg)
 
         # Clean up memory
         del inputs, raw_input, gt_label, gradcam_heatmaps
@@ -354,6 +442,13 @@ def main():
             writer.writeheader()
             writer.writerows(ggcam_metric_rows)
 
+    # ── Write Top-K Guided Grad-CAM Weighted Dice CSV ───────────────────
+    if do_topk and topk_rows:
+        with open(topk_csv_path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=topk_fieldnames)
+            writer.writeheader()
+            writer.writerows(topk_rows)
+
     # ── Print summary ───────────────────────────────────────────────────
     print(f"\nCompleted: {processed} patients")
     print(f"   GBP volumes:  {gbp_export_dir}")
@@ -361,6 +456,9 @@ def main():
     if args.guided_gradcam:
         print(f"   G-GradCAM:    {ggcam_export_dir}")
         print(f"   G-GradCAM met:{ggcam_csv_path}")
+    if do_topk:
+        print(f"   Top-K exports:{topk_export_dir}")
+        print(f"   Top-K metrics:{topk_csv_path}")
 
     # ── Summary stats ───────────────────────────────────────────────────
     for method_name, rows in [("GBP", gbp_metric_rows),
@@ -397,6 +495,34 @@ def main():
             print(f"    Weighted Dice          : {dice_mean:.4f} ± {dice_std:.4f}")
 
         na_count = sum(1 for r in rows if r["Pointing_Game"] == "N/A")
+        if na_count > 0:
+            print(f"\n  Note: {na_count} region evaluations skipped (no tumor in GT)")
+
+        print(f"\n{'=' * 65}")
+
+    # ── Top-K summary ───────────────────────────────────────────────────
+    if do_topk and topk_rows:
+        print(f"\n{'=' * 65}")
+        print(f"  SUMMARY: Guided Grad-CAM Top-{int(topk_pct)}% — Weighted Dice")
+        print(f"{'=' * 65}")
+
+        for ch_idx, region_name in REGION_NAMES.items():
+            region_rows = [
+                r for r in topk_rows
+                if r["Region"] == region_name and r["Weighted_Dice"] != "N/A"
+            ]
+            if not region_rows:
+                print(f"\n  {region_name}: No valid samples")
+                continue
+
+            n = len(region_rows)
+            dice_mean = np.mean([r["Weighted_Dice"] for r in region_rows])
+            dice_std = np.std([r["Weighted_Dice"] for r in region_rows])
+
+            print(f"\n  {region_name} (n={n})")
+            print(f"    Weighted Dice          : {dice_mean:.4f} ± {dice_std:.4f}")
+
+        na_count = sum(1 for r in topk_rows if r["Weighted_Dice"] == "N/A")
         if na_count > 0:
             print(f"\n  Note: {na_count} region evaluations skipped (no tumor in GT)")
 

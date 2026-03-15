@@ -1,0 +1,16 @@
+Patient,Region,TopK_Percent,Weighted_Dice
+BraTS-GLI-01666-000,Whole Tumor,10.0,0.0261
+BraTS-GLI-01666-000,Tumor Core,10.0,0.05
+BraTS-GLI-01666-000,Enhancing Tumor,10.0,N/A
+BraTS-GLI-01518-000,Whole Tumor,10.0,0.1178
+BraTS-GLI-01518-000,Tumor Core,10.0,0.1051
+BraTS-GLI-01518-000,Enhancing Tumor,10.0,0.0589
+BraTS-GLI-01497-000,Whole Tumor,10.0,0.1341
+BraTS-GLI-01497-000,Tumor Core,10.0,0.1369
+BraTS-GLI-01497-000,Enhancing Tumor,10.0,0.0724
+BraTS-GLI-01397-000,Whole Tumor,10.0,0.0555
+BraTS-GLI-01397-000,Tumor Core,10.0,0.0915
+BraTS-GLI-01397-000,Enhancing Tumor,10.0,0.0345
+BraTS-GLI-00291-000,Whole Tumor,10.0,0.0
+BraTS-GLI-00291-000,Tumor Core,10.0,0.0
+BraTS-GLI-00291-000,Enhancing Tumor,10.0,0.0
