@@ -154,6 +154,17 @@ Where:
 - `f(x)` = Model output score for target class
 - `R_i` = Relevance score for voxel `i`
 
+### 3.5 Occlusion Sensitivity
+
+Used in: `src/xai/occlusion.py`
+
+**Score Drop Calculation:**
+```
+S_c(i,j,k) = f_c(x) - f_c(x_{occluded})
+```
+
+Where `x_{occluded}` is the input volume with a 3D bounding box placed at `(i,j,k)` masked to the baseline value (0).
+
 ---
 
 ## 4. XAI Evaluation Metrics
@@ -166,7 +177,16 @@ Used in: `src/xai/metrics.py`
 Pointing_Game(S, G) = 𝟙(G[argmax(S)] = 1)
 ```
 
-### 4.2 Saliency Coverage
+### 4.2 Most Salient Region (MSR) Accuracy
+
+Used in: `src/xai/metrics.py` (specifically for Occlusion Sensitivity)
+
+```
+MSR_Accuracy(S, G) = 𝟙(G[argmax(S)] = 1)
+```
+*(Identical implementation to Pointing Game, but conceptually represents the center of the maximally suppressive occlusion patch)*
+
+### 4.3 Saliency Coverage
 
 Used in: `src/xai/metrics.py`
 

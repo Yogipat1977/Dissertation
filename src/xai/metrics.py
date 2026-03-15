@@ -34,6 +34,27 @@ def pointing_game(saliency: np.ndarray, ground_truth: np.ndarray) -> bool:
     return bool(ground_truth[peak_idx] == 1)
 
 
+def msr_accuracy(saliency: np.ndarray, ground_truth: np.ndarray) -> bool:
+    """
+    Most Salient Region (MSR) Accuracy.
+
+    Similar to Pointing Game, but conceptually used for perturbation methods
+    like Occlusion Sensitivity, testing if the single local patch that caused
+    the largest confidence drop actually falls inside the anomaly.
+
+    Formula:
+        MSR = 1 if G(argmax(S)) == 1 else 0
+
+    Args:
+        saliency:     3D array (D, H, W) of occlusion sensitivity drops.
+        ground_truth: 3D binary array (D, H, W), 1 = tumor, 0 = background.
+
+    Returns:
+        True if the maximum sensitivity drop voxel is within the tumor.
+    """
+    return pointing_game(saliency, ground_truth)
+
+
 def saliency_coverage(saliency: np.ndarray, ground_truth: np.ndarray) -> float:
     """
     Saliency Coverage: fraction of total saliency mass inside the GT region.
@@ -128,10 +149,11 @@ def evaluate_saliency(
         threshold:    Threshold for binarising saliency (for IoU).
 
     Returns:
-        Dict with keys: 'pointing_game', 'coverage', 'iou'.
+        Dict with keys: 'pointing_game', 'msr_accuracy', 'coverage', 'iou', 'weighted_dice'.
     """
     return {
         "pointing_game": float(pointing_game(saliency, ground_truth)),
+        "msr_accuracy": float(msr_accuracy(saliency, ground_truth)),
         "coverage": saliency_coverage(saliency, ground_truth),
         "iou": saliency_iou(saliency, ground_truth, threshold),
         "weighted_dice": weighted_dice(saliency, ground_truth),

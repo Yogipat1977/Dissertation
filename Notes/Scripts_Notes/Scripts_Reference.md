@@ -120,6 +120,22 @@ This document describes every script and source module in the project.
 
 ---
 
+### `scripts/generate_occlusion.py`
+
+**Purpose:** Generate 3D Occlusion Sensitivity maps via a sliding window and evaluate XAI metrics (including MSR Accuracy).
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--config` | required | YAML config file |
+| `--checkpoint` | required | Model weights |
+| `--limit` | `0` (all) | Process N patients only |
+| `--window_size`| `16` | Size of occluding 3D cube |
+| `--stride`| `8` | Sliding window step size |
+
+**Output:** `slicer_export/XAI/Occlusion/<patient>/...` + `results/CSVs/xai_occlusion_metrics.csv`
+
+---
+
 ### `scripts/generate_lrp.py`
 
 **Purpose:** Generate high-resolution Layer-wise Relevance Propagation (LRP) relevance maps for test patients via the Input ✕ Gradient proxy rule. Strict visual export (skips metrics).
@@ -271,6 +287,19 @@ This document describes every script and source module in the project.
 |--------|-------------|
 | `__init__(model)` | Store Model |
 | `generate(input, target_class)` | Returns full-resolution positive relevance map |
+
+---
+
+### `src/xai/occlusion.py`
+
+**Purpose:** 3D Occlusion Sensitivity perturbation testing via sliding window.
+
+**Class: `OcclusionSensitivity3D`**
+
+| Method | Description |
+|--------|-------------|
+| `__init__(model, window_size, stride, baseline)` | Sets up hyperparams |
+| `generate(input, target_class, batch_size)` | Slides occluder block over input, returns upsampled score drop heatmap |
 
 ---
 

@@ -472,7 +472,35 @@ python scripts/generate_lrp.py \
 
 ---
 
-## 12. Summary of All Output Files
+## 12. Occlusion Sensitivity (Testing Regional Importance via Perturbation)
+
+Occlusion Sensitivity is a completely model-agnostic XAI strategy. Instead of relying on gradients (which can be noisy) or internal layer feature maps, it systematically hides (occludes) 3D blocks of the input volume and measures the drop in the model's confidence for the tumor.
+
+- **How it works:** A 16x16x16 window slides across the input. At every step, the pixels inside the window are set to 0. A forward pass is made. The drop in confidence (`baseline_score - occluded_score`) is recorded.
+- **Why it matters:** It directly answers the question: "If the doctor could not see this specific brain region, would they still diagnose a tumor here?"
+- **MSR Accuracy (Most Salient Region):** We evaluate this using MSR Accuracy. This metric finds the *single 3D window* that caused the largest drop in model confidence, and checks if that window was physically inside the true tumor mask. 
+
+### 12.1 Run Command
+
+This method takes longer than gradient-based methods because it requires a forward pass for every window position. It processes windows in batches.
+
+```bash
+python scripts/generate_occlusion.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --limit 20 \
+  --window_size 16 \
+  --stride 8 \
+  --batch_size 16
+```
+
+### 12.2 Output
+- **Metrics:** `results/CSVs/xai_occlusion_metrics.csv`
+- **NIfTI Heatmaps:** `slicer_export/XAI/Occlusion/<patient>/<patient>_occlusion_{wt,tc,et}.nii.gz`
+
+---
+
+## 13. Summary of All Output Files
 
 | File | Method | Resolution | Contents |
 |------|--------|-----------|----------|
