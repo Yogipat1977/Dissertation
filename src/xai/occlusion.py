@@ -85,32 +85,37 @@ class OcclusionSensitivity3D:
 
         # 3. Process occlusions sequentially to save RAM (no batching)
         # We modify the input_tensor in-place, forward pass, and then restore it.
-        for i_d, d in enumerate(d_coords):
-            for i_h, h in enumerate(h_coords):
-                for i_w, w in enumerate(w_coords):
-                    
-                    # Save the original patch
-                    orig_patch = input_tensor[
-                        0, :, d : d + d_win, h : h + h_win, w : w + w_win
-                    ].clone()
-                    
-                    # Apply occlusion
-                    input_tensor[
-                        0, :, d : d + d_win, h : h + h_win, w : w + w_win
-                    ] = self.baseline
-                    
-                    # Forward pass (batch size 1)
-                    occ_output = self.model(input_tensor)
-                    occ_score = occ_output[0, target_class].mean().item()
-                    
-                    # Record drop
-                    drop = base_score - occ_score
-                    occlusion_map[i_d, i_h, i_w] = drop
-                    
-                    # Restore original patch
-                    input_tensor[
-                        0, :, d : d + d_win, h : h + h_win, w : w + w_win
-                    ] = orig_patch
+        total_steps = len(d_coords) * len(h_coords) * len(w_coords)
+        
+        with tqdm(total=total_steps, desc="  Sliding", leave=False) as pbar:
+            for i_d, d in enumerate(d_coords):
+                for i_h, h in enumerate(h_coords):
+                    for i_w, w in enumerate(w_coords):
+                        
+                        # Save the original patch
+                        orig_patch = input_tensor[
+                            0, :, d : d + d_win, h : h + h_win, w : w + w_win
+                        ].clone()
+                        
+                        # Apply occlusion
+                        input_tensor[
+                            0, :, d : d + d_win, h : h + h_win, w : w + w_win
+                        ] = self.baseline
+                        
+                        # Forward pass (batch size 1)
+                        occ_output = self.model(input_tensor)
+                        occ_score = occ_output[0, target_class].mean().item()
+                        
+                        # Record drop
+                        drop = base_score - occ_score
+                        occlusion_map[i_d, i_h, i_w] = drop
+                        
+                        # Restore original patch
+                        input_tensor[
+                            0, :, d : d + d_win, h : h + h_win, w : w + w_win
+                        ] = orig_patch
+                        
+                        pbar.update(1)
 
         # 4. Upsample strided map to full original input resolution
         # occlusion_map is currently (D', H', W'). Add dummy batch+channel for F.interpolate
