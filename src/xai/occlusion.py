@@ -39,19 +39,17 @@ class OcclusionSensitivity3D:
     def generate(
         self,
         input_tensor: torch.Tensor,
-        target_class: int,
         batch_size: int = 16,
     ) -> np.ndarray:
         """
-        Generate a 3D occlusion sensitivity relevance map.
+        Generate a 3D occlusion sensitivity relevance map for all 3 classes simultaneously.
 
         Args:
             input_tensor: Model input, shape (1, C, D, H, W).
-            target_class: Output channel index (0=WT, 1=TC, 2=ET).
-            batch_size:   Number of occluded volumes to pass simultaneously.
+            batch_size:   (Deprecated, unused in sequential to save RAM)
 
         Returns:
-            Numpy array (D, H, W) with values in [0, 1]. Size matches input.
+            Numpy array (3, D, H, W) with values in [0, 1]. Size matches input spatial dims.
         """
         self.model.eval()
         device = input_tensor.device
@@ -59,9 +57,11 @@ class OcclusionSensitivity3D:
         # Get spatial dimensions (1, C, D, H, W) -> (D, H, W)
         _, _, D, H, W = input_tensor.shape
 
-        # 1. Base Unoccluded Score
+        # 1. Base Unoccluded Score for all 3 classes [0, 1, 2]
         base_output = self.model(input_tensor)
-        base_score = base_output[0, target_class].mean().item()
+        base_score_0 = base_output[0, 0].mean().item()
+        base_score_1 = base_output[0, 1].mean().item()
+        base_score_2 = base_output[0, 2].mean().item()
 
         # 2. Setup sliding window grid
         d_stride, h_stride, w_stride = self.strides
@@ -76,9 +76,9 @@ class OcclusionSensitivity3D:
         w_coords = list(range(0, W - w_win + 1, w_stride))
         if w_coords[-1] + w_win < W: w_coords.append(W - w_win)
 
-        # Output heatmap corresponding to stride grid centers
+        # Output heatmap corresponding to stride grid centers for 3 classes
         occlusion_map = torch.zeros(
-            (len(d_coords), len(h_coords), len(w_coords)),
+            (3, len(d_coords), len(h_coords), len(w_coords)),
             device=device,
             dtype=torch.float32
         )
@@ -102,13 +102,16 @@ class OcclusionSensitivity3D:
                             0, :, d : d + d_win, h : h + h_win, w : w + w_win
                         ] = self.baseline
                         
-                        # Forward pass (batch size 1)
+                        # Forward pass (batch size 1) evaluates all 3 classes at once
                         occ_output = self.model(input_tensor)
-                        occ_score = occ_output[0, target_class].mean().item()
+                        occ_0 = occ_output[0, 0].mean().item()
+                        occ_1 = occ_output[0, 1].mean().item()
+                        occ_2 = occ_output[0, 2].mean().item()
                         
                         # Record drop
-                        drop = base_score - occ_score
-                        occlusion_map[i_d, i_h, i_w] = drop
+                        occlusion_map[0, i_d, i_h, i_w] = base_score_0 - occ_0
+                        occlusion_map[1, i_d, i_h, i_w] = base_score_1 - occ_1
+                        occlusion_map[2, i_d, i_h, i_w] = base_score_2 - occ_2
                         
                         # Restore original patch
                         input_tensor[
@@ -118,8 +121,8 @@ class OcclusionSensitivity3D:
                         pbar.update(1)
 
         # 4. Upsample strided map to full original input resolution
-        # occlusion_map is currently (D', H', W'). Add dummy batch+channel for F.interpolate
-        occlusion_map = occlusion_map.unsqueeze(0).unsqueeze(0)
+        # occlusion_map is currently (3, D', H', W'). Add dummy batch for F.interpolate -> (1, 3, D', H', W')
+        occlusion_map = occlusion_map.unsqueeze(0)
         
         # Upsample via trilinear interpolation
         full_map = F.interpolate(
@@ -127,17 +130,18 @@ class OcclusionSensitivity3D:
             size=(D, H, W),
             mode="trilinear",
             align_corners=False
-        ).squeeze()  # Remove dummy dims back to (D, H, W)
+        ).squeeze(0)  # Remove dummy batch dim -> (3, D, H, W)
 
         # 5. Only care about POSITIVE drops (occlusion hurt performance)
         full_map = torch.clamp(full_map, min=0)
 
-        # 6. Normalize to [0, 1]
-        m_min = full_map.min()
-        m_max = full_map.max()
-        if m_max - m_min > 1e-8:
-            full_map = (full_map - m_min) / (m_max - m_min)
-        else:
-            full_map = torch.zeros_like(full_map)
+        # 6. Normalize to [0, 1] per channel
+        for c in range(3):
+            m_min = full_map[c].min()
+            m_max = full_map[c].max()
+            if m_max - m_min > 1e-8:
+                full_map[c] = (full_map[c] - m_min) / (m_max - m_min)
+            else:
+                full_map[c] = torch.zeros_like(full_map[c])
 
         return full_map.cpu().numpy()

@@ -169,8 +169,11 @@ def main():
             inputs = raw_input
 
         # ── Generate and Evaluate Maps ──────────────────────────────────
+        # Generate all 3 classes at once -> (3, D, H, W)
+        heatmaps_3d = occ_engine.generate(inputs, batch_size=args.batch_size)
+        
         for ch_idx, tag in REGION_NAMES.items():
-            heatmap = occ_engine.generate(inputs, target_class=ch_idx, batch_size=args.batch_size)
+            heatmap = heatmaps_3d[ch_idx]
             heatmap = heatmap[:orig_shape[0], :orig_shape[1], :orig_shape[2]]
 
             # Convert to uint8 and save NIfTI
