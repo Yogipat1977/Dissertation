@@ -150,6 +150,22 @@ This document describes every script and source module in the project.
 
 ---
 
+### `scripts/generate_mc_dropout.py`
+
+**Purpose:** Quantifies model confidence by sampling multiple stochastic forward passes with dropout enabled during inference. Output provides both a mean prediction map and an uncertainty (variance) map.
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--config` | required | YAML config file |
+| `--checkpoint` | required | Model weights |
+| `--limit` | `0` (all) | Process N patients only |
+| `--num_iters` | `20` | Number of MC forward passes |
+| `--patient_ids` | `None` | Process only specified patient IDs |
+
+**Output:** `slicer_export/XAI/MC_Dropout/<patient>/...` + `results/CSVs/xai_mc_dropout_metrics.csv`
+
+---
+
 ### `scripts/generate_manifest.py`
 
 **Purpose:** Generate a JSON manifest showing train/val/test patient split.  
@@ -303,6 +319,20 @@ This document describes every script and source module in the project.
 
 ---
 
+### `src/xai/uncertainty.py`
+
+**Purpose:** Monte Carlo Dropout (MC Dropout) uncertainty quantification.
+
+**Class: `MCDropout3D`**
+
+| Method | Description |
+|--------|-------------|
+| `__init__(model, num_iters)` | Store model and iteration count |
+| `enable_dropout()` | Activates dropout layers while keeping BatchNorm frozen |
+| `generate(input)` | Returns mean prediction probabilities and variance (uncertainty) |
+
+---
+
 ### `src/xai/metrics.py`
 
 **Purpose:** Quantitative XAI evaluation metrics (saliency vs ground truth).
@@ -322,4 +352,4 @@ This document describes every script and source module in the project.
 
 **Purpose:** Package exports for the XAI module.
 
-**Exports:** `GradCAM3D`, `GuidedBackprop3D`, `LRP3D`, `evaluate_saliency`, `pointing_game`, `saliency_coverage`, `saliency_iou`, `weighted_dice`
+**Exports:** `GradCAM3D`, `GuidedBackprop3D`, `LRP3D`, `OcclusionSensitivity3D`, `MCDropout3D`, `evaluate_saliency`, `pointing_game`, `saliency_coverage`, `saliency_iou`, `weighted_dice`
