@@ -31,6 +31,9 @@ This project develops a 3D Explainable AI (XAI) framework to interpret 3D CNN mo
 │   └── xai/                         # Explainable AI module
 │       ├── grad_cam.py              # GradCAM3D — 3D Grad-CAM class
 │       ├── guided_backprop.py       # GuidedBackprop3D — Guided Backpropagation
+│       ├── lrp.py                   # LRP3D — Layer-wise Relevance Propagation
+│       ├── occlusion.py             # OcclusionSensitivity — Sliding window ablation
+│       ├── uncertainty.py           # MCDropout3D — Monte Carlo Dropout uncertainty
 │       ├── metrics.py               # XAI evaluation metrics (4 metrics)
 │       └── __init__.py              # Package exports
 ├── train.py                         # Training entry point
@@ -41,7 +44,10 @@ This project develops a 3D Explainable AI (XAI) framework to interpret 3D CNN mo
 │   ├── export_predictions.py        # Export NIfTI predictions for 3D Slicer / VR
 │   ├── evaluate_per_patient.py      # Per-patient metrics (CSV + summary stats)
 │   ├── generate_gradcam.py          # Grad-CAM saliency generation + metrics
-│   └── generate_gbp.py             # GBP + Guided Grad-CAM generation + metrics
+│   ├── generate_gbp.py              # GBP + Guided Grad-CAM generation + metrics
+│   ├── generate_lrp.py              # LRP generation + metrics
+│   ├── generate_occlusion.py        # Occlusion sensitivity generation + metrics
+│   └── generate_mc_dropout.py       # MC Dropout uncertainty maps + evaluation metrics
 ├── models/                          # Saved checkpoints (git-ignored)
 ├── data/                            # Datasets (git-ignored)
 │   ├── BraTS2023-Training/          # Full training data (~1,250 patients)
@@ -51,7 +57,10 @@ This project develops a 3D Explainable AI (XAI) framework to interpret 3D CNN mo
 │   └── XAI/                         # XAI saliency maps
 │       ├── Grad_CAM/                # Grad-CAM heatmaps per patient
 │       ├── GBP/                     # Guided Backpropagation maps per patient
-│       └── Guided_Grad_CAM/         # Guided Grad-CAM maps per patient
+│       ├── Guided_Grad_CAM/         # Guided Grad-CAM maps per patient
+│       ├── LRP/                     # Layer-wise Relevance Propagation maps per patient
+│       ├── Occlusion/               # Occlusion sensitivity drops per patient
+│       └── MC_Dropout/              # MC Dropout uncertainty maps per patient
 ├── results/                         # Evaluation CSVs
 │   └── CSVs/                        # All metric outputs
 ├── Notes/                           # Research notes & documentation
@@ -270,16 +279,55 @@ python scripts/generate_gbp.py \
 | GBP | `slicer_export/XAI/GBP/<patient>/` | `results/CSVs/xai_gbp_metrics.csv` |
 | Guided Grad-CAM | `slicer_export/XAI/Guided_Grad_CAM/<patient>/` | `results/CSVs/xai_guided_gradcam_metrics.csv` |
 
+#### 9c. Layer-wise Relevance Propagation (LRP)
+
+Mathematical projection of exactly what inputs contributed to the output score.
+
+```bash
+python scripts/generate_lrp.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/<run_name>/best_model.pth --limit 5
+```
+
+**Output:** `slicer_export/XAI/LRP/<patient>/` + `results/CSVs/xai_lrp_metrics.csv`
+
+#### 9d. Occlusion Sensitivity
+
+Tests model reliance on specific regions by sliding a black box across the input and recording confidence drops.
+
+```bash
+python scripts/generate_occlusion.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/<run_name>/best_model.pth --limit 5
+```
+
+**Output:** `slicer_export/XAI/Occlusion/<patient>/` + `results/CSVs/xai_occlusion_metrics.csv`
+
+#### 9e. Monte Carlo Dropout (Uncertainty)
+
+Quantifies model confidence by sampling multiple stochastic forward passes with dropout enabled during inference. Output provides both a mean prediction map and a variance (uncertainty) map.
+
+```bash
+python scripts/generate_mc_dropout.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/<run_name>/best_model.pth \
+  --num_iters 20 \
+  --patient_ids "BraTS-GLI-01497-000,BraTS-GLI-00291-000"
+```
+
+**Output:** `slicer_export/XAI/MC_Dropout/<patient>/` + `results/CSVs/xai_mc_dropout_metrics.csv`
+
 #### XAI Evaluation Metrics
 
-All XAI methods are evaluated against ground truth using four quantitative metrics:
+All XAI methods are evaluated against ground truth using quantitative metrics:
 
 | Metric | Range | Description |
 |--------|-------|-------------|
-| **Pointing Game** | 0 or 1 | Does the peak saliency voxel fall inside the tumor? |
+| **Pointing Game** / **MSR** | 0 or 1 | Does the peak saliency voxel fall inside the tumor? |
 | **Saliency Coverage** | [0, 1] | Fraction of total saliency mass inside the tumor |
 | **Saliency IoU** | [0, 1] | Overlap between thresholded saliency and GT mask |
 | **Weighted Dice** | [0, 1] | Soft Dice between continuous saliency and binary GT |
+| **Uncertainty Metrics** | Various | (For MC Dropout only) Boundary Ratio, UAR, Unc Coverage, etc. |
 
 ---
 
@@ -372,8 +420,8 @@ All tuneable parameters live in `configs/*.yaml`:
 |------|-------|
 | Deep Learning | PyTorch, MONAI |
 | Models | SegResNet, Attention U-Net, Swin UNETR |
-| Explainability | 3D Grad-CAM, Guided Backpropagation, Guided Grad-CAM |
-| XAI Metrics | Pointing Game, Saliency Coverage, Saliency IoU, Weighted Dice |
+| Explainability | 3D Grad-CAM, GBP, Guided Grad-CAM, LRP, Occlusion, MC Dropout |
+| XAI Metrics | PG, Coverage, IoU, Weighted Dice, Uncertainty Metrics |
 | Visualisation | 3D Slicer / SlicerVR |
 | Experiment Tracking | Weights & Biases |
 | Documentation | Typst, Quarto |

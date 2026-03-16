@@ -10,13 +10,16 @@
 
 This document describes the complete XAI (Explainable AI) pipeline implemented for interpreting the 3D SegResNet brain tumor segmentation model. The goal is to answer: **"Where is the model looking when it makes a segmentation decision, and does that match the actual tumor?"**
 
-Three XAI methods are implemented:
+Six XAI methods are implemented:
 
 | Method | Resolution | Class-Specific? | Sharpness |
-|--------|-----------|-----------------|-----------|
+|--------|-----------|-----------------|-----------| 
 | **Grad-CAM** | Coarse (20³ → 160³) |  Yes | Low (blurry blob) |
 | **Guided Backpropagation (GBP)** | Full (160³) | No | High (sharp edges) |
 | **Guided Grad-CAM** | Full (160³) |  Yes | High (best of both) |
+| **LRP (Input × Gradient)** | Full (160³) | Yes | High (relevance map) |
+| **Occlusion Sensitivity** | Coarse (20³ → 160³) | Yes | Low (perturbation-based) |
+| **MC Dropout** | Full (160³) | Yes | N/A (uncertainty, not saliency) |
 
 All methods are evaluated against ground truth using four quantitative metrics (see `Notes/XAI/XAI_Evaluation_Metrics.md`).
 
@@ -513,4 +516,129 @@ python scripts/generate_occlusion.py \
 | `xai_guided_gradcam_metrics.csv` | Guided Grad-CAM | Full (160³) | Per-patient metrics |
 | `xai_guided_gradcam_topk<K>_weighted_dice.csv` | Guided Grad-CAM + Top-K | Full (160³) | Weighted Dice only |
 | `slicer_export/XAI/LRP/<patient>/` | LRP | Full (160³) | NIfTI Export Only |
+| `xai_occlusion_metrics.csv` | Occlusion | Coarse (20³) | Per-patient metrics |
+| `xai_mc_dropout_metrics.csv` | MC Dropout | Full (160³) | Per-patient uncertainty metrics |
+| `slicer_export/XAI/MC_Dropout/<patient>/` | MC Dropout | Full (160³) | Mean prediction + Uncertainty NIfTI |
 | `xai_summary_comparison.csv` | All methods | Full (160³) | Aggregated comparison table |
+
+---
+
+## 14. Method 6: MC Dropout (Monte Carlo Dropout) — Uncertainty Quantification
+
+### 14.1 Core Concept
+
+Unlike all other XAI methods in this pipeline which answer "Where is the model looking?", MC Dropout answers a fundamentally different question: **"How confident is the model about its prediction at each voxel?"**
+
+Standard deep learning models are **deterministic** — given the same input, they produce the same output. MC Dropout introduces stochasticity by keeping the dropout layers active during inference and running the same input through the model multiple times. Each pass deactivates different neurons, producing slightly different predictions. The **variance** across these predictions is the uncertainty.
+
+### 14.2 Mathematical Derivation
+
+**Step 1 — Enable dropout at inference:**
+
+SegResNet already has `dropout_prob=0.1` configured. Instead of disabling dropout (standard `model.eval()` behaviour), we selectively re-enable Dropout modules:
+
+```python
+model.eval()                    # Freeze BatchNorm stats
+for m in model.modules():
+    if isinstance(m, Dropout):
+        m.train()               # Re-enable dropout
+```
+
+**Step 2 — N stochastic forward passes:**
+
+For the same input $x$, run $N$ forward passes (default $N = 20$):
+
+```
+p_1 = σ(f_1(x)), p_2 = σ(f_2(x)), ..., p_N = σ(f_N(x))
+```
+
+Where $σ$ is the sigmoid function and $f_n(x)$ is the n-th stochastic forward pass with different neurons dropped.
+
+**Step 3 — Mean prediction (stabilised segmentation):**
+
+```
+p̄ = (1/N) Σ_{n=1}^{N} p_n
+```
+
+This is an **ensemble-like** prediction — more robust than a single deterministic pass.
+
+**Step 4 — Uncertainty map (predictive variance):**
+
+```
+σ²(d,h,w) = (1/N) Σ_{n=1}^{N} (p_n(d,h,w) - p̄(d,h,w))²
+```
+
+High variance = the model gives inconsistent predictions for this voxel = **uncertain**.
+
+### 14.3 "The Boundary Glow"
+
+MC Dropout uncertainty typically produces a characteristic **"boundary glow"** pattern:
+
+| Scenario | Uncertainty Pattern | Interpretation |
+|----------|-------------------|----------------|
+| **Well-segmented tumor** | High uncertainty **only at the boundary** | ✅ Model is confident about interior but uncertain at edges — clinically expected |
+| **Poorly segmented region** | Uncertainty **concentrated throughout** | ⚠️ Model is unsure about the entire structure |
+
+### 14.4 The Critical Comparison: LRP vs Uncertainty
+
+A novel cross-method analysis comparing LRP importance maps with MC Dropout uncertainty:
+
+| LRP Importance | Uncertainty | Interpretation |
+|:-:|:-:|---|
+| ↑ High | ↓ Low | **✅ Ideal** — Model relies on this region AND is confident |
+| ↑ High | ↑ High | **⚠️ Brittle** — Model relies on this region BUT is uncertain → prediction could flip |
+
+This comparison reveals **brittle decision regions** — a clinical red flag where the model's most important features are also its least stable.
+
+### 14.5 Evaluation Metrics
+
+| Metric | Formula | What It Measures |
+|--------|---------|-----------------|
+| **Uncertainty Area Ratio (UAR)** | `Σ(U[GT=1]) / Σ(U)` | Fraction of total uncertainty that is inside the tumor |
+| **Boundary Uncertainty Ratio** | `Σ(U × Boundary) / Σ(U)` | Fraction of total uncertainty at the GT boundary band |
+| **Mean Unc Inside** | `mean(U[GT=1])` | Average variance inside the tumor |
+| **Mean Unc Outside** | `mean(U[GT=0])` | Average variance outside the tumor (should be very low) |
+| **Weighted Dice (LRP)** | `2*Σ(LRP × GT) / (Σ(LRP)+Σ(GT))`| Soft structural overlap of the LRP relevance map |
+| **Saliency-Unc Correlation** | `Pearson_r(LRP, U)` | Correlation between LRP and Uncertainty inside the tumor |
+
+A well-calibrated model should show: high **Boundary Uncertainty Ratio**, low **Mean Unc Inside** (confident about tumor interior), very low **Mean Unc Outside** (confident about healthy tissue), and high **Uncertainty Coverage** (uncertain voxels cluster at boundaries, not randomly).
+
+### 14.6 Script Usage & Run Commands
+
+```bash
+python scripts/generate_mc_dropout.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/SegResNet_f32_d0.1_lr5e-05_Full_Run/best_model.pth \
+  --num_iters 20 \
+  --limit 5
+```
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--num_iters` | `20` | Number of stochastic forward passes |
+| `--limit` | `0` (all) | Number of patients to process |
+| `--split` | `test` | Dataset split to evaluate |
+
+### 14.7 Output
+
+| Output | Location |
+|--------|----------|
+| Mean prediction NIfTI | `slicer_export/XAI/MC_Dropout/<patient>/<patient>_mc_mean_{wt,tc,et}.nii.gz` |
+| Uncertainty NIfTI | `slicer_export/XAI/MC_Dropout/<patient>/<patient>_mc_uncertainty_{wt,tc,et}.nii.gz` |
+| Metrics CSV | `results/CSVs/xai_mc_dropout_metrics.csv` |
+
+### 14.8 Related Files
+
+| File | Purpose |
+|------|---------|
+| `src/xai/uncertainty.py` | `MCDropout3D` class — dropout enable/disable, N-pass inference |
+| `scripts/generate_mc_dropout.py` | Batch generation + boundary metrics + NIfTI export |
+| `Notes/XAI/XAI_MC_Dropout_Notes.md` | Detailed notes including handwritten derivations |
+
+### 14.9 Exception Case: Patient 00291
+
+Patient `BraTS-GLI-00291-000` showed anomalous XAI results (TC Pointing Game = 0%, ET Pointing Game = 0%). MC Dropout uncertainty maps should be used to investigate whether the model's confident-but-wrong predictions for this patient stem from **insufficient data diversity** or a genuinely unusual tumor morphology.
+
+### 14.10 Reference
+
+Gal & Ghahramani, "Dropout as a Bayesian Approximation: Representing Model Uncertainty in Deep Learning", ICML 2016.
