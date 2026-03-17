@@ -41,9 +41,11 @@ This project develops a 3D Explainable AI (XAI) framework to interpret 3D CNN mo
 ├── scripts/
 │   ├── download_data.py             # Download training data from Synapse
 │   ├── extract_prototype.py         # Create prototype subset for local testing
+│   ├── generate_manifest.py         # Save dataset splits to manifest.json
 │   ├── export_predictions.py        # Export NIfTI predictions for 3D Slicer / VR
 │   ├── evaluate_per_patient.py      # Per-patient metrics (CSV + summary stats)
 │   ├── generate_gradcam.py          # Grad-CAM saliency generation + metrics
+│   ├── evaluate_gradcam_coarse.py   # Grad-CAM native resolution evaluation + metrics
 │   ├── generate_gbp.py              # GBP + Guided Grad-CAM generation + metrics
 │   ├── generate_lrp.py              # LRP generation + metrics
 │   ├── generate_occlusion.py        # Occlusion sensitivity generation + metrics
@@ -139,8 +141,17 @@ python train.py
 python scripts/download_data.py
 
 # Train on the entire dataset (~1,250 patients):
-python train.py --config configs/full_training.yaml
+python train.py --config configs/full_training_segresnet.yaml
 ```
+
+### 3c. Saving the Dataset Manifest
+
+To save the exact `train/val/test` split used during training (determined by the config seed) to a JSON file for reproducibility:
+
+```bash
+python scripts/generate_manifest.py --config configs/full_training_segresnet.yaml 
+```
+**Output:** `results/manifest.json`
 
 ### 4. Training Different Models
 
@@ -245,14 +256,24 @@ python scripts/generate_gradcam.py \
   --limit 5
 ```
 
+You can also evaluate Grad-CAM at **native feature map resolution** (without upsampling blur penalties) against a downsampled Ground Truth:
+
+```bash
+python scripts/evaluate_gradcam_coarse.py \
+  --config configs/full_training_segresnet.yaml \
+  --checkpoint models/<run_name>/best_model.pth \
+  --layer bottleneck --topk 15
+```
+
 | Argument | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `--config` | Yes | — | Path to YAML config file |
 | `--checkpoint` | Yes | — | Path to saved model weights (`.pth`) |
 | `--limit` | No | `0` (all) | Process only the first *N* patients |
 | `--layer` | No | `bottleneck` | Target layer (`bottleneck`, `encoder3`, `encoder2`, `encoder1`, `decoder1`) |
+| `--topk` | No | `0` | Optional Top-K% thresholding for native map evaluation |
 
-**Output:** `slicer_export/XAI/Grad_CAM/<patient>/` + `results/CSVs/xai_gradcam_metrics.csv`
+**Output:** `slicer_export/XAI/Grad_CAM/<patient>/` + `results/CSVs/xai_gradcam_metrics.csv` (or coarse evaluation metrics)
 
 #### 9b. Guided Backpropagation (GBP) & Guided Grad-CAM
 
@@ -315,6 +336,11 @@ python scripts/generate_mc_dropout.py \
   --patient_ids "BraTS-GLI-01497-000,BraTS-GLI-00291-000"
 ```
 
+| Argument | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `--num_iters` | No | `20` | Number of stochastic forward passes per patient |
+| `--patient_ids` | No | — | Optional comma-separated list of specific patient IDs to process |
+
 **Output:** `slicer_export/XAI/MC_Dropout/<patient>/` + `results/CSVs/xai_mc_dropout_metrics.csv`
 
 #### XAI Evaluation Metrics
@@ -326,8 +352,10 @@ All XAI methods are evaluated against ground truth using quantitative metrics:
 | **Pointing Game** / **MSR** | 0 or 1 | Does the peak saliency voxel fall inside the tumor? |
 | **Saliency Coverage** | [0, 1] | Fraction of total saliency mass inside the tumor |
 | **Saliency IoU** | [0, 1] | Overlap between thresholded saliency and GT mask |
-| **Weighted Dice** | [0, 1] | Soft Dice between continuous saliency and binary GT |
-| **Uncertainty Metrics** | Various | (For MC Dropout only) Boundary Ratio, UAR, Unc Coverage, etc. |
+| **Weighted Dice / LRP Dice** | [0, 1] | Soft Dice between continuous saliency and binary GT |
+| **Uncertainty Area Ratio (UAR)** | [0, 1] | Fraction of uncertainty mask inside tumor vs total uncertainty mass |
+| **Boundary Ratio** | [0, 1] | Fraction of uncertainty explicitly located at GT borders |
+| **Saliency-Unc Correlation** |-1 to 1| Pearson correlation between uncertainty and XAI saliency (e.g., LRP) |
 
 ---
 
