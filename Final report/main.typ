@@ -9,11 +9,9 @@
   date: datetime(year: 2026, month: 3, day: 16), //
 
   abstract: [
-    This is where your abstract goes. Remember, it must be 500 words or less. It is NOT an introduction. It needs three elements: Purpose, Methodology, and Outcome.
   ],
 
   acknowledgments: [
-    Here you can thank the people, including your supervisor, who have helped you with your project.
   ],
 )
 

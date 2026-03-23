@@ -100,9 +100,8 @@
       // LOGIC: If a heading exists AFTER the header but ON THE SAME PAGE, use it.
       if after.len() > 0 and after.first().location().page() == current_page {
         target_heading = after.first()
-      } 
+      } else if before.len() > 0 {
       // OTHERWISE: Use the heading from before (continuation of previous chapter)
-      else if before.len() > 0 {
         target_heading = before.last()
       }
 

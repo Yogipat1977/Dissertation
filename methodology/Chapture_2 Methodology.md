@@ -89,6 +89,7 @@
   - Input channels (4 MRI modalities), output channels (3 tumor regions).
   - Dropout probability (e.g., 0.1) and its dual role (regularisation and enabling MC Dropout).
   - Loss function: DiceFocalLoss, parameter values (e.g., gamma), and why this loss is well suited to class imbalance and small ET regions.
+- Add a diagram of the SegResNet architecture, highlighting skip connections and the residual block structure.
 
 ### 2.3.3 Evolutionary Prototyping Phase
 

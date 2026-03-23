@@ -1,7 +1,3 @@
-# SegResNet Model & Implementation Documentation
-
-## 1. Overview
-This document compiles the architectural details, configurations, and evaluation strategies of the **SegResNet** model utilized for the 3D brain tumor segmentation framework. The information herein is synthesized from theoretical handwritten notes, PyTorch/MONAI implementation logic, and the exact hyperparameter configurations used for the full BraTS 2023 dataset training.
 
 ---
 
