@@ -19,15 +19,7 @@ Use code blocks for snippets. Do not dump 1000s of lines here; use appendices fo
 
 ] //
 
-= Evaluation
-Include an evaluation of both product and process. Be objective. Reflect on what worked and what did not.
 
-= Conclusion
-Reflect on key findings, limitations, and future opportunities.
-
-// --- BIBLIOGRAPHY --- // Create a file named 'works.bib' in the same folder for this to work
-// #bibliography("works.bib", style: "harvard-cite-them-right")
-//
 
 // --- APPENDICES --- #show: appendix
 

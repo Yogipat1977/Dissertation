@@ -74,6 +74,19 @@ At each ReLU during backprop, GBP applies **two gates**:
 1. Standard gate: zero gradient if forward activation ≤ 0
 2. Additional gate: zero gradient if incoming gradient ≤ 0
 
+According to the AXONS-3 specific formulation, the guided gradient $R_i^l$ propagated backward to neuron $i$ at layer $l$ combines these rules using binary indicator functions:
+
+```math
+R_i^l = (f_i^l > 0) \cdot (R_i^{l+1} > 0) \cdot R_i^{l+1}
+```
+
+Where:
+- $f_i^l$ is the original forward activation.
+- $R_i^{l+1}$ is the incoming gradient from the subsequent layer.
+- $(\cdot > 0)$ evaluates to 1 if true, 0 if false.
+
+Both conditions must individually evaluate to 1; otherwise, the backward flow is suppressed. This selectively preserves purely positive signal paths.
+
 ### Result
 
 Produces a **full-resolution, pixel-level** saliency map — crisp and detailed.

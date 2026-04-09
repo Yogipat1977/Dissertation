@@ -70,3 +70,26 @@ The system's performance on the test split is quantitatively assessed using the 
 - **HD95 (Hausdorff Distance 95th Percentile):** Evaluates surface boundary distances. Calculates the worst-case surface distance (in mm) between the prediction boundary and the ground truth boundary. Lower is better.
 - **Sensitivity (Recall):** "Of all the actual tumor voxels, how many did the model detect?" High sensitivity means the model rarely misses the tumor.
 - **Specificity:** "How effectively does the model secure true negatives (healthy tissue) and avoid false alarms?" Evaluates the model's ability to not predict healthy regions as tumors.
+
+---
+
+## 6. Training Optimization Loop
+
+The training process follows a "Predict-Evaluate-Correct" cycle that happens for every single image in the dataset:
+
+1.  **Forward Pass (`self.model(inputs)`):**
+    - The model takes the preprocessed 4-channel MRI volume and propagates it through the Encoder and Decoder.
+    - Result: A 3-channel probabilistic segmentation mask (WT, TC, ET).
+
+2.  **Loss Calculation (`self.loss_fn(outputs, labels)`):**
+    - The `DiceFocalLoss` function compares the prediction to the expert ground truth.
+    - It generates a single numerical "error" value (the Loss) that represents how far the model is from perfection.
+
+3.  **Backpropagation (`loss.backward()`):**
+    - **Frequency:** Occurs immediately after every image (Batch Size 1).
+    - **Mechanism:** The system calculates the gradient of the loss with respect to every weight in the SegResNet network, moving backward from the final layer to the first.
+    - **Update:** The `AdamW` optimizer then adjusts the weights slightly to ensure the error will be smaller the next time a similar image is seen.
+
+4.  **The Epoch Cycle:**
+    - One **Epoch** consists of repeating this 3-step loop 1,000 times (once for every patient in the primary training set).
+    - The entire process is repeated for **35 Epochs** to reach final convergence.

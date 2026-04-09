@@ -117,7 +117,7 @@ For 3D medical imaging, the most common XAI techniques are those that can genera
 
 All three methods have their strengths and weaknesses, but Grad-CAM remains the best performing method for 3D medical image segmentation because of its computational efficiency (only one backward pass is needed) and its capacity to make use of the spatial information present in CNN feature maps @natekar2020.
 
-However, a critical "fidelity gap" exists, as existing measures frequently show significant discrepancy between the predicted and ground truth segmentation @mironicolau2025. This discrepancy is exacerbated by the standard practice of analysing 3D attention maps as static 2D slices — a method that hides volumetric coherence and increases cognitive load for clinicians. Therefore, closing the "trust gap" calls for a paradigm shift towards immersive virtual reality, which provides the high-dimensional, intuitive visualisation needed to properly understand these deep volumetric insights, rather than simply algorithmic improvements.
+However, a critical "fidelity gap" exists, as existing measures frequently show significant discrepancy between the predicted and ground truth segmentation @mironicolau2025. This discrepancy is exacerbated by the standard practice of analysing 3D attention maps as static 2D slices, a method that hides volumetric coherence and increases cognitive load for clinicians. Therefore, closing the "trust gap" calls for a paradigm shift towards immersive virtual reality, which provides the high-dimensional, intuitive visualisation needed to properly understand these deep volumetric insights, rather than simply algorithmic improvements.
 
 == Immersive Visualisation in Medical Imaging
 

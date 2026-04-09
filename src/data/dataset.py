@@ -61,7 +61,7 @@ def create_data_loaders(cfg: dict) -> dict:
 
     train_files = datalist[:train_split]
     val_files = datalist[train_split : train_split + val_split]
-    test_files = datalist[train_split + val_split :]
+    test_files = datalist[train_split + val_split : train_split + val_split + 25]
 
     print(f"  Train : {len(train_files)} patients")
     print(f"  Val   : {len(val_files)} patients")

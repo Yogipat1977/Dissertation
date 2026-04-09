@@ -11,3 +11,4 @@ env/
 /slicer_export/
 wandb/
 __pycache__/
+/Showcase_video/*.mp4
