@@ -12,3 +12,6 @@ env/
 wandb/
 __pycache__/
 /Showcase_video/*.mp4
+
+# Prototype cache (large .pt files)
+prototype/persistent_cache/
