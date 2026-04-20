@@ -227,9 +227,9 @@ The core segmentation performance of SegResNet is benchmarked against the clinic
     inset: 5pt,
     align: horizon,
     table.header([*Metric Name*], [*Formula*], [*Description / Function*]),
-    [*Dice Score (DSC)*], [$ (2|A sect B|) / (|A| + |B|) $], [Measures volumetric overlap between prediction ($A$) and ground truth ($B$) from 0 to 1. Primary BraTS benchmark.],
+    [*Dice Score (DSC)*], [$ (2|A inter B|) / (|A| + |B|) $], [Measures volumetric overlap between prediction ($A$) and ground truth ($B$) from 0 to 1. Primary BraTS benchmark.],
     [*HD 95th Percentile*], [$ P_(95) (d(a,B) union d(b,A)) $], [Measures 95th percentile surface boundary error in millimeters. Crucial for assessing margin precision.],
-    [*Intersection over Union*], [$ |A sect B| / |A union B| $], [A stricter spatial overlap metric (Jaccard index) penalizing localized false positives more heavily than Dice.],
+    [*Intersection over Union*], [$ |A inter B| / |A union B| $], [A stricter spatial overlap metric (Jaccard index) penalizing localized false positives more heavily than Dice.],
     [*Sensitivity (Recall)*], [$ "TP" / ("TP" + "FN") $], [The true positive rate. Measures the fraction of actual tumor voxels correctly identified to prevent missed diagnoses.],
     [*Specificity*], [$ "TN" / ("TN" + "FP") $], [The true negative rate. Measures reliability in excluding healthy tissue, directly preventing false alarms.]
   ),
@@ -247,7 +247,7 @@ Beyond structural accuracy, the generated gradient-based visual attributions and
     table.header([*Metric Name*], [*Formula*], [*Description / Function*]),
     [*Pointing Game (PG)*], [$ cases(1 "if" arg max (L) in G, 0 "otherwise") $], [Binary test returning 1 if the highest activation peak in the saliency map $L$ falls inside the tumor region $G$.],
     [*Saliency Coverage*], [$ (sum_(x in G) L(x)) / (sum_x L(x)) $], [Calculates the percentage of total salient relevance mass concentrated inside the true tumor boundary.],
-    [*Saliency IoU*], [$ |L_"thresh" sect G| / |L_"thresh" union G| $], [Evaluates shape overlap between a thresholded Boolean heatmap ($L_"thresh"$) and the ground truth mask ($G$).],
+    [*Saliency IoU*], [$ |L_"thresh" inter G| / |L_"thresh" union G| $], [Evaluates shape overlap between a thresholded Boolean heatmap ($L_"thresh"$) and the ground truth mask ($G$).],
     [*Weighted Dice*], [$ (2 sum L(x) dot.c G(x)) / (sum L(x) + sum G(x)) $], [Treats continuous heatmaps as soft predictive weights, modeling organic relevance without binary thresholds.],
     [*Uncertainty Area Ratio*], [$ (sum_(x in G) sigma^2(x)) / (sum_x sigma^2(x)) $], [Computes the ratio of predictive uncertainty (variance $sigma^2$) trapped inside the pathogenic ROI versus total volume.],
     [*Saliency-Uncertainty*], [$ "Cov"(L, sigma^2) / (sigma_L sigma_(sigma^2)) $], [Pearson correlation isolating "brittle" behaviors where high relevance ($L$) intersects with high variance ($sigma^2$).]
