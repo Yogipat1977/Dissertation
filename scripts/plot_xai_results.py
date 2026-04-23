@@ -63,11 +63,11 @@ def plot_bottleneck_resolution_svg():
         fig, ax = plt.subplots(figsize=(8, 6))
         
         # Keep groups close together
-        group_spacing = 0.8
+        group_spacing = 0.6
         x = np.arange(len(REGION_ORDER)) * group_spacing
         
         # --- REDUCED BAR THICKNESS FOR GRAPH 1 ---
-        bar_width = 0.20 
+        bar_width = 0.15 
         max_y_value = 0
 
         for i, res in enumerate(resolutions):
@@ -76,7 +76,7 @@ def plot_bottleneck_resolution_svg():
             means = [res_data.loc[r, 'mean'] if r in res_data.index else 0 for r in REGION_ORDER]
             stds = [res_data.loc[r, 'std'] if r in res_data.index else 0 for r in REGION_ORDER]
             
-            offset = (i - 0.5) * bar_width
+            offset = (i - 0.05) * bar_width
             pos = x + offset
             
             bars = ax.bar(
