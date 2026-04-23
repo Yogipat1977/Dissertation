@@ -89,7 +89,7 @@ This blueprint provides a professional, highly aligned structural guide for your
 
 #### 📊 GRAPH: Paired Bar Chart (or Slope Graph)
 * **Data:** `xai_gradcam_metrics.csv` (upsampled to 160³) vs. `xai_gradcam_coarse_bottleneck_metrics.csv` (evaluated at native ~20³ resolution)
-* **Design:** For each patient, two side-by-side bars per tumor region showing Weighted Dice at upsampled resolution vs. native bottleneck resolution.
+* **Design:** For each patient, two side-by-side bars per tumor region showing Weighted Dice at upsampled resolution vs. native bottleneck resolution with comparision with Saliency IoU and explain why it is been campered with salinecy IoU.
 * **What to show:**
     - Upsampled Weighted Dice and native Weighted Dice are **very close** (within ±0.02–0.04) — proving upsampling doesn't artificially inflate or deflate the score
     - In some cases native resolution scores slightly **higher** (e.g. 01497 TC: 0.4506 upsampled → 0.4536 native) — the interpolation blur of upsampling slightly hurts alignment
@@ -99,7 +99,43 @@ This blueprint provides a professional, highly aligned structural guide for your
 
 ---
 
-### 2.3 Relevance-Based Attribution: LRP (Input × Gradient)
+### 2.3 Full-Resolution Gradient Attribution: Guided Backpropagation (GBP)
+*Goal: Present GBP as the only method achieving perfect localisation across every patient and every region — including the failure case.*
+
+* **Narrative:** GBP modifies the standard gradient by gating negative gradients at every ReLU during backpropagation, producing a full-resolution (160³) saliency map. Unlike Grad-CAM, it requires no bottleneck layer and makes no class-specific weighting — it reveals which input voxels the network's forward activations depend on most.
+* **Key Results (5 patients × 3 regions, from `xai_gbp_metrics.csv`):**
+    - **Pointing Game: 100% for ALL patients, ALL regions, including ET** — the only method to achieve this universally
+    - **Patient 00291:** GBP scores PG = 1.0 across all three regions where Grad-CAM and Guided Grad-CAM score **zero** — proving that input-level gradient features remain intact even when higher-level methods fail
+    - Coverage: 0.12–0.44 — low, because GBP spreads relevance across fine-grained texture features (edges, intensity gradients) rather than concentrating on the tumor mass
+    - Weighted Dice: 0.03–0.18 — low spatial precision, but perfect localisation
+    - ET Weighted Dice: 0.03–0.18 — notably, GBP's ET scores are **competitive with or higher than** Grad-CAM's ET scores (near-zero), demonstrating the resolution advantage
+* **Figure:** 2D GBP saliency overlay + 3D Slicer rendering for one patient.
+* **Discussion:**
+    - GBP's perfect PG everywhere proves the model encodes tumor-relevant features at the **input pixel level** — not just in deep bottleneck representations. This is the strongest evidence of feature grounding.
+    - The low coverage is expected and not a flaw: GBP highlights fine edges and texture boundaries (not just tumor blobs), which is why it spreads saliency across both tumor and peri-tumoral tissue.
+    - **Clinical implication:** GBP acts as a "sanity check" — if GBP fails to localise, the model genuinely lacks input-level features for that region. Because GBP never fails here, every model prediction is traceable to real input evidence.
+
+---
+
+### 2.4 Gradient Fusion: Guided Grad-CAM (GBP × Grad-CAM)
+*Goal: Show how fusing GBP's full resolution with Grad-CAM's class discrimination recovers spatial detail lost in the bottleneck — but inherits Grad-CAM's failure modes.*
+
+* **Narrative:** Guided Grad-CAM element-wise multiplies GBP's full-resolution saliency by the upsampled Grad-CAM heatmap. This should combine the best of both: GBP's voxel-level detail and Grad-CAM's class-specific weighting. The results show this works — except when Grad-CAM produces a zero map.
+* **Key Results (5 patients × 3 regions, from `xai_guided_gradcam_metrics.csv`):**
+    - **Pointing Game: 100%** for 4/5 patients (excluding 00291) — inherits Grad-CAM's failure for that patient
+    - **Highest Saliency Coverage of ANY method:** WT 0.81–0.96, TC 0.81–0.92 — the fusion concentrates nearly all saliency mass inside the tumor
+    - ET Coverage improved to 0.03–0.38 — **significantly better** than raw Grad-CAM's near-zero ET
+    - Weighted Dice: 0.03–0.13 (WT), 0.05–0.14 (TC) — moderate precision
+    - **Patient 00291: Zero across ALL metrics** — because Grad-CAM × anything = zero when Grad-CAM is zero
+* **Figure:** Side-by-side comparison: Grad-CAM (coarse blob) vs. Guided Grad-CAM (sharp + focused) for the same patient/region.
+* **Discussion:**
+    - The coverage improvement from raw Grad-CAM (0.43–0.98 WT) to Guided Grad-CAM (0.81–0.96 WT) with much tighter variance proves the fusion successfully eliminates non-tumor saliency while preserving class discrimination.
+    - **The critical limitation:** Guided Grad-CAM inherits Grad-CAM's failure mode. When Grad-CAM produces a zero activation (patient 00291), the multiplication zeros out GBP's otherwise perfect signal. This demonstrates why **no single XAI method is sufficient** — multi-method evaluation is essential.
+    - **Comparison with GBP alone:** GBP achieves 100% PG for patient 00291; Guided Grad-CAM achieves 0%. The fusion trades GBP's robustness for Grad-CAM's class specificity — a fundamental trade-off in gradient-based XAI.
+
+---
+
+### 2.5 Relevance-Based Attribution: LRP (Input × Gradient)
 * **Narrative:** LRP distributes the prediction score back to individual input voxels. Unlike Grad-CAM (which shows *where* the model attends), LRP shows *what evidence* the model uses.
 * **Key Results (5 patients × 3 regions):**
     - Pointing Game: **100%** for ALL patients, ALL regions (including ET) — the most reliable localiser
@@ -111,7 +147,7 @@ This blueprint provides a professional, highly aligned structural guide for your
 
 ---
 
-### 2.4 Perturbation-Based Attribution: Occlusion Sensitivity
+### 2.6 Perturbation-Based Attribution: Occlusion Sensitivity
 * **Narrative:** Unlike all gradient-based methods, Occlusion makes zero mathematical assumptions. It slides a 16³ black patch across the input, records the confidence drop, and maps it to spatial locations. This is the **gold-standard XAI validation**.
 * **Key Results (5 patients × 3 regions):**
     - WT Pointing Game + MSR Accuracy: **100%**
@@ -123,7 +159,7 @@ This blueprint provides a professional, highly aligned structural guide for your
 
 ---
 
-### 2.5 Uncertainty Quantification: MC Dropout — Per-Patient Analysis
+### 2.7 Uncertainty Quantification: MC Dropout — Per-Patient Analysis
 *Goal: Present MC Dropout as a fundamentally different signal (uncertainty ≠ saliency). Detailed per-patient tables.*
 
 #### MC Dropout Metrics Explained
@@ -176,7 +212,7 @@ This blueprint provides a professional, highly aligned structural guide for your
 
 ---
 
-### 2.6 Cross-Method Comparative Analysis
+### 2.8 Cross-Method Comparative Analysis
 
 #### 📊 Regional Vulnerability Analysis (Grouped Bar Chart)
 * **Data:** Mean Weighted Dice per tumor region across all 5 attribution methods (Grad-CAM, GBP, Guided Grad-CAM, LRP, Occlusion)
@@ -212,7 +248,7 @@ This blueprint provides a professional, highly aligned structural guide for your
 
 ---
 
-### 2.7 Visual Evaluation
+### 2.9 Visual Evaluation
 
 #### 📸 Five-Patient × Six-Method XAI Grid
 * **Layout:** Grid with 7 columns (GT + 6 XAI methods) × 5 rows (patients)
