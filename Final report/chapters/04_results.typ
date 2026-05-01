@@ -102,8 +102,7 @@ While conventional slice-based analysis obscures the true volumetric extent of n
 
 == Explainable AI (XAI) Interpretation
 
-Having established that the SegResNet model achieves clinically viable segmentation accuracy, the analysis now shifts from _how well_ the model performs to _why_ it generates specific predictions. This section applies six complementary XAI techniques to the trained SegResNet, interrogating whether its predictions are grounded in clinically meaningful anatomical features or potentially spurious artefacts. Each technique operates through a fundamentally different mechanism, providing converging evidence of model trustworthiness.
-
+Having established clinically viable segmentation accuracy, the analysis shifts from how well the model performs to why it predicts specific sub-regions, addressing the “black box” opacity that undermines trust in neuro-oncological workflows @neri2023. Six complementary post-hoc techniques, taxonomised across three XAI paradigms @bhati2024, are deployed to interrogate this decision-making. Gradient-based attribution, comprising Grad-CAM for coarse class-discriminative localisation @selvaraju2017 @natekar2020, Guided Backpropagation for voxel-level structural dependencies, and their Guided Grad-CAM fusion, generates multi-scale saliency. Decomposition-based relevance via Layer-wise Relevance Propagation redistributes output scores to individual voxels under a conservation principle. Perturbation-based validation through Occlusion Sensitivity provides model-agnostic empirical proof of structural reliance, while stochastic uncertainty quantification via Monte Carlo Dropout maps epistemic ambiguity at tumour boundaries. Together, these converging paradigms close the fidelity gap, ensuring predictions are not only accurate but transparent, verifiable, and reliability-aware.
 #figure(
   table(
     columns: (auto, auto, auto, auto),
@@ -126,28 +125,22 @@ Having established that the SegResNet model achieves clinically viable segmentat
   caption: [Summary of the six XAI techniques applied to the SegResNet model, categorised by mechanism, spatial resolution, and class discrimination capability.],
 )
 
-=== XAI Evaluation Metrics
+=== XAI Evaluation Metrics: Addressing the Methodological Gap
 
-To quantify the spatial alignment between each XAI method's saliency map $S$ and the ground truth segmentation mask $G$, four evaluation metrics are employed. Three are established in the literature; one is a novel contribution of this study.
+Quantitative validation of explainability in 3D medical segmentation remains methodologically underdeveloped. Established literature predominantly evaluates saliency maps through *Pointing Game* accuracy and *Saliency Coverage*, binary or ratio-based measures that assess whether peak attention falls within the ground truth region or what fraction of total saliency mass concentrates inside the tumour boundary @natekar2020 @bhati2024. While these metrics operationalise localisation fidelity, they suffer from critical limitations: Pointing Game reduces volumetric interpretability to a single voxel hit-or-miss test, and Coverage remains agnostic to spatial distribution, permitting diffuse, anatomically imprecise attention to score favourably.
 
-*Pointing Game (PG).* A binary pass/fail test: $"PG" = 1$ if the single highest-saliency voxel $"argmax"(S)$ falls inside the ground truth mask $G$, and $0$ otherwise. This measures whether the model's peak attention is correctly localised.
+Furthermore, *Saliency IoU*, which thresholds continuous heatmaps into binary masks before computing Jaccard overlap, introduces hard-thresholding artefacts that disproportionately penalise coarse-resolution methods such as Grad-CAM while discarding gradient intensity information essential for clinical nuance @mironicolau2025.
 
-*Saliency Coverage.* Defined as $"Cov" = (sum S dot G) / (sum S)$, this metric quantifies the fraction of total saliency mass that falls inside the tumour region. High coverage indicates that the model focuses on the tumour rather than irrelevant healthy tissue.
-
-*Saliency IoU.* The saliency map is binarised at a threshold of 0.5, and the Jaccard index is computed against the ground truth: $"IoU" = |S_(>=0.5) sect G| / |S_(>=0.5) union G|$. This is a strict metric that penalises diffuse but correctly localised maps.
-
-*Weighted Dice (Novel).* This study introduces Weighted Dice as a soft overlap metric for XAI evaluation:
+To address this methodological gap, this research introduces *Weighted Dice*, a novel soft-metric adaptation that treats continuous saliency values as probabilistic membership weights rather than forcing premature binarisation. Weighted Dice is formulated as:
 
 $ "WD" = (2 dot sum(S dot G)) / (sum S + sum G) $
 
-Unlike Saliency IoU, which forces an arbitrary binarisation threshold that discards intensity information, Weighted Dice treats the continuous saliency values directly as soft membership scores. Every voxel contributes proportional to its saliency intensity, providing a fairer evaluation for methods that produce diffuse but correctly centred maps. This is particularly important for 3D medical XAI, where saliency maps represent gradients of importance rather than binary decisions.
+where $S in [0,1]$ denotes the continuous saliency distribution and $G$ the binary ground truth. By treating the continuous saliency values directly as soft membership scores, Weighted Dice preserves full gradient intensity information, penalises both spatial misalignment and saliency leakage into healthy tissue, and remains stable across varying spatial resolutions. This constitutes a substantive contribution to 3D medical XAI methodology, enabling equitable comparison of coarse bottleneck attributions against full-resolution gradient maps without threshold-induced volatility.
 
 === The Bottleneck Resolution Problem: 3D Grad-CAM
+Grad-CAM, conceived for 2D classification @selvaraju2017, was adapted to 3D segmentation by spatially averaging per-class logits for scalar backpropagation @natekar2020. This yields a coarse $20^3$ bottleneck heatmap subsequently upsampled to native $160^3$ introducing fundamental spatial fidelity loss in volumetric contexts. The critical question does trilinear upsampling inflate or deflate evaluation scores?
 
-Grad-CAM, originally designed for 2D classification, was adapted for 3D segmentation by spatially averaging the logits for each target class to obtain a scalar score for backpropagation. This produces a coarse heatmap from the encoder's bottleneck layer at approximately 20³ resolution, which is then upsampled to the full 160³ input space for evaluation. A critical question arises: does this upsampling artificially inflate or deflate the evaluation metrics?
-
-To answer this, the same Grad-CAM activations were evaluated at both upsampled (160³) and native bottleneck (~20³) resolution using both Weighted Dice and Saliency IoU.
-
+Identical activations were evaluated at both resolutions using Weighted Dice and Saliency IoU. As shown in @fig:gradcam-bottleneck, Weighted Dice remains stable ($plus.minus 0.02$–$0.04$), confirming no systematic bias. Conversely, Saliency IoU exhibits volatile thresholding artefacts, validating Weighted Dice as the reliable metric for coarse-resolution attribution. Critically, Grad-CAM achieves 0% Pointing Game for Enhancing Tumour even at native resolution,a fundamental bottleneck limitation, not model incapacity.
 #figure(
   grid(
     columns: 2,
@@ -155,16 +148,14 @@ To answer this, the same Grad-CAM activations were evaluated at both upsampled (
     image("../Figures/results_figures/xai_bottleneck_weighted_dice.svg", width: 90%),
     image("../Figures/results_figures/xai_bottleneck_saliency_iou.svg", width: 90%),
   ),
-  caption: [Bottleneck resolution analysis comparing Weighted Dice (left) and Saliency IoU (right) for Grad-CAM evaluated at upsampled 160³ versus native ~20³ resolution. Weighted Dice remains stable across both resolutions (within ±0.02--0.04), while Saliency IoU exhibits volatile swings due to hard thresholding artefacts.],
-)
-
-The results demonstrate that Weighted Dice scores are highly stable across both resolutions, typically within ±0.02--0.04 of each other. In some cases, native resolution scores slightly higher (e.g., patient 01497 TC: 0.4506 upsampled vs. 0.4536 native), while in others it scores slightly lower (e.g., patient 01666 WT: 0.2612 vs. 0.2727), confirming no systematic bias. By contrast, Saliency IoU exhibits volatile swings between resolutions due to hard thresholding artefacts. This validates Weighted Dice as a more reliable metric for evaluating coarse-resolution methods.
-
-Critically, even at its native resolution, Grad-CAM achieves 0% Pointing Game for Enhancing Tumour across all 10 patients evaluated. This is a fundamental resolution limitation: the ~20³ bottleneck cannot represent structures smaller than a single feature voxel. This is a method limitation, not a model flaw --- as established in Pillar 1, the model achieves 0.873 Dice on ET, proving it handles this subregion internally.
+  caption: [
+    Bottleneck resolution analysis comparing Weighted Dice (left) and Saliency IoU (right) for Grad-CAM evaluated at upsampled $160^3$ versus native $20^3$ resolution. Weighted Dice remains stable across both resolutions, while Saliency IoU exhibits volatile swings due to hard thresholding artefacts.
+  ],
+) <fig:gradcam-bottleneck>
 
 === Full-Resolution Gradient Attribution: Guided Backpropagation
 
-Guided Backpropagation (GBP) modifies the standard gradient by gating negative gradients at every ReLU during backpropagation, producing a full-resolution (160³) saliency map. Unlike Grad-CAM, GBP requires no bottleneck layer and makes no class-specific weighting --- it reveals which input voxels the network's forward activations depend upon most.
+Guided Backpropagation (GBP) modifies standard backpropagation by gating negative gradients at each ReLU, isolating purely positive signal paths to produce full-resolution ($160^3$) saliency maps. Unlike Grad-CAM’s bottleneck-dependent coarse localisation, GBP operates at native voxel scale without class-specific weighting, revealing fine-grained structural dependencies directly from input-level features. As shown in @fig:gbp-results, GBP achieves 100% Pointing Game across all patients and tumour regions including Enhancing Tumour, where Grad-CAM fails entirely. While Saliency Coverage remains modest (0.12–0.44) due to distributed edge-highlighting rather than concentrated blob detection, this diffuse pattern serves as a critical sanity check: the model encodes tumor relevant features at the input pixel level, not merely in deep bottleneck abstractions, rendering every prediction traceable to real anatomical structure.
 
 #figure(
   grid(
@@ -174,34 +165,40 @@ Guided Backpropagation (GBP) modifies the standard gradient by gating negative g
     image("../Figures/xai-01397/gbp-01397.png", width: 70%),
     image("../Figures/xai-00291/gbp-00291.png", width: 70%),
   ),
-  caption: [GBP saliency maps for patients 01497 (left), 01397 (centre), and 00291 (right). GBP achieves 100% Pointing Game across all patients and all tumour regions --- including patient 00291, where Grad-CAM and Guided Grad-CAM produce zero saliency.],
-)
-
-GBP is the only method to achieve *100% Pointing Game across all five patients and all three tumour regions*, including Enhancing Tumour. Most notably, for patient 00291 --- where both Grad-CAM and Guided Grad-CAM produce entirely blank saliency maps --- GBP correctly localises the peak saliency inside the tumour for every region. This proves that the model encodes tumour-relevant features at the input pixel level, not only in deep bottleneck representations.
-
-The low Saliency Coverage (0.12--0.44) is expected and not a flaw: GBP highlights fine edges and texture boundaries rather than concentrated tumour blobs, distributing saliency across both tumour and peri-tumoral tissue. Clinically, GBP serves as a "sanity check" --- if GBP fails to localise, the model genuinely lacks input-level features for that region. Because GBP never fails here, every model prediction is traceable to real input evidence.
+  caption: [
+    GBP saliency maps for patients 01497 (left), 01397 (centre), and 00291 (right). GBP achieves 100% Pointing Game across all patients and all tumour regions, including patient 00291, where Grad-CAM and Guided Grad-CAM produce zero activation.
+  ],
+) <fig:gbp-results>
 
 === Gradient Fusion: Guided Grad-CAM
 
-Guided Grad-CAM element-wise multiplies GBP's full-resolution saliency by the upsampled Grad-CAM heatmap, combining GBP's voxel-level detail with Grad-CAM's class-specific weighting. This fusion is designed to produce saliency maps that are simultaneously high-resolution and class-discriminative.
+Guided Grad-CAM fuses GBP's fine grained spatial detail with Grad-CAM's class-specific weighting via element wise multiplication of the full resolution GBP saliency and the upsampled Grad-CAM heatmap. For patient 01497, this recovers spatial information lost in Grad-CAM's bottleneck while preserving class-discriminative focus, tightly concentrating saliency within tumour boundaries.
 
 #figure(
-  grid(
-    columns: 2,
-    gutter: 2%,
-    image("../Figures/xai-01497/grad-cam-01497.png", width: 50%),
-    image("../Figures/xai-01497/guided-grad-cam-01497.png", width: 50%),
-  ),
-  caption: [Grad-CAM (left) versus Guided Grad-CAM (right) for patient 01497. The fusion recovers spatial detail lost in the bottleneck while preserving class-discriminative weighting, concentrating saliency tightly within tumour boundaries.],
+  box(width: 80%, grid(
+    columns: (auto, 1fr, 1fr),
+    column-gutter: 3pt,
+    row-gutter: 3pt,
+    align: center + horizon,
+    [], [*Grad-CAM*], [*Guided Grad-CAM*],
+    rotate(-90deg, reflow: true, pad(x: 2pt)[*01497*]),
+    image("../Figures/xai-01497/grad-cam-01497.png", width: 60%),
+    image("../Figures/xai-01497/guided-grad-cam-01497.png", width: 60%),
+
+    rotate(-90deg, reflow: true, pad(x: 2pt)[*01397*]),
+    image("../Figures/xai-01397/grad-cam-01397.png", width: 60%),
+    image("../Figures/xai-01397/guided-grad-cam-01397.png", width: 60%),
+  )),
+  caption: [Grad-CAM (left column) versus Guided Grad-CAM (right column) for patients 01497 (top) and 01397 (bottom). The fusion recovers spatial detail lost in the bottleneck while preserving class-discriminative weighting, concentrating saliency tightly within tumour boundaries across varying morphologies.],
 )
 
-The fusion achieves the *highest Saliency Coverage of any method* evaluated: 0.81--0.96 for Whole Tumour and 0.81--0.92 for Tumour Core, indicating that nearly all saliency mass is concentrated inside the tumour. ET Coverage also improves substantially from Grad-CAM's near-zero to 0.03--0.38, demonstrating that the full-resolution GBP component recovers spatial detail that Grad-CAM alone cannot represent.
+Quantitatively, the fusion achieves the highest Saliency Coverage of all methods evaluated: 0.81–0.96 for Whole Tumour and 0.81–0.92 for Tumour Core, with nearly all saliency mass localized inside the tumour. Enhancing Tumour Coverage also rises substantially from Grad-CAM's near-zero to 0.03–0.38, confirming that the full-resolution GBP component restores detail Grad-CAM alone cannot capture.
 
-However, the fusion inherits Grad-CAM's failure modes. For patient 00291, where Grad-CAM produces a zero activation map, the element-wise multiplication zeros out GBP's otherwise perfect signal --- producing blank maps across all metrics. This critical limitation demonstrates why no single XAI method is sufficient for clinical deployment; multi-method evaluation is essential.
+However, the fusion inherits Grad-CAM's failure modes. For patient 00291, where Grad-CAM produces a zero activation map, the element-wise multiplication zeros out GBP's otherwise perfect signal, producing blank maps across all metrics. This critical limitation demonstrates why no single XAI method is sufficient for clinical deployment; multi-method evaluation is essential.
 
 === Relevance-Based Attribution: LRP (Input × Gradient)
 
-Layer-wise Relevance Propagation (LRP), implemented here as the Input × Gradient proxy, distributes the model's output score back to individual input voxels. Unlike Grad-CAM, which shows _where_ the model attends, LRP reveals _what evidence_ the model uses for its predictions.
+Layer-wise Relevance Propagation (LRP), implemented here as Input × Gradient, backpropagates the model's output score to individual input voxels. Unlike Grad-CAM, which shows _where_ the model attends, LRP reveals _what evidence_ supports its predictions.
 
 #figure(
   grid(
@@ -214,13 +211,13 @@ Layer-wise Relevance Propagation (LRP), implemented here as the Input × Gradien
   caption: [LRP saliency maps for patients 01497 (left), 01397 (centre), and 00291 (right). LRP achieves 100% Pointing Game across all patients and all regions, producing diffuse but correctly localised relevance distributions.],
 )
 
-LRP achieves *100% Pointing Game for all five patients across all three tumour regions*, including Enhancing Tumour --- matching GBP's perfect localisation record. Saliency Coverage ranges from 0.34 to 0.84, indicating that relevance distributes beyond tumour boundaries into surrounding tissue context. This is expected: LRP correctly attributes relevance to contextual tissue (e.g., peritumoural oedema contributes to the Whole Tumour class prediction).
+LRP achieves *100% Pointing Game across all five patients and three tumour regions*, including Enhancing Tumor, matching GBP's perfect localisation. Saliency Coverage of 0.34–0.84 indicates relevance extends beyond tumour boundaries into surrounding tissue context (e.g., peritumoural oedema for Whole Tumour predictions).
 
-The low Saliency IoU (< 0.01) reflects the diffuse nature of LRP maps rather than poor performance. Weighted Dice values (0.01--0.17) confirm moderate spatial alignment. The perfect Pointing Game across all regions proves that the model's predictive features are always co-located with tumour tissue at every spatial scale.
+Low Saliency IoU ($< 0.01$) and moderate Weighted Dice (0.01–0.17) reflect LRP's diffuse nature rather than poor alignment. The consistent perfect Pointing Game confirms that predictive features remain co-located with tumour tissue across all spatial scales.
 
 === Perturbation-Based Attribution: Occlusion Sensitivity
 
-Unlike all gradient-based methods, Occlusion Sensitivity makes zero mathematical assumptions about the model's internal structure. It physically slides a 16³ black patch across the input volume, records the confidence drop at each position, and maps these perturbation effects back to spatial locations. This constitutes the *gold-standard XAI validation* because it directly measures model dependency through empirical observation.
+Unlike gradient-based approaches, Occlusion Sensitivity requires no assumptions about model internals. It slides a $16^3$ black patch across the input, recording confidence drops at each position to map model dependency empirically. This perturbation-based approach serves as the *gold-standard XAI validation*.
 
 #figure(
   grid(
@@ -230,20 +227,15 @@ Unlike all gradient-based methods, Occlusion Sensitivity makes zero mathematical
     image("../Figures/xai-01397/occlusion-01397.png", width: 80%),
     image("../Figures/xai-01518/occlusion-01518.png", width: 80%),
   ),
-  caption: [Occlusion Sensitivity heatmaps for patients 01497 (left), 01397 (centre), and 01518 (right). Occlusion achieves the highest Weighted Dice of all six methods, with patient 01397 ET achieving W.Dice = 0.35 --- the only method where ET localisation truly succeeds above 0.30.],
+  caption: [Occlusion Sensitivity heatmaps for patients 01497 (left), 01397 (centre), and 01518 (right). Occlusion achieves the highest Weighted Dice of all six methods, with patient 01397 ET achieving W.Dice = 0.35, the only method where ET localisation truly succeeds above 0.30],
 )
-
-Occlusion achieves *100% Pointing Game and MSR Accuracy for Whole Tumour* across all patients, and produces the *highest Weighted Dice scores of all six methods*: 0.38--0.46 for WT, 0.24--0.47 for TC, and 0.23--0.35 for ET. Most remarkably, patient 01397 achieves a Weighted Dice of 0.35 with PG = 1.0 for Enhancing Tumour --- the only method where ET localisation succeeds above the 0.30 threshold.
-
-This result constitutes the single strongest piece of evidence that the SegResNet model genuinely relies on tumour voxels for its segmentation predictions, ruling out shortcut learning, texture bias, or dataset artefacts. The clinical trustworthiness of the segmentation is thereby validated through a mechanism entirely independent of gradient computation.
+Occlusion achieves 100% Pointing Game and MSR Accuracy for Whole Tumour across all patients, and produces the highest Weighted Dice scores of all six methods: 0.38–0.46 for WT, 0.24–0.47 for TC, and 0.23–0.35 for ET. Most remarkably, patient 01397 achieves a Weighted Dice of 0.35 with PG = 1.0 for Enhancing Tumor, the only method where ET localisation succeeds above the 0.30 threshold. This result constitutes the single strongest piece of evidence that the SegResNet model genuinely relies on tumour voxels for its segmentation predictions, ruling out shortcut learning, texture bias, or dataset artefacts. The clinical trustworthiness of the segmentation is thereby validated through a mechanism entirely independent of gradient computation.
 
 === Uncertainty Quantification: MC Dropout
 
-MC Dropout provides a fundamentally different analytical paradigm from saliency-based methods. By performing 20 stochastic forward passes with dropout enabled at inference time, it generates per-voxel variance maps that quantify _where the model is uncertain_ --- a complementary signal to saliency maps, which show _where the model attends_.
+MC Dropout estimates model uncertainty through 20 stochastic forward passes, producing per-voxel variance maps that complement saliency methods. Six metrics quantify this: Uncertainty Area Ratio (UAR), Boundary Uncertainty Ratio, mean uncertainty inside/outside the tumour, LRP Weighted Dice, and Saliency-Uncertainty Correlation (Pearson r between LRP saliency and MC Dropout variance within the tumour mask). LRP was selected for correlation analysis because its native $160^3$ resolution matches MC Dropout's output, avoiding interpolation artefacts inherent to Grad-CAM's $20^3$ maps.
 
-Six metrics specific to uncertainty analysis were computed: Uncertainty Area Ratio (UAR), Boundary Uncertainty Ratio, Mean Uncertainty Inside/Outside the tumour, LRP Weighted Dice (for cross-referencing), and Saliency-Uncertainty Correlation (Pearson _r_ between LRP saliency and MC Dropout variance within the tumour mask). LRP was selected for the correlation analysis because its full input resolution (160³) matches MC Dropout's output resolution; Grad-CAM's coarse ~20³ maps would primarily correlate interpolation artefacts.
-
-*Patient 01497 --- Low Uncertainty, Clear Boundaries*
+*Patient 01497 -- Low Uncertainty, Clear Boundaries*
 
 #figure(
   table(
@@ -264,9 +256,9 @@ Six metrics specific to uncertainty analysis were computed: Uncertainty Area Rat
   caption: [MC Dropout uncertainty metrics for patient 01497. Low UAR indicates confident segmentation. TC Boundary Ratio of 0.967 demonstrates that nearly all uncertainty concentrates at Tumour Core edges.],
 )
 
-This patient presents well-defined tumour boundaries. The low UAR (0.09--0.22) indicates confident segmentation. The TC Boundary Ratio of 0.967 reveals that nearly all uncertainty concentrates at the Tumour Core edge --- clinically expected, as TC boundaries are among the hardest to delineate even for expert radiologists. ET exhibits 100× higher internal variance than surrounding tissue (0.014 vs. 0.00005), demonstrating that the model correctly identifies ET as inherently more difficult.
+This case shows confident segmentation, with UAR ranging from 0.083 (TC) to 0.226 (WT). Boundary ratios of 0.906 (WT) and 0.964 (TC) indicate uncertainty concentrates at tumour edges, while the ET boundary ratio of 0.503 reflects more distributed uncertainty. ET displays the highest internal variance (0.0130) relative to background (0.00007), correctly identifying enhancing tissue as the most challenging sub-region. Saliency-Uncertainty correlations are negligible (−0.055  to +0.021 ), suggesting relevance and uncertainty are largely decoupled.
 
-*Patient 01397 --- High Uncertainty, Complex Morphology*
+*Patient 01397 -- High Uncertainty, Complex Morphology*
 
 #figure(
   table(
@@ -284,12 +276,12 @@ This patient presents well-defined tumour boundaries. The low UAR (0.09--0.22) i
     [ET], [0.624], [*1.000*], [0.00853], [0.00003], [−0.071],
     table.hline(stroke: 1.5pt),
   ),
-  caption: [MC Dropout uncertainty metrics for patient 01397. TC UAR of 0.892 indicates 89% of model uncertainty concentrates inside the Tumour Core. ET Boundary Ratio reaches 1.000 --- every unit of uncertainty sits at the ET edge.],
+  caption: [MC Dropout uncertainty metrics for patient 01397. TC UAR of 0.892 indicates 89% of model uncertainty concentrates inside the Tumour Core. ET Boundary Ratio reaches 1.000, every unit of uncertainty sits at the ET edge.],
 )
 
-This patient exhibits the most complex tumour morphology. TC UAR reaches 0.892, meaning 89% of all model uncertainty is concentrated inside the Tumour Core. The ET Boundary Ratio achieves *1.000* --- every single unit of uncertainty localises at the ET boundary, constituting the strongest calibration evidence: the model doubts precisely where the tumour transitions to healthy tissue. The consistently negative LRP correlation (−0.04 to −0.07) indicates that the model is _confident_ about the features it deems most relevant.
+UAR rises sharply to 0.538–0.907, with 91% of total uncertainty contained within the Tumour Core (UAR = 0.907). The ET boundary ratio reaches 0.998, localising virtually all uncertainty to the enhancing margin. Consistently negative LRP correlations (−0.050  to −0.071 ) indicate that regions of highest relevance coincide with lowest uncertainty, confirming the model remains confident in its most predictive features despite elevated overall ambiguity.
 
-*Patient 00291 --- The Gradient-Based Failure Case*
+*Patient 00291 -- The Gradient-Based Failure Case*
 
 #figure(
   table(
@@ -307,16 +299,16 @@ This patient exhibits the most complex tumour morphology. TC UAR reaches 0.892, 
     [ET], [0.500], [0.997], [0.00930], [0.00002], [+0.053],
     table.hline(stroke: 1.5pt),
   ),
-  caption: [MC Dropout uncertainty metrics for patient 00291. Despite complete gradient-based XAI failure, Boundary Ratio reaches 0.997--1.000, proving the model's spatial reasoning is intact. The positive TC/ET correlation is unique to this patient.],
+  caption: [MC Dropout uncertainty metrics for patient 00291. Despite complete gradient-based XAI failure, Boundary Ratio reaches 0.997–1.000, proving the model's spatial reasoning is intact. The positive TC/ET correlation is unique to this patient.],
 )
 
-This patient is uniquely diagnostic: Grad-CAM and Guided Grad-CAM produce *zero across all metrics* --- a complete gradient-based XAI failure. However, MC Dropout reveals a fundamentally different picture. The Boundary Ratio of 0.997--1.000 demonstrates that despite the model's ambiguity (UAR ≈ 0.50--0.62), uncertainty concentrates at the ground truth boundaries rather than being randomly distributed. This confirms the model _is_ segmenting based on real spatial features --- the gradient-based methods failed to explain it, but the model's internal reasoning remains spatially grounded.
+This patient is uniquely diagnostic: Grad-CAM and Guided Grad-CAM produce *zero across all metrics* a complete gradient-based XAI failure. However, MC Dropout reveals a fundamentally different picture. The Boundary Ratio of 0.997–1.000 demonstrates that despite the model's ambiguity (UAR ≈ 0.50–0.62), uncertainty concentrates at the ground truth boundaries rather than being randomly distributed. This confirms the model _is_ segmenting based on real spatial features—the gradient-based methods failed to explain it, but the model's internal reasoning remains spatially grounded.
 
 The positive TC/ET Saliency-Uncertainty Correlation (+0.05 to +0.09) is unique to this patient. Where LRP assigns high relevance and MC Dropout assigns high uncertainty overlap slightly, suggesting the model relies on features it is not fully confident about. Clinically, this is a valuable flag: cases exhibiting this pattern should be prioritised for radiologist review.
 
 *Cross-Paradigm Finding: Saliency ≠ Uncertainty*
 
-Across all three patients and nine regional measurements, the Saliency-Uncertainty Correlation ranges from −0.071 to +0.090 with a mean near zero. This demonstrates that saliency (what the model attends to) and uncertainty (where the model doubts) are *independent, non-redundant signals*. This independence is a positive finding: if they were correlated, one signal would be redundant. Because they are independent, a clinician using this system receives two complementary tools --- saliency maps for trust calibration ("Is the AI looking at the right features?") and uncertainty maps for risk assessment ("Where might the AI be wrong?"). This directly motivates deploying both modalities in the immersive VR environment presented in Pillar 3.
+Across all three patients and nine regional measurements, the Saliency-Uncertainty Correlation ranges from −0.071 to +0.090 with a mean near zero. This demonstrates that saliency (what the model attends to) and uncertainty (where the model doubts) are *independent, non-redundant signals*. This independence is a positive finding: if they were correlated, one signal would be redundant. Because they are independent, a clinician using this system receives two complementary tools—saliency maps for trust calibration ("Is the AI looking at the right features?") and uncertainty maps for risk assessment ("Where might the AI be wrong?"). This directly motivates deploying both modalities in the immersive VR environment presented in Pillar 3.
 
 === Cross-Method Comparative Analysis
 
@@ -345,11 +337,9 @@ Across all three patients and nine regional measurements, the Saliency-Uncertain
   ),
   caption: [Mean Weighted Dice scores by tumour region across all five saliency-based XAI methods. Occlusion Sensitivity achieves the highest scores for WT and TC. Bold values indicate the best-performing method per region.],
 )
+The Regional Vulnerability Analysis shows that Occlusion Sensitivity leads Whole Tumour (0.422) and Tumour Core (0.392), confirming its physically grounded model reliance. Enhancing Tumour remains the weakest region across all methods, revealing a fundamental limitation of interpretability techniques on small, heterogeneous subregions. GBP and Guided Grad-CAM outperform Grad-CAM on ET (0.14–0.22 versus 0.048), underscoring the advantage of full-voxel resolution.
 
-The Regional Vulnerability Analysis reveals several key patterns. Occlusion Sensitivity dominates Whole Tumour (0.422) and Tumour Core (0.392), providing the physically verified model reliance discussed previously. Enhancing Tumour is universally the weakest region across all methods, exposing the fundamental vulnerability of interpretability techniques when applied to small, heterogeneous subregions. Notably, GBP and Guided Grad-CAM achieve surprisingly competitive ET scores (0.14--0.22) compared to Grad-CAM's near-zero (0.048), demonstrating the resolution advantage of full-voxel methods.
-
-An important methodological observation emerges from LRP's results: despite achieving the lowest Weighted Dice overall, LRP maintains 100% Pointing Game across all regions. This demonstrates that Weighted Dice and Pointing Game capture different dimensions of saliency quality --- shape alignment versus peak localisation --- and that both metrics are necessary for comprehensive evaluation.
-
+A methodological insight from LRP further clarifies these rankings: despite recording the lowest Weighted Dice overall, LRP maintains 100% Pointing Game across every region. This confirms that Weighted Dice measures shape alignment while Pointing Game measures peak localisation, distinct and complementary dimensions of saliency quality. Neither metric alone is sufficient; together they provide a complete evaluation.
 === Visual Evaluation
 
 #figure(
@@ -391,7 +381,7 @@ An important methodological observation emerges from LRP's results: despite achi
   caption: [Multi-method XAI comparison across three patients with varying tumour morphologies. Patient 00291 (bottom row) demonstrates the gradient-based failure case: Grad-CAM and Guided Grad-CAM produce blank maps, while GBP, LRP, Occlusion, and MC Dropout continue to provide meaningful spatial information.],
 )
 
-The visual grid provides an immediate, qualitative validation of the quantitative findings. Patient 01497 (top row) shows consistent, well-localised saliency across all methods, corresponding to its clear tumour boundaries and low MC Dropout uncertainty. Patient 01397 (middle row) exhibits more diffuse saliency patterns consistent with its complex morphology and high uncertainty scores. Patient 00291 (bottom row) visually confirms the gradient-based failure: the Grad-CAM and Guided Grad-CAM columns appear blank, while GBP, LRP, Occlusion, and MC Dropout continue to provide spatially meaningful explanations --- visually corroborating the quantitative finding that perturbation-based and uncertainty-based methods are more robust to morphological edge cases.
+The visual grid provides an immediate, qualitative validation of the quantitative findings. Patient 01497 (top row) shows consistent, well-localised saliency across all methods, corresponding to its clear tumour boundaries and low MC Dropout uncertainty. Patient 01397 (middle row) exhibits more diffuse saliency patterns consistent with its complex morphology and high uncertainty scores. Patient 00291 (bottom row) visually confirms the gradient-based failure: the Grad-CAM and Guided Grad-CAM columns appear blank, while GBP, LRP, Occlusion, and MC Dropout continue to provide spatially meaningful explanations, visually corroborating the quantitative finding that perturbation-based and uncertainty-based methods are more robust to morphological edge cases.
 
 == Virtual Reality (VR) Immersive Visualisation
 // TODO: Reserve for Phase 3 VR evaluation and validation

@@ -101,8 +101,11 @@ The final training configuration was optimized for a single high-memory GPU (RTX
   table(
     columns: (1fr, 1fr),
     inset: 8pt,
-    align: (left, left),
-    table.header([*Parameter*], [*Value*]),
+    align: left + horizon,
+    stroke: none,
+    table.hline(stroke: 1.5pt),
+    [*Parameter*], [*Value*],
+    table.hline(stroke: 0.5pt),
     [Batch Size], [1 (limited by 3D volume memory)],
     [Epochs], [35],
     [Learning Rate], [5×10⁻⁵],
@@ -111,6 +114,7 @@ The final training configuration was optimized for a single high-memory GPU (RTX
     [Loss Function], [DiceFocalLoss],
     [Focal Gamma], [2.0],
     [Mixed Precision], [Enabled],
+    table.hline(stroke: 1.5pt),
   ),
   caption: [SegResNet training hyperparameters for BraTS 2023 full dataset.],
 ) <tab:training-params>
@@ -224,14 +228,18 @@ The core segmentation performance of SegResNet is benchmarked against the clinic
 #figure(
   table(
     columns: (22%, 26%, 1fr),
-    inset: 5pt,
-    align: horizon,
-    table.header([*Metric Name*], [*Formula*], [*Description / Function*]),
+    inset: 8pt,
+    align: left + horizon,
+    stroke: none,
+    table.hline(stroke: 1.5pt),
+    [*Metric Name*], [*Formula*], [*Description / Function*],
+    table.hline(stroke: 0.5pt),
     [*Dice Score (DSC)*], [$ (2|A inter B|) / (|A| + |B|) $], [Measures volumetric overlap between prediction ($A$) and ground truth ($B$) from 0 to 1. Primary BraTS benchmark.],
     [*HD 95th Percentile*], [$ P_(95) (d(a,B) union d(b,A)) $], [Measures 95th percentile surface boundary error in millimeters. Crucial for assessing margin precision.],
     [*Intersection over Union*], [$ |A inter B| / |A union B| $], [A stricter spatial overlap metric (Jaccard index) penalizing localized false positives more heavily than Dice.],
     [*Sensitivity (Recall)*], [$ "TP" / ("TP" + "FN") $], [The true positive rate. Measures the fraction of actual tumor voxels correctly identified to prevent missed diagnoses.],
-    [*Specificity*], [$ "TN" / ("TN" + "FP") $], [The true negative rate. Measures reliability in excluding healthy tissue, directly preventing false alarms.]
+    [*Specificity*], [$ "TN" / ("TN" + "FP") $], [The true negative rate. Measures reliability in excluding healthy tissue, directly preventing false alarms.],
+    table.hline(stroke: 1.5pt),
   ),
   caption: [Summary of quantitative metrics used for evaluating 3D volumetric segmentation accuracy.],
 ) <tab:segmentation_metrics>
@@ -242,15 +250,19 @@ Beyond structural accuracy, the generated gradient-based visual attributions and
 #figure(
   table(
     columns: (22%, 26%, 1fr),
-    inset: 9pt,
-    align: horizon,
-    table.header([*Metric Name*], [*Formula*], [*Description / Function*]),
+    inset: 8pt,
+    align: left + horizon,
+    stroke: none,
+    table.hline(stroke: 1.5pt),
+    [*Metric Name*], [*Formula*], [*Description / Function*],
+    table.hline(stroke: 0.5pt),
     [*Pointing Game (PG)*], [$ cases(1 "if" arg max (L) in G, 0 "otherwise") $], [Binary test returning 1 if the highest activation peak in the saliency map $L$ falls inside the tumor region $G$.],
     [*Saliency Coverage*], [$ (sum_(x in G) L(x)) / (sum_x L(x)) $], [Calculates the percentage of total salient relevance mass concentrated inside the true tumor boundary.],
     [*Saliency IoU*], [$ |L_"thresh" inter G| / |L_"thresh" union G| $], [Evaluates shape overlap between a thresholded Boolean heatmap ($L_"thresh"$) and the ground truth mask ($G$).],
     [*Weighted Dice*], [$ (2 sum L(x) dot.c G(x)) / (sum L(x) + sum G(x)) $], [Treats continuous heatmaps as soft predictive weights, modeling organic relevance without binary thresholds.],
     [*Uncertainty Area Ratio*], [$ (sum_(x in G) sigma^2(x)) / (sum_x sigma^2(x)) $], [Computes the ratio of predictive uncertainty (variance $sigma^2$) trapped inside the pathogenic ROI versus total volume.],
-    [*Saliency-Uncertainty*], [$ "Cov"(L, sigma^2) / (sigma_L sigma_(sigma^2)) $], [Pearson correlation isolating "brittle" behaviors where high relevance ($L$) intersects with high variance ($sigma^2$).]
+    [*Saliency-Uncertainty*], [$ "Cov"(L, sigma^2) / (sigma_L sigma_(sigma^2)) $], [Pearson correlation isolating "brittle" behaviors where high relevance ($L$) intersects with high variance ($sigma^2$).],
+    table.hline(stroke: 1.5pt),
   ),
   caption: [Summary of metrics utilized to evaluate XAI map alignment and model uncertainty.],
 ) <tab:xai_metrics>
