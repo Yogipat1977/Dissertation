@@ -384,4 +384,32 @@ A methodological insight from LRP further clarifies these rankings: despite reco
 The visual grid provides an immediate, qualitative validation of the quantitative findings. Patient 01497 (top row) shows consistent, well-localised saliency across all methods, corresponding to its clear tumour boundaries and low MC Dropout uncertainty. Patient 01397 (middle row) exhibits more diffuse saliency patterns consistent with its complex morphology and high uncertainty scores. Patient 00291 (bottom row) visually confirms the gradient-based failure: the Grad-CAM and Guided Grad-CAM columns appear blank, while GBP, LRP, Occlusion, and MC Dropout continue to provide spatially meaningful explanations, visually corroborating the quantitative finding that perturbation based and uncertainty based methods are more robust to morphological edge cases.
 
 == Virtual Reality (VR) Immersive Visualisation
-// TODO: Reserve for Phase 3 VR evaluation and validation
+
+Having established clinically viable segmentation and multi-paradigm XAI validation, Pillar 3 demonstrates the complete end-to-end immersive pipeline and shows how it enables a clinician to interact with the model's spatial reasoning in real time.
+
+=== Technical Implementation
+
+The VR stack runs entirely on open, Linux-native tooling. A Bash launcher (`run_slicer_vr.sh`) sets `XR_RUNTIME_JSON` to the WiVRn OpenXR runtime manifest, directing wireless streaming to the Meta Quest 3, and `VTK_OPENXR_ACTION_MANIFEST` to the SlicerVR controller binding file, then launches 3D Slicer with `--python-script fix_vr.py`. This script executes five auto-initialisation functions at startup without any manual interaction: `enable_volume_rendering_for_all` activates GPU Ray Cast rendering (`vtkMRMLGPURayCastVolumeRenderingDisplayNode`) for every loaded NIfTI volume, preventing the CPU-bound fallback that causes session hangs; `setup_vr_view` creates the VR view node and activates the headset stream; `attach_custom_models` spawns geometry-accurate hand controllers bound to the left and right transform nodes; `update_vr_pointers` launches a 50 ms ray-march loop that tests voxel scalar values along each controller's forward axis, placing a green hit-dot at the first intersection; and `watch_for_new_volumes` polls every 5 seconds to auto-activate rendering whenever a new volume is loaded mid-session. The entire setup reduces a twelve-step manual workflow to a single terminal command.
+
+=== Qualitative Evaluation: Brain and Isolated Tumour View
+
+@fig:vr-full-brain presents a side-by-side rendering full brain context alongside an isolated tumor-only view. The clinician can toggle between global anatomical context and subregion morphology, pointing directly at any voxel with the ray-marching controller cursor. This is a proof-of-concept instance, the pipeline is an active interrogation tool, not a passive display.
+
+#figure(
+  grid(
+    columns: (1fr, 1fr),
+    gutter: 8pt,
+    image("../Figures/VR/VR_Immersive_View_Full_Brain.jpg", width: 100%),
+    image("../Figures/VR/VR_Tumor_Detailed_Morphology.jpg", width: 100%),
+  ),
+  caption: [Side-by-side immersive rendering: full brain context (left) and isolated tumor view (right). The polychromatic subregion hierarchy is navigable from any orientation using 6-DoF hand controllers.],
+) <fig:vr-full-brain>
+
+=== Qualitative Evaluation: XAI Heatmap Rendering in VR
+
+@fig:vr-heatmap renders the Occlusion Sensitivity heatmap for the same patient selected because it achieved the highest Weighted Dice scores across all six XAI methods (WT: 0.422, TC: 0.392). The `watch_for_new_volumes` watcher activates GPU rendering automatically when the saliency NIfTI is loaded. The warm attribution plume co-localises tightly with the segmentation boundary, closing the interpretability chain the clinician perceives in three dimensions which spatial regions drove the model’s prediction, a verification structurally inaccessible in any flat-panel workflow.
+
+#figure(
+  image("../Figures/VR/ss-heatmap.png", width: 50%),
+  caption: [Occlusion Sensitivity heatmap rendered volumetrically in VR. Peak attribution (warm tones) envelops the tumor boundary, materialising the Weighted Dice localisation scores from Pillar 2 in three-dimensional perceptual space.],
+) <fig:vr-heatmap>
