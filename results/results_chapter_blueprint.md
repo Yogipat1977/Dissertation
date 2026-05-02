@@ -48,7 +48,8 @@ This blueprint provides a professional, highly aligned structural guide for your
 ## 2. Pillar 2: Explainable AI (XAI) Interpretation
 
 ### 2.0 Introduction
-* **Narrative:** Transition from Pillar 1 — segmentation accuracy is established, now we ask *"why does the model predict what it predicts?"*. Introduce the six XAI methods with a categorisation table:
+* **Narrative:** Transition from Pillar 1 — segmentation accuracy is established, now we ask *"why does the model predict what it predicts?"*. This section introduces six complementary XAI methodologies, categorized according to the taxonomy established by Bhati et al. [-@bhati2024], presented in the table below:
+
 
 | Category | Method | Resolution | Class-Specific? |
 |----------|--------|-----------|----------------|
@@ -270,12 +271,32 @@ This blueprint provides a professional, highly aligned structural guide for your
 * **Narrative:** Grad-CAM and Guided Grad-CAM produce blank maps. GBP and LRP achieve 100% PG. Occlusion succeeds with PG=1.0, MSR=1.0, W.Dice=0.42 (WT). MC Dropout shows Boundary Ratio=1.00. This demonstrates which methods are robust to morphological edge cases — a clinically important finding for method selection.
 
 
-## 3. Pillar 3: Virtual Reality (VR) Immersive Visualisation
-*(Placeholder - To be developed)*
-* **Goal:** Demonstrating the end-user clinical application using SlicerVR/Unity3D.
-* **Potential Inclusions:**
-   - Showcasing the integration of MRI + Segmentation (Pillar 1) + XAI (Pillar 2) into the immersive 3D space.
-   - Assessment of user experience, depth perception improvements, and potential utility for surgical planning.
+## 3. Pillar 3: Virtual Reality (VR) Immersive Visualisation (200-300 words)
+*Goal: Demonstrating the clinical translation of 3D CNN and XAI outputs into an immersive, interactive environment for diagnostic support.*
+
+### 3.1 Immersive Volumetric Rendering & Perception
+*Goal: Prove that VR provides a superior spatial understanding of tumour morphology compared to 2D slices.*
+* **Narrative:** Transition from the 2D/3D screen-based results to the immersive VR space. Explain how the SegResNet predictions (Pillar 1) and XAI saliency maps (Pillar 2) are fused into a single volumetric rendering using SlicerVR.
+* **Component 1 (Immersive Vision):** Insert images showing the "Virtual Vision" of the brain.
+    - **Visuals:** High-resolution screenshots of the 3D brain volume (e.g., `3d-grad-cam.png`, `3d-gbp.png`) rendered within the VR headset view.
+    - **Discussion:** Contrast the "mental reconstruction" required in 2D with the "direct perception" in VR. Discuss the transparency settings that allow clinicians to see through the healthy brain tissue (low opacity) into the ET core (high opacity).
+* **Component 2 (Structural Integrity):** Use patient `01666` or `01497` to show how the complex 3D shape of the tumour—often obscured in axial slices—is fully realised in the immersive space.
+
+### 3.2 Interactive XAI Querying & Controller Integration
+*Goal: Demonstrate the "human-in-the-loop" interaction enabled by VR controllers.*
+* **Narrative:** Describe the interaction model. The user is not just a passive observer but an active investigator using VR controllers to query the model's reasoning.
+* **Component 3 (Controller Interactions):** Insert images of the VR controllers interacting with the brain model.
+    - **Interaction 1 (Point-and-Query):** Show a screenshot of the virtual laser pointer selecting a specific tumour region to trigger a "Pop-up" of the XAI saliency intensity or uncertainty score.
+    - **Interaction 2 (Clipping Planes):** Show the clinician using the controller to "slice" through the 3D volume in real-time, revealing the internal TC/ET distribution.
+* **Discussion:** Explain how these interactions reduce cognitive load. Instead of mentally mapping a Grad-CAM blob to an MRI slice, the clinician "touches" the tumour and sees the explanation exactly where the evidence exists in 3D space.
+
+### 3.3 Clinical Utility and Trust Calibration
+*Goal: Validate if the VR pipeline actually aids decision-making.*
+* **Narrative:** Summarise the qualitative feedback on the VR experience.
+* **Key Observations:**
+    - **Depth Perception:** How the stereoscopic view aids in understanding the proximity of the ET core to critical functional areas (e.g., motor cortex).
+    - **Trust Calibration:** Discuss how seeing the saliency map (Pillar 2) "wrapped" around the tumour mask (Pillar 1) in 3D confirms that the model is looking at the correct anatomical boundaries.
+    - **Conclusion on Clinical Deployment:** Frame the VR pipeline as the "Bridge" between the black-box AI and the radiologist's desk.
 
 ---
 ## Chapter Summary
