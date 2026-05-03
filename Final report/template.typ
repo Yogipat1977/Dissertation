@@ -18,6 +18,7 @@
     numbering: none,
   )
   set text(font: "Linux Libertine", lang: "en", size: 12pt)
+  set par(justify: true, leading: 0.8em)
   
   // 2. The Title Page [cite: 1]
   align(center)[
@@ -64,11 +65,13 @@
   // We use aligned numbering: none so they don't get "1. Abstract"
   set heading(numbering: none)
   
-  heading(level: 1, outlined: true)[Abstract]
+  align(center)[#heading(level: 1, outlined: true)[Abstract]]
+  v(1.5em)
   abstract
   pagebreak()
 
-  heading(level: 1, outlined: true)[Acknowledgments]
+  align(center)[#heading(level: 1, outlined: true)[Acknowledgments]]
+  v(1.5em)
   acknowledgments
   pagebreak()
 
@@ -142,8 +145,7 @@
     v(1em)
   }
 
-  // Paragraph styling
-  set par(justify: true, leading: 0.8em)
+  // Paragraph styling moved to top
   
   body
 }
