@@ -37,10 +37,9 @@
 
 #include "chapters/06_conclusion.typ"
 
-#include "chapters/appendix-a.typ"
 // --- REFERENCES ---
 #bibliography("works.bib", style: "harvard-cite-them-right")
 
 // --- APPENDICES ---
 #show: appendix
-
+#include "chapters/appendix-a.typ"
