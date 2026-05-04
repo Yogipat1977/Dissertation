@@ -107,6 +107,8 @@ def main():
                         help="Path to model checkpoint (.pth)")
     parser.add_argument("--limit", type=int, default=0,
                         help="Limit to N patients (0 = all)")
+    parser.add_argument("--skip", type=int, default=0,
+                        help="Skip the first N patients (for incremental runs)")
     parser.add_argument("--split", type=str, default="test",
                         help="Dataset split to process")
     parser.add_argument("--iou_threshold", type=float, default=0.5,
@@ -218,6 +220,11 @@ def main():
 
         if args.limit > 0 and processed >= args.limit:
             break
+
+        # Skip already-tested patients (for incremental runs)
+        if processed < args.skip:
+            processed += 1
+            continue
 
         # ── Extract patient ID ──────────────────────────────────────────
         if "image_meta_dict" in data and "filename_or_obj" in data["image_meta_dict"]:

@@ -152,6 +152,8 @@ def main():
     parser.add_argument("--checkpoint", type=str, required=True)
     parser.add_argument("--num_iters", type=int, default=20, help="Number of MC forward passes")
     parser.add_argument("--limit", type=int, default=0, help="Limit patients (0=all)")
+    parser.add_argument("--skip", type=int, default=0,
+                        help="Skip the first N patients (for incremental runs)")
     parser.add_argument("--split", type=str, default="test", help="Dataset split")
     parser.add_argument("--patient_ids", type=str, default=None, 
                         help="Comma-separated list of specific patient IDs to process "
@@ -226,6 +228,11 @@ def main():
     csv_rows = []
 
     for idx in tqdm(range(n_patients), desc="MC Dropout + LRP"):
+
+        # Skip already-tested patients (for incremental runs)
+        if idx < args.skip:
+            continue
+
         sample = dataset[idx]
         image = sample["image"].unsqueeze(0).to(device)  # (1, 4, D, H, W)
         label = sample["label"]  # (3, D, H, W)

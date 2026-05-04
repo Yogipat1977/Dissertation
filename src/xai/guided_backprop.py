@@ -83,7 +83,7 @@ class GuidedBackprop3D:
                     self._original_relus.append((child, 'inplace', True))
                     child.inplace = False
                 # Register backward hook on this ReLU
-                hook = child.register_backward_hook(self._guided_relu_hook)
+                hook = child.register_full_backward_hook(self._guided_relu_hook)
                 self._hooks.append(hook)
             else:
                 # Recurse into sub-modules

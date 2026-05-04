@@ -1,13 +1,15 @@
 """
-lrp.py — 3D Layer-wise Relevance Propagation (LRP) proxy for volumetric models.
+lrp.py — Input × Gradient attribution (LRP proxy) for volumetric models.
 
-Implements the Input ✕ Gradient method, which is a mathematically solid
-approximation for epsilon-LRP in networks composed primarily of ReLU 
-activations (like SegResNet).
+Implements the Input × Gradient method, a first-order Taylor decomposition
+that serves as a tractable proxy for epsilon-LRP in architectures where
+true layer-wise propagation is infeasible (e.g., SegResNet with GroupNorm
+and residual skip connections).
 
 Unlike Guided Backpropagation, which filters gradients purely to find
-"what could change the output", LRP distributes the actual prediction score
-back to the input voxels to answer "what explicitly contributed to the output".
+"what could change the output", Input × Gradient distributes the actual
+prediction score back to the input voxels to answer "what explicitly
+contributed to the output".
 """
 
 import torch
