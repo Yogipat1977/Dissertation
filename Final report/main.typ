@@ -1,7 +1,7 @@
 #import "template.typ": *
 
 #show: project.with(
-  title: "Final Year Project Report", // Replace with your title
+  title: "Illuminating the Black Box: An Explainable AI Framework for Brain Tumor Segmentation Using Volumetric Data Interpretation in 3D CNNs", // Replace with your title
   author: "Yogi Amitkumar Patel", //
   student_id: "2536809", //
   degree: "Data Science and Artificial Intelligence", //
@@ -38,6 +38,25 @@
 #include "chapters/06_conclusion.typ"
 
 // --- REFERENCES ---
+#set cite(style: "harvard-cite-them-right")
+
+#show bibliography: it => {
+  let b = counter("bib-internal")
+  b.update(0)
+  show block: it => {
+    if type(it.body) == content {
+      b.step()
+      grid(columns: (2em, 1fr), gutter: 1em,
+        align(right)[#context b.display().],
+        it.body
+      )
+    } else {
+      it
+    }
+  }
+  it
+}
+
 #bibliography("works.bib", style: "harvard-cite-them-right")
 
 // --- APPENDICES ---

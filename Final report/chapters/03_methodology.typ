@@ -31,7 +31,7 @@ Deep learning model training is very exploratory and unpredictable, making tradi
 
 @fig:agile-crisp-dm illustrates the six interconnected phases of the methodology, with dashed arrows indicating the iterative nature of the development process. Each phase feeds into the next, but the Agile approach allows for rapid cycling back to earlier phases when issues are discovered or improvements are identified.
 
-The framework, which was created using an iterative CRISP-DM process, was continuously validated against strict clinical criteria (Dice, HD95, IoU, sensitivity, and specificity) while containing Explainable AI components that were verified by saliency overlap and uncertainty quantification. Although the system is still an experimental research prototype awaiting clinical deployment, the pipeline produces standardised NIfTI outputs, containing segmentations, attention heatmaps, and variance arrays for direct 3D Slicer VR visualisation.
+The framework, which was created using an iterative CRISP-DM process, was continuously validated against strict clinical criteria (Dice, HD95, IoU, sensitivity, and specificity) while containing Explainable AI components that were verified by saliency overlap and uncertainty quantification. Although the system is still an experimental research prototype awaiting clinical deployment, the pipeline produces standardised NIfTI outputs, containing segmentations, attention heatmaps, and variance arrays for direct 3D Slicer @fedorov20123d VR visualisation.
 
 The Agile CRISP-DM approach ensured an organized, rapid-iteration development loop while maintaining the stringent robustness required for safety-critical medical machine learning components. Regular sprint reviews allowed for course correction, and the modular architecture enabled independent validation of each component.
 
@@ -88,7 +88,7 @@ The prototype results demonstrated that SegResNet provided the optimal performan
 
 The implementation follows a modular architecture designed for reproducibility and extensibility, organized into several key components. YAML-based configuration files manage all hyperparameters and paths, supporting accessible parameter sweeps across the experiments. The core data pipeline (`src/data`) manages dataset scanning, patient splitting, and MONAI transform pipelines, while the model factory (`src/models`) dynamically instantiates model architectures, loss functions, and optimizers. Operating in tandem, the training framework (`src/training`) orchestrates the complete training lifecycle, integrating automatic mixed precision, automated checkpointing, and tracking via Weights & Biases. Finally, the explainability aspect is controlled by the XAI suite (`src/xai`), which standardizes the generation of saliency maps and uncertainty metrics, supported directly by the evaluation tools (`src/evaluation`) responsible for computing both segmentation and novel XAI-specific metrics and exporting them to CSV configurations.
 
-The end-to-end workflow proceeds through seven stages: (1) configuration loading and data initialization, (2) model training with validation, (3) test set inference, (4) XAI map generation for all methods, (5) metric computation and CSV export, (6) NIfTI volume export for 3D Slicer, and (7) VR visualization preparation.
+The end-to-end workflow proceeds through seven stages: (1) configuration loading and data initialization, (2) model training with validation, (3) test set inference, (4) XAI map generation for all methods, (5) metric computation and CSV export, (6) NIfTI volume export for 3D Slicer @fedorov20123d, and (7) VR visualization preparation.
 
 #figure(
   image("../Figures/Implementation_pipeline.drawio.svg", width: 85%),
@@ -145,7 +145,7 @@ The final training configuration was optimized for a single high-memory GPU (RTX
 
 The dataset was split into 1,000 training cases, 125 validation cases, and approximately 126 test cases. The validation set was used for hyperparameter tuning and early stopping, while the test set was reserved for final evaluation and XAI analysis. All splits were performed deterministically using a fixed random seed (42) to ensure reproducibility.
 
-Training progress was monitored using Weights & Biases (W&B) for experiment tracking, with metrics logged at every iteration. Best model checkpoints were selected based on validation Dice score, and the final model was evaluated on the held-out test set to report unbiased performance estimates.
+Training progress was monitored using Weights & Biases (W&B) @wandb for experiment tracking, with metrics logged at every iteration. Best model checkpoints were selected based on validation Dice score, and the final model was evaluated on the held-out test set to report unbiased performance estimates.
 
 === XAI Module Implementation
 
@@ -209,7 +209,7 @@ $
 
 Where high variance occurs, it highlights "brittle" transition zones or anatomically ambiguous boundaries where the network remains unconfident. Comparing Input × Gradient attributions against these uncertainty maps isolates clinically critical structural dependencies that carry significant diagnostic risks.
 
-All XAI outputs are saved as NIfTI volumes organized per patient and per method, ready for loading into 3D Slicer or VR visualization tools. The implementation ensures spatial alignment between saliency maps and ground truth labels by computing metrics inline during generation, using the same preprocessed coordinate space.
+All XAI outputs are saved as NIfTI volumes organized per patient and per method, ready for loading into 3D Slicer @fedorov20123d or VR visualization tools. The implementation ensures spatial alignment between saliency maps and ground truth labels by computing metrics inline during generation, using the same preprocessed coordinate space.
 
 == Research Approach
 

@@ -32,7 +32,10 @@
     
     #v(4fr)
     
-    #text(weight: "bold", size: 22pt)[#title]
+    #block(width: 90%)[
+      #set par(leading: 0.6em)
+      #text(weight: "bold", size: 18pt)[#title]
+    ]
     
     #v(2fr)
     
@@ -77,6 +80,14 @@
 
   // 4. Table of Contents [cite: 6]
   outline(depth: 3, indent: 2em)
+  pagebreak()
+
+  // 4.1 List of Figures
+  outline(title: "List of Figures", target: figure.where(kind: image))
+  pagebreak()
+
+  // 4.2 List of Tables
+  outline(title: "List of Tables", target: figure.where(kind: table))
   pagebreak()
 
   // 4.1 Start numbering pages

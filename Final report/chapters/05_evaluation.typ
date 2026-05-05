@@ -73,9 +73,9 @@ To formally appraise the VR pipeline without a full user study, Nielsen's 10 Heu
     [Visibility of system status], [Volume rendering confirms loaded state; no progress indicator during NIfTI loading.], [2],
     [Match between system and real world], [Anatomically accurate NIfTI rendering; BraTS-standard colour coding.], [3],
     [User control and freedom], [6-DoF navigation; volume toggle; no undo functionality.], [2],
-    [Consistency and standards], [Follows 3D Slicer conventions; standard OpenXR controller bindings.], [3],
+    [Consistency and standards], [Follows 3D Slicer @fedorov20123d conventions; standard OpenXR controller bindings.], [3],
     [Error prevention], [Auto-rendering via `watch_for_new_volumes`; no guard for corrupt NIfTI files.], [2],
-    [Recognition over recall], [Volumes listed in Slicer panel; ray-march cursor provides spatial context.], [3],
+    [Recognition over recall], [Volumes listed in Slicer @fedorov20123d panel; ray-march cursor provides spatial context.], [3],
     [Flexibility and efficiency], [Single-command launch; limited in-VR shortcuts.], [2],
     [Aesthetic and minimal design], [Clean volumetric rendering; no UI clutter in VR space.], [3],
     [Help users recover from errors], [No in-VR error messages; terminal-only diagnostics.], [1],
@@ -87,7 +87,7 @@ To formally appraise the VR pipeline without a full user study, Nielsen's 10 Heu
 
 === Proposed Clinician Evaluation Protocol
 
-The pipeline's primary limitation is the absence of a formal user study. Whether immersive rendering improves diagnostic accuracy or reduces cognitive load relative to flat-panel viewing remains the most impactful open question. Future work will deploy a within-subjects study recruiting 12-15 radiologists to evaluate XAI outputs via standard flat-panel versus immersive VR. Metrics will include task completion time for identifying false positives, boundary alignment Dice, and NASA-TLX scores for cognitive load assessment.
+The pipeline's primary limitation is the absence of a formal user study. Whether immersive rendering improves diagnostic accuracy or reduces cognitive load relative to flat-panel viewing remains the most impactful open question. Future work will deploy a within-subjects study recruiting 12-15 radiologists to evaluate XAI outputs via standard flat-panel versus immersive VR. Metrics will include task completion time for identifying false positives, boundary alignment Dice, and NASA-TLX @hart1988nasa scores for cognitive load assessment.
 
 == Objective 6: XAI-Guided Pruning — Architectural Design
 
@@ -101,8 +101,8 @@ Layer-wise Relevance Propagation (LRP) requires custom backward hooks at every l
 
 The proposed pipeline integrates the VR visualisation environment with XAI-guided filter ranking:
 
-+ A clinician in VR identifies a false-positive region via the ray-march pointer in SlicerVR.
-+ SlicerVR exports the spatial coordinates via OpenIGTLink to a Python backend running the SegResNet model.
++ A clinician in VR identifies a false-positive region via the ray-march pointer in SlicerVR @fedorov20123d.
++ SlicerVR @fedorov20123d exports the spatial coordinates via OpenIGTLink to a Python backend running the SegResNet model.
 + Targeted backpropagation computes gradients _only_ for the clinician-defined error region, producing a spatially focused attribution map.
 + Taylor first-order pruning ranks convolutional filters by $|W times nabla L|$ computed on the error region, identifying filters that contribute most to the false positive.
 + The lowest-relevance filters are pruned, the model is fine-tuned for 2–3 epochs, and the updated predictions are re-exported to VR for validation.
@@ -111,7 +111,7 @@ This loop would enable clinician-in-the-loop model refinement, where domain expe
 
 === Why It Was Not Implemented
 
-The critical dependency is a real-time SlicerVR ↔ Python bridge via OpenIGTLink. While OpenIGTLink is supported by 3D Slicer, configuring bidirectional coordinate streaming between VR controllers and a PyTorch inference backend required integration work beyond the project timeline. The architectural design above is provided as a concrete, implementable specification for future work.
+The critical dependency is a real-time SlicerVR @fedorov20123d ↔ Python bridge via OpenIGTLink. While OpenIGTLink is supported by 3D Slicer, configuring bidirectional coordinate streaming between VR controllers and a PyTorch inference backend required integration work beyond the project timeline. The architectural design above is provided as a concrete, implementable specification for future work.
 
 == Objective Satisfaction
 
