@@ -1,0 +1,6 @@
+=== MC Dropout Calibration: UAR vs Segmentation Error ===
+Whole Tumor     : n=23, Pearson r(UAR, 1-Dice) = -0.1880
+Tumor Core      : n=23, Pearson r(UAR, 1-Dice) = -0.2123
+Enhancing Tumor : n=23, Pearson r(UAR, 1-Dice) = -0.3085
+
+Done.

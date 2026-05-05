@@ -18,7 +18,7 @@ This study creates a three-stage pipeline using the BraTS 2023 dataset, which co
 
 SegResNet was selected as the primary architecture due to its residual connections, which provide robustness against vanishing gradients and enable effective training of deep networks @he2016deep. The architecture offers an optimal balance between performance and computational complexity, making it suitable for medical imaging applications where training data may be limited and model interpretability is essential.
 
-The rationale for implementing multiple XAI methods stems from their complementary strengths. Gradient-based methods (Grad-CAM, Guided Backpropagation, LRP) provide different perspectives on feature importance, while perturbation-based approaches (Occlusion Sensitivity) offer model-agnostic explanations. Monte Carlo Dropout adds uncertainty quantification, enabling identification of regions where the model lacks confidence, a critical capability for clinical decision support.
+The rationale for implementing multiple XAI methods stems from their complementary strengths. Gradient-based methods (Grad-CAM, Guided Backpropagation, Input × Gradient) provide different perspectives on feature importance, while perturbation-based approaches (Occlusion Sensitivity) offer model-agnostic explanations. Monte Carlo Dropout adds uncertainty quantification, enabling identification of regions where the model lacks confidence, a critical capability for clinical decision support.
 
 === Agile CRISP-DM Methodology and Its Use
 
@@ -41,7 +41,8 @@ The Agile CRISP-DM approach ensured an organized, rapid-iteration development lo
 
 The BraTS 2023 dataset, provided through the MICCAI Brain Tumor Segmentation Challenge, serves as the foundation for this research. The dataset comprises approximately 1,251 patient cases, each containing four co-registered MRI modalities: T1-weighted (T1), T1-weighted with Gadolinium contrast enhancement (T1c), T2-weighted (T2), and T2 Fluid-Attenuated Inversion Recovery (FLAIR). All volumes have been resampled to an isotropic resolution of 1 mm³ and skull-stripped.
 
-The tumor labels in BraTS follow a standard annotation scheme where each voxel is classified as background (0), necrotic tumor core (1), peritumoral edema (2), or enhancing tumor (3). For this research, these labels are converted into three binary channels representing clinically relevant regions: Whole Tumor (WT = necrosis + edema + enhancing), Tumor Core (TC = necrosis + enhancing), and Enhancing Tumor (ET = enhancing only). The preprocessing pipeline optimizes raw MRI volumes for efficient 3D model training through four core operations: foreground cropping reduces spatial dimensions from ~240³ to ~160³ voxels by removing extraneous background; channel-first formatting restructures data to [4, 160, 160, 160] for PyTorch compatibility; per-channel z-score normalization standardizes intensities across modalities using only brain tissue statistics; and random spatial augmentation (training only) applies geometric and intensity transforms  such as random flips, adding noise, etc. to enhance model robustness.
+
+The tumor labels in BraTS follow a standard annotation scheme where each voxel is classified as background (0), necrotic tumor core (1), peritumoral edema (2), or enhancing tumor (3). For this research, these labels are converted into three binary channels representing clinically relevant regions: Whole Tumor (WT = necrosis + edema + enhancing), Tumor Core (TC = necrosis + enhancing), and Enhancing Tumor (ET = enhancing only). The preprocessing pipeline optimizes raw MRI volumes for efficient 3D model training through four core operations: foreground cropping reduces spatial dimensions from ~240³ to ~160³ voxels by removing extraneous background; channel-first formatting restructures data to [4, 160, 160, 160] for PyTorch compatibility; per-channel z-score normalization standardizes intensities across modalities using only brain tissue statistics; and random spatial augmentation (training only) applies geometric and intensity transforms — such as random flips, adding noise, etc. — to enhance model robustness.
 
 === SegResNet Model Architecture
 
@@ -56,7 +57,7 @@ The bottleneck layer offers a compressed, globally-aware representation well-sui
 
 === Evolutionary Prototyping Phase
 
-Before committing to full-scale training, an evolutionary prototyping phase was conducted using a 250-patient subset randomly sampled from the BraTS training data. This phase served multiple purposes: validating the complex 3D data pipeline, rapidly testing candidate architectures, and verifying hardware memory limits.The initial prototype was implemented using an 2 NVIDIA GeForce RTX 2080 Ti (11 GB VRAM each), which allowed for training across 10 epochs in approximately 1 hours 2 min. The dataset was split into 200 training cases, 25 validation cases, and 25 test cases for this phase.
+Before committing to full-scale training, an evolutionary prototyping phase was conducted using a 250-patient subset randomly sampled from the BraTS training data. This phase served multiple purposes: validating the complex 3D data pipeline, rapidly testing candidate architectures, and verifying hardware memory limits. The 250-patient prototype subset was drawn from the same BraTS 2023 corpus used for full-scale training. As the full training utilises the entire 1,251-patient dataset with a fresh deterministic split (seed = 42), prototype test patients may appear in the final training set. This does not constitute leakage for the final reported metrics, which are evaluated exclusively on the held-out 126-patient test split that was never exposed during full-scale training. The initial prototype was implemented using two NVIDIA GeForce RTX 2080 Ti GPUs (11 GB VRAM each), which allowed for training across 10 epochs in approximately 1 hour 2 minutes. The dataset was split into 200 training cases, 25 validation cases, and 25 test cases for this phase.
 
 The prototype results demonstrated that SegResNet provided the optimal performance-to-complexity ratio among the tested architectures. The 250-patient subset achieved promising results on the prototype test set with Dice scores of 0.80 for the Whole Tumor (WT), 0.55 for the Tumor Core (TC), and 0.34 for the Enhancing Tumor (ET), confirming the viability of the approach for full-scale implementation. After validating this core functionality, the system was refactored into its final modular, configuration-driven PyTorch framework.
 
@@ -180,7 +181,7 @@ $
 
 This process effectively masks out the fine-grained features that are irrelevant to the target class, resulting in high-resolution attributions that accurately highlight the structural features directly responsible for the model's prediction.
 
-*Layer-wise Relevance Propagation* (LRP) operates on a deep Taylor decomposition "conservation principle," attributing a literal relevance score to each input voxel such that their sum equals the final model prediction score. Due to the architectural complexity of SegResNet, which encompasses numerous skip connections and specialized GroupNorm layers, developing manual backward hooks for every layer block is prohibitively complex. Therefore, the implementation utilizes the "Input × Gradient" approximation. For deep neural networks predominantly employing ReLU activations, this proxy is mathematically equivalent to the $epsilon$-LRP rule. The relevance $R_i$ assigned to the $i$-th voxel of the input $x_i$ concerning the spatial model prediction score $f(x)$ is formulated as:
+*Input × Gradient (LRP Proxy)* operates on a first-order Taylor decomposition, attributing a relevance score to each input voxel proportional to both its magnitude and the model's sensitivity to it. True layer-wise relevance propagation (Bach et al., 2015) @bach2015pixel requires implementing conservation rules ($epsilon$-rule, $alpha beta$-rule) through every network layer individually. Due to the architectural complexity of SegResNet — which encompasses residual skip connections and GroupNorm layers that violate the strict assumptions of standard LRP propagation rules — developing manual backward hooks for every layer block is prohibitively complex. Therefore, the implementation utilises the Input × Gradient approximation, a tractable proxy that serves as the closest feasible approximation to $epsilon$-LRP for this architecture. The relevance $R_i$ assigned to the $i$-th voxel of the input $x_i$ concerning the spatial model prediction score $f(x)$ is formulated as:
 
 $
   R_i approx x_i dot.c (partial f(x)) / (partial x_i)
@@ -194,7 +195,7 @@ $
   S_c (i,j,k) = f_c (x) - f_c (x_"occluded")
 $
 
-Because the sliding window utilizes a stride of 8 across a 160³ input space, the resulting sensitivity map is initially evaluated at a dimension of 20³. It is subsequently reconstructed and upsampled back to 160³ via trilinear interpolation. This systematic validation step quantifies the clinical necessity of explicit brain regions on an undeniable, empirical level.
+Because the sliding window utilizes a stride of 8 across a 160³ input space, the resulting sensitivity map is initially evaluated at a dimension of 20³. It is subsequently reconstructed and upsampled back to 160³ via trilinear interpolation. The confidence score $f_c$ is computed as the spatial mean of class logits rather than their sum, ensuring computational stability across volumes of varying tumour size and maintaining consistency with Grad-CAM's score function, which also spatially averages logits. A consequence of this choice is that small subregions (e.g., Enhancing Tumour at ~5% volume) produce attenuated sensitivity scores because their occlusion has minimal impact on the spatial mean — a limitation acknowledged in the results.
 
 *Monte Carlo (MC) Dropout* quantifies confidence rather than providing structural attribution. Because traditional inference is deterministic, this implementation introduces test-time stochasticity by forcing SegResNet's built-in dropout layers (at a probability of $p=0.1$) to remain active during the evaluation phase. Generating $N=20$ stochastic forward passes for an identical volumetric input produces a probability distribution over the predicted segmentations. Given the predicted output probability $p_n$ from the $n$-th forward pass, the stabilized mean prediction $macron(p)$ and its corresponding voxel-wise predictive variance (uncertainty map) $sigma^2$ are evaluated as:
 
@@ -206,7 +207,7 @@ $
   sigma^2(x, y, z) = 1/N sum_(n=1)^N (p_n(x,y,z) - macron(p)(x,y,z))^2
 $
 
-Where high variance occurs, it highlights "brittle" transition zones or anatomically ambiguous boundaries where the network remains unconfident. Comparing LRP attributions against these uncertainty maps isolates clinically critical structural dependencies that carry significant diagnostic risks.
+Where high variance occurs, it highlights "brittle" transition zones or anatomically ambiguous boundaries where the network remains unconfident. Comparing Input × Gradient attributions against these uncertainty maps isolates clinically critical structural dependencies that carry significant diagnostic risks.
 
 All XAI outputs are saved as NIfTI volumes organized per patient and per method, ready for loading into 3D Slicer or VR visualization tools. The implementation ensures spatial alignment between saliency maps and ground truth labels by computing metrics inline during generation, using the same preprocessed coordinate space.
 
@@ -220,7 +221,7 @@ The experimental unit is a single BraTS patient case. Independent variables incl
 
 === Evaluation Strategy
 
-Model performance and internal reliability are evaluated systematically. To ensure clinical interpretability, the quantitative assessment is divided into mathematical evaluations for structural segmentation accuracy and subsequent evaluations for XAI attribution and uncertainty. 
+Model performance and internal reliability are evaluated systematically. To ensure clinical interpretability, the quantitative assessment is divided into mathematical evaluations for structural segmentation accuracy and subsequent evaluations for XAI attribution and uncertainty.
 
 *1. Segmentation Performance Metrics*
 The core segmentation performance of SegResNet is benchmarked against the clinically-annotated test set using the following spatial metrics:
@@ -234,11 +235,21 @@ The core segmentation performance of SegResNet is benchmarked against the clinic
     table.hline(stroke: 1.5pt),
     [*Metric Name*], [*Formula*], [*Description / Function*],
     table.hline(stroke: 0.5pt),
-    [*Dice Score (DSC)*], [$ (2|A inter B|) / (|A| + |B|) $], [Measures volumetric overlap between prediction ($A$) and ground truth ($B$) from 0 to 1. Primary BraTS benchmark.],
-    [*HD 95th Percentile*], [$ P_(95) (d(a,B) union d(b,A)) $], [Measures 95th percentile surface boundary error in millimeters. Crucial for assessing margin precision.],
-    [*Intersection over Union*], [$ |A inter B| / |A union B| $], [A stricter spatial overlap metric (Jaccard index) penalizing localized false positives more heavily than Dice.],
-    [*Sensitivity (Recall)*], [$ "TP" / ("TP" + "FN") $], [The true positive rate. Measures the fraction of actual tumor voxels correctly identified to prevent missed diagnoses.],
-    [*Specificity*], [$ "TN" / ("TN" + "FP") $], [The true negative rate. Measures reliability in excluding healthy tissue, directly preventing false alarms.],
+    [*Dice Score (DSC)*],
+    [$ (2|A inter B|) / (|A| + |B|) $],
+    [Measures volumetric overlap between prediction ($A$) and ground truth ($B$) from 0 to 1. Primary BraTS benchmark.],
+    [*HD 95th Percentile*],
+    [$ P_(95) (d(a,B) union d(b,A)) $],
+    [Measures 95th percentile surface boundary error in millimeters. Crucial for assessing margin precision.],
+    [*Intersection over Union*],
+    [$ |A inter B| / |A union B| $],
+    [A stricter spatial overlap metric (Jaccard index) penalizing localized false positives more heavily than Dice.],
+    [*Sensitivity (Recall)*],
+    [$ "TP" / ("TP" + "FN") $],
+    [The true positive rate. Measures the fraction of actual tumor voxels correctly identified to prevent missed diagnoses.],
+    [*Specificity*],
+    [$ "TN" / ("TN" + "FP") $],
+    [The true negative rate. Measures reliability in excluding healthy tissue, directly preventing false alarms.],
     table.hline(stroke: 1.5pt),
   ),
   caption: [Summary of quantitative metrics used for evaluating 3D volumetric segmentation accuracy.],
@@ -256,12 +267,24 @@ Beyond structural accuracy, the generated gradient-based visual attributions and
     table.hline(stroke: 1.5pt),
     [*Metric Name*], [*Formula*], [*Description / Function*],
     table.hline(stroke: 0.5pt),
-    [*Pointing Game (PG)*], [$ cases(1 "if" arg max (L) in G, 0 "otherwise") $], [Binary test returning 1 if the highest activation peak in the saliency map $L$ falls inside the tumor region $G$.],
-    [*Saliency Coverage*], [$ (sum_(x in G) L(x)) / (sum_x L(x)) $], [Calculates the percentage of total salient relevance mass concentrated inside the true tumor boundary.],
-    [*Saliency IoU*], [$ |L_"thresh" inter G| / |L_"thresh" union G| $], [Evaluates shape overlap between a thresholded Boolean heatmap ($L_"thresh"$) and the ground truth mask ($G$).],
-    [*Weighted Dice*], [$ (2 sum L(x) dot.c G(x)) / (sum L(x) + sum G(x)) $], [Treats continuous heatmaps as soft predictive weights, modeling organic relevance without binary thresholds.],
-    [*Uncertainty Area Ratio*], [$ (sum_(x in G) sigma^2(x)) / (sum_x sigma^2(x)) $], [Computes the ratio of predictive uncertainty (variance $sigma^2$) trapped inside the pathogenic ROI versus total volume.],
-    [*Saliency-Uncertainty*], [$ "Cov"(L, sigma^2) / (sigma_L sigma_(sigma^2)) $], [Pearson correlation isolating "brittle" behaviors where high relevance ($L$) intersects with high variance ($sigma^2$).],
+    [*Pointing Game (PG)*],
+    [$ cases(1 "if" arg max (L) in G, 0 "otherwise") $],
+    [Binary test returning 1 if the highest activation peak in the saliency map $L$ falls inside the tumor region $G$.],
+    [*Saliency Coverage*],
+    [$ (sum_(x in G) L(x)) / (sum_x L(x)) $],
+    [Calculates the percentage of total salient relevance mass concentrated inside the true tumor boundary.],
+    [*Saliency IoU*],
+    [$ |L_"thresh" inter G| / |L_"thresh" union G| $],
+    [Evaluates shape overlap between a thresholded Boolean heatmap ($L_"thresh"$) and the ground truth mask ($G$).],
+    [*Weighted Dice*],
+    [$ (2 sum L(x) dot.c G(x)) / (sum L(x) + sum G(x)) $],
+    [Treats continuous heatmaps as soft predictive weights, modeling organic relevance without binary thresholds.],
+    [*Uncertainty Area Ratio*],
+    [$ (sum_(x in G) sigma^2(x)) / (sum_x sigma^2(x)) $],
+    [Computes the ratio of predictive uncertainty (variance $sigma^2$) trapped inside the pathogenic ROI versus total volume.],
+    [*Saliency-Uncertainty*],
+    [$ "Cov"(L, sigma^2) / (sigma_L sigma_(sigma^2)) $],
+    [Pearson correlation isolating "brittle" behaviors where high relevance ($L$) intersects with high variance ($sigma^2$).],
     table.hline(stroke: 1.5pt),
   ),
   caption: [Summary of metrics utilized to evaluate XAI map alignment and model uncertainty.],
