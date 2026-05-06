@@ -126,7 +126,9 @@
             align(left)[
               #text(style: "italic", size: 10pt)[
                 // Check numbering to handle unnumbered sections like "Appendix" cleanly
-                #if target_heading.numbering != none [
+                #if target_heading.numbering == "A.1" [
+                  Appendix #numbering("A", ..counter(heading).at(target_heading.location())): 
+                ] else if target_heading.numbering != none [
                   Chapter #counter(heading).at(target_heading.location()).first(): 
                 ]
                 #target_heading.body
@@ -148,12 +150,29 @@
   
   // Custom rule to force "Chapter X: Title" formatting
   show heading.where(level: 1): it => {
-    pagebreak(weak: true)
-    v(1em)
-    text(size: 16pt, weight: "bold")[
-      Chapter #counter(heading).display(): #it.body
-    ]
-    v(1em)
+    if it.numbering == "A.1" {
+      // Appendix Level 1
+      pagebreak(weak: true)
+      v(1em)
+      text(size: 14pt, weight: "bold")[
+        Appendix #counter(heading).display("A") - #it.body
+      ]
+      v(1em)
+    } else if it.numbering != none {
+      // Normal Chapter
+      pagebreak(weak: true)
+      v(1em)
+      text(size: 16pt, weight: "bold")[
+        Chapter #counter(heading).display(): #it.body
+      ]
+      v(1em)
+    } else {
+      // Unnumbered Level 1 (e.g. Bibliography if not handled elsewhere)
+      pagebreak(weak: true)
+      v(1em)
+      text(size: 16pt, weight: "bold")[#it.body]
+      v(1em)
+    }
   }
 
   // Paragraph styling moved to top
@@ -166,12 +185,5 @@
   pagebreak()
   counter(heading).update(0)
   set heading(numbering: "A.1")
-  show heading.where(level: 1): it => {
-    pagebreak(weak: true)
-    text(size: 14pt, weight: "bold")[
-      Appendix #counter(heading).display("A") - #it.body
-    ]
-    v(1em)
-  }
   body
 }

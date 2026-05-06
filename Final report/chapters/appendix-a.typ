@@ -1,9 +1,7 @@
 #show raw.where(block: true): set text(size: 9pt)
-= Appendices and Supplementary Materials
+= Project Administration Forms
 
-== Appendix A: Project Administration Forms
-
-=== A.1 Initial Project Proposal
+== Initial Project Proposal
 #grid(
   columns: (1fr, 1fr),
   gutter: 1em,
@@ -11,7 +9,7 @@
   image("../Figures/Proposal_page-0002.jpg", width: 100%)
 )
 
-=== A.2 Final Project Proposal
+== Final Project Proposal
 #grid(
   columns: (1fr, 1fr, 1fr),
   gutter: 1em,
@@ -20,7 +18,7 @@
   image("../Figures/Final_Proposal_page-0003.jpg", width: 100%)
 )
 
-=== A.3 Internal Ethical Approval Process
+== Internal Ethical Approval Process
 #grid(
   columns: (1fr, 1fr),
   gutter: 1em,
@@ -31,7 +29,7 @@
   image("../Figures/Ethics_page-04.jpg", width: 100%)
 )
 
-== Appendix B: Full Training Configuration
+= Full Training Configuration
 This section details the complete configuration YAML used for training the SegResNet model on the BraTS 2023 dataset, ensuring reproducibility of the hyperparameters, optimiser settings, and loss functions.
 
 #strong[Listing:] Full Training Configuration (`full_training_segresnet.yaml`)
@@ -69,10 +67,10 @@ training:
     gamma: 2.0                               # Focal factor for hard examples (ET)
 ```
 
-== Appendix C: Technical "Crown Jewels" Implementation
+= Technical "Crown Jewels" Implementation
 This section highlights the most critical technical contributions of the framework, focusing on the core XAI logic, novel evaluation metrics, and the immersive visualisation bridge.
 
-=== C.1 3D Grad-CAM (Core XAI Logic)
+== 3D Grad-CAM (Core XAI Logic)
 This snippet demonstrates the implementation of 3D Grad-CAM, specifically focusing on the gradient-weighted feature map combination.
 
 ```python
@@ -102,7 +100,7 @@ def generate(self, input_tensor: torch.Tensor, target_class: int) -> np.ndarray:
     return cam.squeeze().cpu().numpy()
 ```
 
-=== C.2 Weighted Dice (Novel Soft-Membership Metric)
+== Weighted Dice (Novel Soft-Membership Metric)
 The following code implements the Weighted Dice score, which allows for fair evaluation of coarse saliency maps by treating them as soft membership volumes.
 
 ```python
@@ -118,7 +116,7 @@ def weighted_dice(saliency: np.ndarray, ground_truth: np.ndarray) -> float:
     return float(numerator / denominator)
 ```
 
-=== C.3 Uncertainty Quantification (MC Dropout)
+== Uncertainty Quantification (MC Dropout)
 This snippet shows the stochastic inference loop used to estimate predictive variance as a proxy for model uncertainty.
 
 ```python
@@ -140,7 +138,7 @@ def generate_uncertainty(self, input_tensor: torch.Tensor, num_samples: int = 20
     return uncertainty.squeeze().cpu().numpy()
 ```
 
-=== C.4 VR Pipeline: NIfTI Volume Reconstruction
+== VR Pipeline: NIfTI Volume Reconstruction
 To enable clinicians to view model outputs identically to standard ground truth in 3D Slicer, this logic maps the multi-channel predictions back into clinical BraTS labels.
 
 ```python
