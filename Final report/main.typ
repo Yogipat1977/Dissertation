@@ -1,7 +1,7 @@
 #import "template.typ": *
 
 #show: project.with(
-  title: "Illuminating the Black Box: An Explainable AI Framework for Brain Tumor Segmentation Using Volumetric Data Interpretation in 3D CNNs", // Replace with your title
+  title: "Illuminating the Black Box: An Explainable AI Framework for Brain Tumour Segmentation Using Volumetric Data Interpretation in 3D CNNs", // Replace with your title
   author: "Yogi Amitkumar Patel", //
   student_id: "2536809", //
   degree: "Data Science and Artificial Intelligence", //
@@ -9,21 +9,25 @@
   date: datetime(year: 2026, month: 3, day: 16), //
 
   abstract: [
-    Deep learning has achieved remarkable accuracy in medical image analysis, yet the "black-box" nature of 3D Convolutional Neural Networks (CNNs) remains a critical barrier to clinical adoption in neuro-oncology. This dissertation addresses this trust deficit by developing an end-to-end Explainable AI (XAI) framework for 3D brain tumor segmentation. A volumetric SegResNet architecture was trained on the BraTS 2023 dataset to accurately delineate glioma sub regions (Whole Tumor, Tumor Core, and Enhancing Tumor) directly from multi-modal MRI scans. To establish transparency, the framework integrates six voxel-level post-hoc XAI attribution methods including Grad-CAM, Guided Backpropagation, and Monte Carlo Dropout to spatially map the model's internal decision making process.
+    Despite achieving state-of-the-art performance in neuro-oncological imaging, deep learning models remain clinically underutilised due to their opacity - a critical barrier when automated segmentation informs high-stakes decisions such as brain tumour resection planning. This dissertation addresses the fundamental tension between predictive accuracy and clinical trustworthiness by developing an integrated framework for explainable and uncertainty-aware volumetric brain tumour segmentation. A 3D SegResNet architecture was trained on the BraTS 2023 dataset (n = 1,251 glioma patients) to segment three clinically salient sub-regions - Whole Tumour (WT), Tumour Core (TC), and Enhancing Tumour (ET) - from multimodal MRI, achieving Dice scores of 0.923, 0.891, and 0.873 respectively, with an ET boundary precision of 3.66 mm HD95, surpassing BraTS 2023 challenge medians across all sub-regions.
 
-    Crucially, this research addresses the cognitive limitations of traditional 2D slice-based XAI displays by pioneering the visualization of these 3D saliency volumes within an immersive Virtual Reality (VR) environment. Leveraging 3D Slicer, the pipeline allows clinicians to interactively navigate stereoscopic representations of the patient's anatomy, the predicted segmentation masks, and the localized AI attribution maps. By systematically evaluating the trade-off between segmentation accuracy and model transparency, this project demonstrates how immersive XAI can transform opaque neural networks into accountable, transparent, and clinically viable decision-support systems for surgical planning.
+    The principal contribution lies in a systematic, multi-modal explainability framework that renders the model's decision-making process auditable through six complementary post-hoc attribution methods: Grad-CAM, Guided Backpropagation, Guided Grad-CAM, Input × Gradient, Occlusion Sensitivity, and Monte Carlo Dropout. Saliency fidelity was quantitatively evaluated via Pointing Game accuracy, Saliency Coverage, and Saliency IoU, ensuring methodological rigour beyond qualitative impression. A key empirical finding, derived from analysis across 25 held-out patients, is that saliency and uncertainty constitute statistically independent signals (Pearson r ≈ 0), establishing their non-redundant complementarity for clinical decision support. To overcome the spatial information loss inherent in conventional 2D displays, 3D saliency and uncertainty volumes were streamed into an immersive Virtual Reality environment, rendered via GPU-accelerated ray-casting and delivered wirelessly to a Meta Quest 3 headset through 3D Slicer, enabling stereoscopic, six-degrees-of-freedom navigation within anatomical context.
+
+    Current limitations include the absence of formal clinician user studies, reliance on a single data split without cross-validation, and partial implementation of XAI-guided model pruning. Future work will prioritise within-subjects radiologist evaluation measuring diagnostic accuracy and NASA-TLX cognitive load across flat-panel versus VR workflows, multi-institutional external validation, and completion of the feedback-driven pruning loop. Ultimately, this work demonstrates that the "black box" nature of deep learning is not an inherent epistemological limit but a tractable engineering problem; through rigorous volumetric attribution, principled uncertainty quantification, and immersive reproducible visualisation, we establish a pathway toward clinically trustworthy neuro-oncological AI.
   ],
 
   acknowledgments: [
-    I would like to express my sincere gratitude to my supervisor, Maimoona Sarif, for her invaluable guidance, expertise, and continuous support throughout the development of this dissertation. Her insightful feedback and encouragement were instrumental in shaping the direction and scope of this research.
+    I would like to express my sincere gratitude to my supervisor, Maimoona Sarif, for her invaluable guidance, expertise, and continuous support throughout the development of this dissertation. Her insightful feedback and encouragement were instrumental in shaping both the direction and scope of this research.
 
-    I also extend my thanks to the faculty at the University of East London for providing a rigorous academic environment and the foundational knowledge required to undertake this complex project in Data Science and Artificial Intelligence.
+    I am deeply grateful to my close friend, Jayrup Nakawala, whose technical assistance was indispensable to this work. His support in configuring computational infrastructure and facilitating access to remote server resources for model training enabled the full-scale experiments that underpin the results presented herein.
 
-    Finally, I am deeply thankful to my family and friends for their unwavering patience, understanding, and motivation during the demanding months of this final year project. A special thank you goes to a close friend who stood by me and provided invaluable assistance in tackling technical difficulties whenever they arose.
+    I also extend my heartfelt thanks to Maged Abdelmonem for generously providing access to a VR headset, which was essential to the immersive visualisation component of this framework and directly contributed to achieving the project's objectives.
+
+    Finally, I am profoundly thankful to my family and friends for their unwavering patience, understanding, and motivation during the demanding months of this final year project.
   ],
 )
 
-// --- MAIN BODY ---
+// --- MAIN BODY --
 
 #include "chapters/01_introduction.typ"
 
@@ -46,9 +50,10 @@
   show block: it => {
     if type(it.body) == content {
       b.step()
-      grid(columns: (2em, 1fr), gutter: 1em,
-        align(right)[#context b.display().],
-        it.body
+      grid(
+        columns: (2em, 1fr),
+        gutter: 1em,
+        align(right)[#context b.display().], it.body,
       )
     } else {
       it

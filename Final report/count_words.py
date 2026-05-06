@@ -12,7 +12,7 @@ def count_words_in_typ(filepath):
     content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
     
     # Strip Typst syntax like #heading, #include, etc.
-    # This is a bit rough but should get the main text
+    # This is a bit rough but should get the main text 
     content = re.sub(r'#\w+(\(.*?\))?(\[.*?\])?', '', content) # Strip #func(...) or #func[...]
     content = re.sub(r'(\[|\])', '', content) # Strip brackets
     content = re.sub(r'\$', '', content) # Strip math

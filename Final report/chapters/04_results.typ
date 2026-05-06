@@ -1,9 +1,9 @@
 = Results
 
-This chapter presents a comprehensive appraisal of the 3D Convolutional Neural Network (SegResNet) and its efficacy. The results are organized into three sequential analyses: an evaluation of the model's predictive segmentation performance, the interpretability of its decisions via Explainable Artificial Intelligence (XAI) techniques, and the subsequent visualization of these complex metrics within an immersive Virtual Reality (VR) framework.
+This chapter presents a comprehensive appraisal of the 3D Convolutional Neural Network (CNN) (SegResNet) and its efficacy. The results are organised into three sequential analyses: an evaluation of the model's predictive segmentation performance, the interpretability of its decisions via Explainable Artificial Intelligence (XAI) techniques, and the subsequent visualisation of these complex metrics within an immersive Virtual Reality (VR) framework.
 
 == Prediction and Segmentation Performance
-The foundational technical phase of this study necessitated the development of a neural network architecture capable of accurately localizing brain tumor subregions, serving as a prerequisite for subsequent explainability analyses. Given the substantial histopathological heterogeneity and complex morphological variations characteristic of neoplastic lesions (actual tumor), establishing a robust segmentation backbone was imperative to ensure the validity of downstream interpretability methods.
+The first phase of this study involved developing a neural network architecture capable of accurately localizing brain tumour subregions, serving as a prerequisite for subsequent explainability analyses. Given the substantial histopathological heterogeneity and complex morphological variations characteristic of neoplastic lesions (actual tumour), establishing a robust segmentation backbone was imperative to ensure the validity of downstream interpretability methods.
 
 === Progression and Metric Analysis (Baseline vs. Final)
 This section presents a comparative analysis of model iterations developed through the Agile-based methodology previously described. Beginning with a baseline prototype (Version 1) trained on minimal data and culminating in a fully-specified model trained on 1,251 patients from the BraTS cohort, the evaluation metrics reveal substantial performance divergences between these developmental phases.
@@ -19,7 +19,7 @@ This section presents a comparative analysis of model iterations developed throu
 )
 
 *Data Scaling Comparison*
-To understand how dataset volume directly influences performance, we compared the Dice scores across three versions: the initial baseline, an intermediate training run of 250 patients, and the final run utilizing the complete 1,251-patient dataset.
+To understand how dataset volume directly influences performance, we compared the Dice scores across three versions: the initial baseline, an intermediate training run of 250 patients, and the final run utilising the complete 1,251-patient dataset.
 
 #figure(
   table(
@@ -42,11 +42,11 @@ To understand how dataset volume directly influences performance, we compared th
   caption: [Test set Dice and HD95 progression across data scaling stages. Dice quantifies volumetric overlap (higher is better) while HD95 measures boundary error in millimetres (lower is better).],
 ) <tab:dice-hd95>
 
-@tab:dice-hd95 presents segmentation metrics across training data scales (45 to 1,251 patients), utilizing Dice coefficients for volumetric overlap and 95th Percentile Hausdorff Distance (HD95) for boundary delineation. Whole Tumor segmentation exhibited asymptotic performance (Dice 0.908 to 0.923), suggesting efficient learning of macroscopic structures from limited data. In contrast, the Enhancing Tumor characterized by fragmented, heterogeneous morphology demonstrated substantial dependency on training volume, improving from 0.272 to 0.873. Corresponding boundary refinement was equally pronounced: ET HD95 decreased from 75.91 mm to 3.66 mm, progressing from clinically unusable deviations to sub-voxel precision requisite for safe neurosurgical planning.
+@tab:dice-hd95 presents segmentation metrics across training data scales (45 to 1,251 patients), utilising Dice coefficients for volumetric overlap and 95th Percentile Hausdorff Distance (HD95) for boundary delineation. Whole Tumour (WT) segmentation exhibited asymptotic performance (Dice 0.908 to 0.923), suggesting efficient learning of macroscopic structures from limited data. In contrast, the Enhancing Tumour (ET) characterized by fragmented, heterogeneous morphology demonstrated substantial dependency on training volume, improving from 0.272 to 0.873. Corresponding boundary refinement was equally pronounced: ET HD95 decreased from 75.91 mm to 3.66 mm, progressing from clinically unusable deviations to sub-voxel precision requisite for safe neurosurgical planning.
 
 *Computational vs. Performance Trade-off*
 
-The escalation from 250 patients to 1,251 patients carried substantial hardware and temporal costs. Training iterations lasted exponentially longer on the GPU infrastructure. However, as the table indicates, the added computation was unequivocally justified. While general regions (WT) hit a point of diminishing returns in both Dice and HD95, the deeper feature extraction required to confidently segment the complex non-linear Enhancing Tumors and to tighten their boundary precision required the full breadth of the training corpus.
+The escalation from 250 patients to 1,251 patients carried substantial hardware and temporal costs. Training iterations lasted exponentially longer on the GPU infrastructure. However, as the table indicates, the added computation was unequivocally justified. While general regions (WT) hit a point of diminishing returns in both Dice and HD95, the deeper feature extraction required to confidently segment the complex non-linear Enhancing Tumours and to tighten their boundary precision required the full breadth of the training corpus.
 
 #figure(
   grid(
@@ -55,7 +55,7 @@ The escalation from 250 patients to 1,251 patients carried substantial hardware 
     image("../Figures/results_figures/heatmap_sensitivity.png", width: 80%),
     image("../Figures/results_figures/heatmap_specificity.png", width: 80%),
   ),
-  caption: [Sensitivity (left) and Specificity (right) heatmaps across model versions. Sensitivity measures the proportion of true tumor voxels correctly identified, while Specificity reflects the model's ability to correctly exclude healthy tissue.],
+  caption: [Sensitivity (left) and Specificity (right) heatmaps across model versions. Sensitivity measures the proportion of true tumour voxels correctly identified, while Specificity reflects the model's ability to correctly exclude healthy tissue.],
 )
 
 
@@ -95,10 +95,10 @@ Morphological fidelity is still necessary for therapeutic value, even though qua
   caption: [Qualitative comparison of patients 01661, 01663, and 01666. Row 1: Ground Truth (GT). Row 2: Model Prediction (Pred). Row 3: 3D volumetric rendering of the predicted segmentation.],
 )
 *2D Alignment Analysis*
-When examining the 2D planes, the model’s predicted boundary layers flawlessly align with the True Ground Truth masks. As established, the 3.66 mm precision in HD95 manifests visually here: the predicted layers perfectly hug the edges of the actual tumor on the base MRI scans rather than loosely bleeding into healthy tissue.
+When examining the 2D planes, the model’s predicted boundary layers flawlessly align with the True Ground Truth masks. As established, the 3.66 mm precision in HD95 manifests visually here: the predicted layers perfectly hug the edges of the actual tumour on the base Magnetic Resonance Imaging (MRI) scans rather than loosely bleeding into healthy tissue.
 
 *3D Morphological Analysis*
-While conventional slice-based analysis obscures the true volumetric extent of neoplastic growth, three-dimensional reconstruction (Panel D) reveals the complete spatial topography and structural depth of the lesion. SegResNet's native volumetric processing capability generates high-fidelity 3D masks that facilitate direct translation into immersive rendering environments. This dimensional accuracy establishes the essential foundation for the immersive visualization framework presented in Pillar 3.
+While conventional slice-based analysis obscures the true volumetric extent of neoplastic growth, three-dimensional reconstruction (Panel D) reveals the complete spatial topography and structural depth of the lesion. SegResNet's native volumetric processing capability generates high-fidelity 3D masks that facilitate direct translation into immersive rendering environments. This dimensional accuracy establishes the essential foundation for the immersive visualisation framework presented in Pillar 3.
 
 == Explainable AI (XAI) Interpretation
 
@@ -140,13 +140,13 @@ where $S in [0,1]$ denotes the continuous saliency distribution and $G$ the bina
 === The Bottleneck Resolution Problem: 3D Grad-CAM
 Grad-CAM, conceived for 2D classification @selvaraju2017, was adapted to 3D segmentation by spatially averaging per-class logits for scalar backpropagation @natekar2020. This yields a coarse $20^3$ bottleneck heatmap subsequently upsampled to native $160^3$ introducing fundamental spatial fidelity loss in volumetric contexts. The critical question does trilinear upsampling inflate or deflate evaluation scores?
 
-Identical activations were evaluated at both resolutions using Weighted Dice and Saliency IoU across the 25-patient evaluation cohort. As shown in @fig:gradcam-bottleneck, Weighted Dice remains stable ($plus.minus 0.02$–$0.04$), confirming no systematic bias. Conversely, Saliency IoU exhibits volatile thresholding artefacts, validating Weighted Dice as the reliable metric for coarse-resolution attribution. Critically, Grad-CAM achieves only a 33.3% Pointing Game for Enhancing Tumour even at native resolution (compared to 92.0% for Whole Tumour), confirming that the poor ET localisation is a fundamental bottleneck limitation, not simply a model incapacity.
+Identical activations were evaluated at both resolutions using Weighted Dice and Saliency IoU across the 25-patient evaluation cohort. As shown in @fig:gradcam-bottleneck, both metrics show a decrease at native resolution, with Weighted Dice dropping by approximately 0.12–0.15. This suggests that trilinear upsampling provides a "smoothing" benefit that improves overlap scores, though the relative performance between regions remains consistent. Critically, Grad-CAM achieves only a 16.7% Pointing Game for Enhancing Tumour at native resolution (compared to 92.0% for Whole Tumour), confirming that the poor ET localisation is a fundamental bottleneck limitation, not simply a model incapacity.
 #figure(
   grid(
     columns: 2,
     gutter: 2%,
-    image("../Figures/results_figures/xai_bottleneck_weighted_dice.svg", width: 90%),
-    image("../Figures/results_figures/xai_bottleneck_saliency_iou.svg", width: 90%),
+    image("../Figures/results_figures/graph1_bottleneck_weighted_dice.svg", width: 90%),
+    image("../Figures/results_figures/graph1_bottleneck_saliency_iou.svg", width: 90%),
   ),
   caption: [
     Bottleneck resolution analysis comparing Weighted Dice (left) and Saliency IoU (right) for Grad-CAM evaluated at upsampled $160^3$ versus native $20^3$ resolution. Weighted Dice remains stable across both resolutions, while Saliency IoU exhibits volatile swings due to hard thresholding artefacts.
@@ -229,7 +229,7 @@ Unlike gradient-based approaches, Occlusion Sensitivity requires no assumptions 
   ),
   caption: [Occlusion Sensitivity heatmaps for patients 01497 (left), 01397 (centre), and 01518 (right). Occlusion achieves the highest Weighted Dice of all six methods, with patient 01397 ET achieving W.Dice = 0.35, the only method where ET localisation truly succeeds above 0.30],
 )
-Across the full 25-patient evaluation cohort, Occlusion achieves 100% Pointing Game for Whole Tumour and 88% for Tumour Core, with an ET Pointing Game of 54.2%, substantially higher than Grad-CAM's 33.3%. It produces the highest mean Weighted Dice for WT (0.397) and TC (0.345), and the second-highest for ET (0.233). Most remarkably, patient 01397 achieves a Weighted Dice of 0.35 with PG = 1.0 for Enhancing Tumor, one of the strongest ET localisation results across all methods. This result constitutes the single strongest piece of evidence that the SegResNet model genuinely relies on tumour voxels for its segmentation predictions, ruling out shortcut learning, texture bias, or dataset artefacts. The clinical trustworthiness of the segmentation is thereby validated through a mechanism entirely independent of gradient computation.
+Across the full 25-patient evaluation cohort, Occlusion achieves 100% Pointing Game for Whole Tumour and 88% for Tumour Core, with an ET Pointing Game of 54.2%, substantially higher than Grad-CAM's 33.3%. It produces the highest mean Weighted Dice for WT (0.397) and TC (0.345), and the second-highest for ET (0.233). Most remarkably, patient 01397 achieves a Weighted Dice of 0.35 with PG = 1.0 for Enhancing Tumour, one of the strongest ET localisation results across all methods. This result constitutes the single strongest piece of evidence that the SegResNet model genuinely relies on tumour voxels for its segmentation predictions, ruling out shortcut learning, texture bias, or dataset artefacts. The clinical trustworthiness of the segmentation is thereby validated through a mechanism entirely independent of gradient computation.
 
 === Uncertainty Quantification: MC Dropout
 
@@ -302,22 +302,22 @@ UAR rises sharply to 0.538–0.907, with 91% of total uncertainty contained with
   caption: [MC Dropout uncertainty metrics for patient 00291. Despite complete gradient-based XAI failure, Boundary Ratio reaches 0.997–1.000, proving the model's spatial reasoning is intact. The positive TC/ET correlation is unique to this patient.],
 )
 
-This patient is uniquely diagnostic: Grad-CAM and Guided Grad-CAM produce *zero across all metrics* a complete gradient-based XAI failure. However, MC Dropout reveals a fundamentally different picture. The Boundary Ratio of 0.997–1.000 demonstrates that despite the model's ambiguity (UAR ≈ 0.50–0.62), uncertainty concentrates at the ground truth boundaries rather than being randomly distributed. This confirms the model _is_ segmenting based on real spatial features—the gradient-based methods failed to explain it, but the model's internal reasoning remains spatially grounded.
+This patient is uniquely diagnostic: Grad-CAM and Guided Grad-CAM produce *zero across all metrics* a complete gradient-based XAI failure. However, MC Dropout reveals a fundamentally different picture. The Boundary Ratio of 0.997–1.000 demonstrates that despite the model's ambiguity (UAR ≈ 0.50–0.62), uncertainty concentrates at the ground truth boundaries rather than being randomly distributed. This confirms the model _is_ segmenting based on real spatial features - the gradient-based methods failed to explain it, but the model's internal reasoning remains spatially grounded.
 
 The positive TC/ET Saliency-Uncertainty Correlation (+0.05 to +0.09) is unique to this patient. Where IxG assigns high relevance and MC Dropout assigns high uncertainty overlap slightly, suggesting the model relies on features it is not fully confident about. Clinically, this is a valuable flag: cases exhibiting this pattern should be prioritised for radiologist review.
 
 *Calibration Analysis*
 
-To assess calibration across the 23-patient MC Dropout cohort, the Pearson correlation between per-patient mean uncertainty (UAR) and per-patient segmentation error ($1 - "Dice"$) was computed. The correlations are weak and negative (WT: $r = -0.19$, TC: $r = -0.21$, ET: $r = -0.31$), indicating that higher volumetric uncertainty does _not_ strongly predict lower segmentation accuracy at the patient level. This suggests that MC Dropout uncertainty captures a complementary signal — boundary ambiguity and morphological complexity — rather than directly calibrating prediction error. The weak ET correlation ($r = -0.31$) is the strongest, consistent with enhancing tumour's inherently variable morphology driving both higher uncertainty and lower Dice simultaneously. Clinically, this means uncertainty maps should be interpreted as _spatial risk indicators_ (where the model hedges) rather than _accuracy proxies_ (how wrong the model is).
+To assess calibration across the 23-patient MC Dropout cohort, the Pearson correlation between per-patient mean uncertainty (UAR) and per-patient segmentation error ($1 - "Dice"$) was computed. The correlations are weak and negative (WT: $r = -0.19$, TC: $r = -0.21$, ET: $r = -0.31$), indicating that higher volumetric uncertainty does _not_ strongly predict lower segmentation accuracy at the patient level. This suggests that MC Dropout uncertainty captures a complementary signal - boundary ambiguity and morphological complexity - rather than directly calibrating prediction error. The weak ET correlation ($r = -0.31$) is the strongest, consistent with enhancing tumour's inherently variable morphology driving both higher uncertainty and lower Dice simultaneously. Clinically, this means uncertainty maps should be interpreted as _spatial risk indicators_ (where the model hedges) rather than _accuracy proxies_ (how wrong the model is).
 
 *Cross-Paradigm Finding: Saliency ≠ Uncertainty*
 
-Across the expanded 23-patient MC Dropout cohort and all regional measurements, the Saliency-Uncertainty Correlation averages near zero (WT: -0.007 ± 0.096, TC: -0.037 ± 0.104, ET: -0.095 ± 0.119). This demonstrates that saliency (what the model attends to) and uncertainty (where the model doubts) are *independent, non-redundant signals*. This independence is a positive finding: if they were correlated, one signal would be redundant. Because they are independent, a clinician using this system receives two complementary tools—saliency maps for trust calibration ("Is the AI looking at the right features?") and uncertainty maps for risk assessment ("Where might the AI be wrong?"). This directly motivates deploying both modalities in the immersive VR environment presented in Pillar 3.
+Across the expanded 23-patient MC Dropout cohort and all regional measurements, the Saliency-Uncertainty Correlation averages near zero (WT: -0.007 ± 0.096, TC: -0.037 ± 0.104, ET: -0.095 ± 0.119). This demonstrates that saliency (what the model attends to) and uncertainty (where the model doubts) are *independent, non-redundant signals*. This independence is a positive finding: if they were correlated, one signal would be redundant. Because they are independent, a clinician using this system receives two complementary tools - saliency maps for trust calibration ("Is the AI looking at the right features?") and uncertainty maps for risk assessment ("Where might the AI be wrong?"). This directly motivates deploying both modalities in the immersive VR environment presented in Pillar 3.
 
 === Cross-Method Comparative Analysis
 
 #figure(
-  image("../Figures/results_figures/xai_regional_vulnerability.svg", width: 85%),
+  image("../Figures/results_figures/graph6_regional_vulnerability.svg", width: 85%),
   caption: [Regional Vulnerability Analysis: Mean Weighted Dice across five XAI attribution methods (n=25 per method, n=23 for MC Dropout), grouped by tumour subregion. Occlusion Sensitivity leads WT and TC, while Grad-CAM leads ET. Error bars indicate standard deviation.],
 )
 
@@ -332,11 +332,11 @@ Across the expanded 23-patient MC Dropout cohort and all regional measurements, 
     [*Method*], [*WT Mean W.Dice*], [*TC Mean W.Dice*], [*ET Mean W.Dice*],
     table.hline(stroke: 0.5pt),
 
-    [Grad-CAM], [0.320 ± 0.142], [0.358 ± 0.158], [0.250 ± 0.170],
-    [GBP], [0.066 ± 0.050], [0.054 ± 0.051], [0.041 ± 0.048],
-    [Guided Grad-CAM], [0.132 ± 0.071], [0.186 ± 0.081], [0.169 ± 0.072],
-    [IxG (LRP Proxy)], [0.074 ± 0.032], [0.123 ± 0.049], [0.142 ± 0.055],
-    [Occlusion], [*0.397 ± 0.113*], [*0.345 ± 0.132*], [0.233 ± 0.114],
+    [Grad-CAM], [0.320 ± 0.145], [0.358 ± 0.161], [0.250 ± 0.174],
+    [GBP], [0.066 ± 0.051], [0.053 ± 0.052], [0.041 ± 0.049],
+    [Guided Grad-CAM], [0.132 ± 0.072], [0.186 ± 0.082], [0.169 ± 0.073],
+    [IxG (LRP Proxy)], [0.074 ± 0.033], [0.122 ± 0.050], [0.141 ± 0.056],
+    [Occlusion], [*0.397 ± 0.116*], [*0.345 ± 0.135*], [0.233 ± 0.116],
     table.hline(stroke: 1.5pt),
   ),
   caption: [Mean Weighted Dice scores ± standard deviation by tumour region across the 25-patient XAI evaluation cohort. Occlusion Sensitivity achieves the highest scores for WT and TC, while Grad-CAM leads ET. Bold values indicate the best-performing method per region.],
@@ -397,7 +397,7 @@ The VR stack runs entirely on open, Linux-native tooling. A Bash launcher (`run_
 
 === Qualitative Evaluation: Brain and Isolated Tumour View
 
-@fig:vr-full-brain presents a side-by-side rendering full brain context alongside an isolated tumor-only view. The clinician can toggle between global anatomical context and subregion morphology, pointing directly at any voxel with the ray-marching controller cursor. This is a proof-of-concept instance, the pipeline is an active interrogation tool, not a passive display.
+@fig:vr-full-brain presents a side-by-side rendering full brain context alongside an isolated tumour-only view. The clinician can toggle between global anatomical context and subregion morphology, pointing directly at any voxel with the ray-marching controller cursor. This is a proof-of-concept instance, the pipeline is an active interrogation tool, not a passive display.
 
 #figure(
   grid(
@@ -406,7 +406,7 @@ The VR stack runs entirely on open, Linux-native tooling. A Bash launcher (`run_
     image("../Figures/VR/VR_Immersive_View_Full_Brain.jpg", width: 100%),
     image("../Figures/VR/VR_Tumor_Detailed_Morphology.jpg", width: 100%),
   ),
-  caption: [Side-by-side immersive rendering: full brain context (left) and isolated tumor view (right). The polychromatic subregion hierarchy is navigable from any orientation using 6-DoF hand controllers.],
+  caption: [Side-by-side immersive rendering: full brain context (left) and isolated tumour view (right). The polychromatic subregion hierarchy is navigable from any orientation using 6-DoF hand controllers.],
 ) <fig:vr-full-brain>
 
 === Qualitative Evaluation: XAI Heatmap Rendering in VR
@@ -415,5 +415,5 @@ The VR stack runs entirely on open, Linux-native tooling. A Bash launcher (`run_
 
 #figure(
   image("../Figures/VR/ss-heatmap.png", width: 50%),
-  caption: [Occlusion Sensitivity heatmap rendered volumetrically in VR. Peak attribution (warm tones) envelops the tumor boundary, materialising the Weighted Dice localisation scores from Pillar 2 in three-dimensional perceptual space.],
+  caption: [Occlusion Sensitivity heatmap rendered volumetrically in VR. Peak attribution (warm tones) envelop the tumour boundary, materialising the Weighted Dice localisation scores from Pillar 2 in three-dimensional perceptual space.],
 ) <fig:vr-heatmap>

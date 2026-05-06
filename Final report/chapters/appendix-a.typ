@@ -32,7 +32,7 @@
 )
 
 == Appendix B: Model Configuration and Hyperparameters
-This section details the complete configuration YAML used for training the SegResNet model on the BraTS 2023 dataset, ensuring reproducibility of the hyperparameters, optimizer settings, and loss functions.
+This section details the complete configuration YAML used for training the SegResNet model on the BraTS 2023 dataset, ensuring reproducibility of the hyperparameters, optimiser settings, and loss functions.
 
 #strong[Listing:] Full Training Configuration (`full_training_segresnet.yaml`)
 
@@ -45,7 +45,7 @@ data:
   data_dir: "data/BraTS2023-Training"       # full training dataset
   train_split: 1000
   val_split: 125                             # remaining ~125 go to test
-  roi_size: [160, 160, 160]                  # 160³ — larger spatial context
+  roi_size: [160, 160, 160]                  # 160³ - larger spatial context
   batch_size: 1                              # ~38 GB on single GPU with AMP
   num_workers: 8                             # keeps data pipeline saturated
   num_samples: 4                             # RandCropByPosNegLabeld samples
@@ -76,7 +76,7 @@ This snippet demonstrates the data preprocessing pipeline implemented in MONAI, 
 
 ```python
 """
-transforms.py — BraTS-specific transforms and preprocessing pipelines.
+transforms.py - BraTS-specific transforms and preprocessing pipelines.
 """
 
 import torch
@@ -101,9 +101,9 @@ from monai.transforms import (
 class ConvertToMultiChannelBraTS2023d(MapTransform):
     """
     Groups raw BraTS labels (1, 2, 3) into clinical sub-regions:
-        - Channel 0: Whole Tumor (WT) — labels 1, 2, 3
-        - Channel 1: Tumor Core (TC) — labels 1, 3
-        - Channel 2: Enhancing Tumor (ET) — label 3
+        - Channel 0: Whole Tumour (WT) - labels 1, 2, 3
+        - Channel 1: Tumour Core (TC) - labels 1, 3
+        - Channel 2: Enhancing Tumour (ET) - label 3
     """
 
     def __call__(self, data):
@@ -174,13 +174,13 @@ This section details the custom training loop implemented in PyTorch and MONAI, 
 
 ```python
 """
-trainer.py — Training loop with validation, checkpointing, and W&B logging.
+trainer.py - Training loop with validation, checkpointing, and W&B logging.
 
 Supports:
   - Automatic Mixed Precision (AMP) for ~2× speedup and ~50% less VRAM
   - Best-model checkpointing (saves when val Dice improves)
   - Last-checkpoint saving (saves every epoch for crash recovery)
-  - Resume from last checkpoint (restore model, optimizer, scheduler, epoch)
+  - Resume from last checkpoint (restore model, optimiser, scheduler, epoch)
 """
 
 import os
@@ -198,11 +198,11 @@ from src.config import save_config
 class Trainer:
     """Handles the full training lifecycle: train, validate, checkpoint."""
 
-    def __init__(self, model, loaders, loss_fn, optimizer, scheduler, cfg, device):
+    def __init__(self, model, loaders, loss_fn, optimiser, scheduler, cfg, device):
         self.model = model
         self.loaders = loaders
         self.loss_fn = loss_fn
-        self.optimizer = optimizer
+        self.optimiser = optimiser
         self.scheduler = scheduler
         self.cfg = cfg
         self.device = device
@@ -234,7 +234,7 @@ class Trainer:
         checkpoint = {
             "epoch": epoch,
             "model_state_dict": state_dict,
-            "optimizer_state_dict": self.optimizer.state_dict(),
+            "optimiser_state_dict": self.optimiser.state_dict(),
             "scheduler_state_dict": self.scheduler.state_dict(),
             "scaler_state_dict": self.scaler.state_dict(),
             "best_metric": self.best_metric,
@@ -247,7 +247,7 @@ class Trainer:
         Returns True if checkpoint was loaded, False otherwise.
         """
         if not os.path.exists(self.last_checkpoint_path):
-            print("[Resume] No checkpoint found — training from scratch.")
+            print("[Resume] No checkpoint found - training from scratch.")
             return False
 
         print(f"[Resume] Loading checkpoint: {self.last_checkpoint_path}")
@@ -261,7 +261,7 @@ class Trainer:
         else:
             self.model.load_state_dict(checkpoint["model_state_dict"])
 
-        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        self.optimiser.load_state_dict(checkpoint["optimiser_state_dict"])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
         if "scaler_state_dict" in checkpoint:
             self.scaler.load_state_dict(checkpoint["scaler_state_dict"])
@@ -300,7 +300,7 @@ class Trainer:
                 "val_dice_WT": val_results["WT"],
                 "val_dice_TC": val_results["TC"],
                 "val_dice_ET": val_results["ET"],
-                "lr": self.optimizer.param_groups[0]["lr"],
+                "lr": self.optimiser.param_groups[0]["lr"],
             })
 
             # Checkpoint best model
@@ -335,7 +335,7 @@ class Trainer:
             inputs = batch_data["image"].to(self.device)
             labels = batch_data["label"].to(self.device)
 
-            self.optimizer.zero_grad()
+            self.optimiser.zero_grad()
 
             # Forward pass with AMP
             with torch.amp.autocast("cuda", enabled=self.use_amp):
@@ -344,7 +344,7 @@ class Trainer:
 
             # Backward pass with gradient scaling
             self.scaler.scale(loss).backward()
-            self.scaler.step(self.optimizer)
+            self.scaler.step(self.optimiser)
             self.scaler.update()
 
             epoch_loss += loss.item()
@@ -383,7 +383,7 @@ The following sections document the complete source code for the post-hoc Explai
 
 ```python
 """
-grad_cam.py — 3D Grad-CAM for volumetric segmentation models.
+grad_cam.py - 3D Grad-CAM for volumetric segmentation models.
 
 Implements Gradient-weighted Class Activation Mapping (Grad-CAM) for 3D CNNs.
 Produces a class-discriminative saliency volume by weighting feature-map
@@ -392,7 +392,7 @@ weights.
 
 Reference:
     Selvaraju et al., "Grad-CAM: Visual Explanations from Deep Networks
-    via Gradient-based Localization", IJCV 2020.
+    via Gradient-based Localisation", IJCV 2020.
 
 Usage:
     from src.xai.grad_cam import GradCAM3D
@@ -488,7 +488,7 @@ class GradCAM3D:
         # _activations shape: (1, K, D', H', W')
         cam = (alpha * self._activations).sum(dim=1, keepdim=True)  # (1, 1, D', H', W')
 
-        # ── 6. ReLU — keep only positive contributions ──────────────────
+        # ── 6. ReLU - keep only positive contributions ──────────────────
         cam = F.relu(cam)
 
         # ── 7. Normalise to [0, 1] ──────────────────────────────────────
@@ -526,7 +526,7 @@ class GradCAM3D:
 
 ```python
 """
-guided_backprop.py — 3D Guided Backpropagation for volumetric segmentation models.
+guided_backprop.py - 3D Guided Backpropagation for volumetric segmentation models.
 
 Implements Guided Backpropagation (GBP), which modifies the standard gradient
 backpropagation by additionally gating negative gradients at every ReLU layer.
@@ -694,7 +694,7 @@ class GuidedBackprop3D:
 
 ```python
 """
-lrp.py — Input × Gradient attribution (LRP proxy) for volumetric models.
+lrp.py - Input × Gradient attribution (LRP proxy) for volumetric models.
 
 Implements the Input × Gradient method, a first-order Taylor decomposition
 that serves as a tractable proxy for epsilon-LRP in architectures where
@@ -793,7 +793,7 @@ class LRP3D:
 
 ```python
 """
-occlusion.py — 3D Occlusion Sensitivity for volumetric models.
+occlusion.py - 3D Occlusion Sensitivity for volumetric models.
 
 Implements a sliding-window perturbation method to test model reliance
 on specific spatial regions. Unlike gradient methods, this physically hides
@@ -946,14 +946,14 @@ class OcclusionSensitivity3D:
 
 ```python
 """
-uncertainty.py — MC Dropout for uncertainty quantification in 3D segmentation.
+uncertainty.py - MC Dropout for uncertainty quantification in 3D segmentation.
 
 Implements Monte Carlo (MC) Dropout to estimate model uncertainty. By running
 multiple forward passes with dropout layers enabled at inference time, we can
 compute the mean prediction (a more stable segmentation) and the voxel-wise
 variance (a proxy for predictive uncertainty).
 
-Key insight from notes: No model retraining needed — SegResNet already has
+Key insight from notes: No model retraining needed - SegResNet already has
 dropout_prob=0.1 in its architecture. We just keep those layers active
 during inference.
 
@@ -1024,8 +1024,8 @@ class MCDropout3D:
 
         Returns:
             Tuple of:
-                mean_pred:       numpy array (3, D, H, W) — mean probabilities
-                uncertainty_map: numpy array (3, D, H, W) — per-voxel variance
+                mean_pred:       numpy array (3, D, H, W) - mean probabilities
+                uncertainty_map: numpy array (3, D, H, W) - per-voxel variance
         """
         self._enable_dropout()
 
@@ -1060,15 +1060,15 @@ class MCDropout3D:
 
 ```python
 """
-metrics.py — Quantitative evaluation of XAI saliency maps against ground truth.
+metrics.py - Quantitative evaluation of XAI saliency maps against ground truth.
 
 Implements metrics that measure how well a model's attention (saliency)
-aligns with actual tumor locations, answering:
+aligns with actual tumour locations, answering:
     "Is the model looking at the right region for the right reasons?"
 
 Metrics:
-    - Pointing Game:     Does the peak saliency voxel fall inside the tumor?
-    - Saliency Coverage: What fraction of total saliency mass is inside the tumor?
+    - Pointing Game:     Does the peak saliency voxel fall inside the tumour?
+    - Saliency Coverage: What fraction of total saliency mass is inside the tumour?
     - Saliency IoU:      Overlap between thresholded saliency and ground truth mask.
 
 Reference:
@@ -1086,7 +1086,7 @@ def pointing_game(saliency: np.ndarray, ground_truth: np.ndarray) -> bool:
 
     Args:
         saliency:     3D array (D, H, W) with values in [0, 1].
-        ground_truth: 3D binary array (D, H, W), 1 = tumor, 0 = background.
+        ground_truth: 3D binary array (D, H, W), 1 = tumour, 0 = background.
 
     Returns:
         True if the voxel with maximum saliency is inside the GT mask.
@@ -1108,10 +1108,10 @@ def msr_accuracy(saliency: np.ndarray, ground_truth: np.ndarray) -> bool:
 
     Args:
         saliency:     3D array (D, H, W) of occlusion sensitivity drops.
-        ground_truth: 3D binary array (D, H, W), 1 = tumor, 0 = background.
+        ground_truth: 3D binary array (D, H, W), 1 = tumour, 0 = background.
 
     Returns:
-        True if the maximum sensitivity drop voxel is within the tumor.
+        True if the maximum sensitivity drop voxel is within the tumour.
     """
     return pointing_game(saliency, ground_truth)
 
@@ -1121,15 +1121,15 @@ def saliency_coverage(saliency: np.ndarray, ground_truth: np.ndarray) -> float:
     Saliency Coverage: fraction of total saliency mass inside the GT region.
 
     High coverage (→ 1.0) means the model focuses its attention on the
-    actual tumor.  Low coverage means the model is distracted by
+    actual tumour.  Low coverage means the model is distracted by
     irrelevant areas.
 
     Args:
         saliency:     3D array (D, H, W) with values in [0, 1].
-        ground_truth: 3D binary array (D, H, W), 1 = tumor, 0 = background.
+        ground_truth: 3D binary array (D, H, W), 1 = tumour, 0 = background.
 
     Returns:
-        Float in [0, 1].  1.0 = all saliency is inside the tumor.
+        Float in [0, 1].  1.0 = all saliency is inside the tumour.
     """
     total = saliency.sum()
     if total < 1e-8:
@@ -1148,7 +1148,7 @@ def saliency_iou(
 
     Args:
         saliency:     3D array (D, H, W) with values in [0, 1].
-        ground_truth: 3D binary array (D, H, W), 1 = tumor, 0 = background.
+        ground_truth: 3D binary array (D, H, W), 1 = tumour, 0 = background.
         threshold:    Saliency values above this are considered "active".
 
     Returns:
@@ -1175,7 +1175,7 @@ def weighted_dice(
     Unlike standard Dice (which compares two binary masks), this treats
     the saliency as soft membership values [0, 1] and computes overlap
     with the binary ground truth.  This rewards saliency maps that not
-    only cover the tumor but also match its shape.
+    only cover the tumour but also match its shape.
 
     Formula:
         Weighted_Dice = 2 * Σ(S · G) / (Σ S + Σ G)
@@ -1184,7 +1184,7 @@ def weighted_dice(
 
     Args:
         saliency:     3D array (D, H, W) with values in [0, 1].
-        ground_truth: 3D binary array (D, H, W), 1 = tumor, 0 = background.
+        ground_truth: 3D binary array (D, H, W), 1 = tumour, 0 = background.
 
     Returns:
         Float in [0, 1].  1.0 = perfect soft overlap.
@@ -1206,7 +1206,7 @@ def evaluate_saliency(
 
     Args:
         saliency:     3D array (D, H, W) with values in [0, 1].
-        ground_truth: 3D binary array (D, H, W), 1 = tumor, 0 = background.
+        ground_truth: 3D binary array (D, H, W), 1 = tumour, 0 = background.
         threshold:    Threshold for binarising saliency (for IoU).
 
     Returns:
