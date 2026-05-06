@@ -67,7 +67,7 @@
 #v(0.5em)
 
 #par(first-line-indent: 0em)[
-  Deep learning models for 3D brain tumor segmentation have achieved remarkable accuracy, yet their opaque decision-making processes present a critical barrier to clinical adoption. This paper presents a comprehensive Explainable AI (XAI) framework integrating six complementary post-hoc explanation techniques with a SegResNet architecture for volumetric brain tumor segmentation on the BraTS 2023 dataset. Our framework combines gradient-based methods (Grad-CAM, Guided Backpropagation, Guided Grad-CAM, Layer-wise Relevance Propagation), perturbation-based analysis (Occlusion Sensitivity), and probabilistic uncertainty quantification (Monte Carlo Dropout) to provide multi-perspective interpretability of 3D CNN predictions. The SegResNet model achieves competitive segmentation performance with mean Dice scores of 0.923 (Whole Tumor), 0.891 (Tumor Core), and 0.873 (Enhancing Tumor) on a held-out test set of 126 patients. Quantitative evaluation of XAI outputs using four metrics—Pointing Game accuracy, Saliency Coverage, Saliency IoU, and a novel Weighted Dice score—demonstrates that Guided Grad-CAM achieves 93% saliency coverage for the Whole Tumor region, while Occlusion Sensitivity achieves the highest spatial alignment (Weighted Dice: 0.42). Monte Carlo Dropout uncertainty analysis reveals characteristic boundary-concentrated variance patterns, with Boundary Uncertainty Ratios exceeding 0.84, confirming clinically meaningful confidence calibration. A critical finding is the gradient-based failure case (patient 00291) where Grad-CAM and Guided Grad-CAM produce zero saliency, yet MC Dropout confirms spatially grounded reasoning—demonstrating why multi-method XAI evaluation is essential. All explanation outputs are exported as spatially-aligned NIfTI volumes for immersive 3D visualization via 3D Slicer. This work bridges the gap between model accuracy and clinical trust by providing a unified, quantitatively validated explainability pipeline for volumetric medical image analysis.
+  Deep learning models for 3D brain tumor segmentation have achieved remarkable accuracy, yet their opaque decision-making processes present a critical barrier to clinical adoption. This paper presents a comprehensive Explainable AI (XAI) framework integrating six complementary post-hoc explanation techniques with a SegResNet architecture for volumetric brain tumor segmentation on the BraTS 2023 dataset. Our framework combines gradient-based methods (Grad-CAM, Guided Backpropagation, Guided Grad-CAM, Layer-wise Relevance Propagation), perturbation-based analysis (Occlusion Sensitivity), and probabilistic uncertainty quantification (Monte Carlo Dropout) to provide multi-perspective interpretability of 3D CNN predictions. The SegResNet model achieves competitive segmentation performance with mean Dice scores of 0.923 (Whole Tumor), 0.891 (Tumor Core), and 0.873 (Enhancing Tumor) on a held-out test set of 126 patients. Quantitative evaluation of XAI outputs using four metrics - Pointing Game accuracy, Saliency Coverage, Saliency IoU, and a novel Weighted Dice score - demonstrates that Guided Grad-CAM achieves 93% saliency coverage for the Whole Tumor region, while Occlusion Sensitivity achieves the highest spatial alignment (Weighted Dice: 0.42). Monte Carlo Dropout uncertainty analysis reveals characteristic boundary-concentrated variance patterns, with Boundary Uncertainty Ratios exceeding 0.84, confirming clinically meaningful confidence calibration. A critical finding is the gradient-based failure case (patient 00291) where Grad-CAM and Guided Grad-CAM produce zero saliency, yet MC Dropout confirms spatially grounded reasoning - demonstrating why multi-method XAI evaluation is essential. All explanation outputs are exported as spatially-aligned NIfTI volumes for immersive 3D visualization via 3D Slicer. This work bridges the gap between model accuracy and clinical trust by providing a unified, quantitatively validated explainability pipeline for volumetric medical image analysis.
 ]
 
 #v(0.5em)
@@ -81,17 +81,17 @@
 
 In modern neuro-oncology, accurate identification and delineation of brain tumors from Magnetic Resonance Imaging (MRI) data remains a critical clinical challenge. Manual segmentation by radiologists is labor-intensive, subjective, and increasingly unsustainable as imaging volumes grow @brats2015. Deep learning models, particularly 3D Convolutional Neural Networks (CNNs), have demonstrated superior performance in automated volumetric segmentation tasks @iftikhar2025 @bhati2024, processing entire MRI volumes rather than individual 2D slices to capture the true three-dimensional spatial relationships of tumor pathology.
 
-However, the clinical deployment of these high-performing models is critically hindered by the _"black box"_ problem: their internal decision-making processes remain fundamentally opaque to the clinicians who must rely on their outputs @neri2023. In the high-stakes domain of neurosurgery, this opacity creates a _"trust gap"_ @wen2025—it is insufficient for a model to simply output a segmentation mask; clinicians require the ability to verify _why_ specific voxels were classified as tumor tissue. This lack of interpretability is not merely a technical limitation but a barrier to ethical and safe clinical deployment, particularly within regulatory frameworks such as the GDPR's "right to explanation" @neri2023.
+However, the clinical deployment of these high-performing models is critically hindered by the _"black box"_ problem: their internal decision-making processes remain fundamentally opaque to the clinicians who must rely on their outputs @neri2023. In the high-stakes domain of neurosurgery, this opacity creates a _"trust gap"_ @wen2025 - it is insufficient for a model to simply output a segmentation mask; clinicians require the ability to verify _why_ specific voxels were classified as tumor tissue. This lack of interpretability is not merely a technical limitation but a barrier to ethical and safe clinical deployment, particularly within regulatory frameworks such as the GDPR's "right to explanation" @neri2023.
 
 Explainable AI (XAI) techniques aim to address this disconnect by illuminating model reasoning. Methods such as Gradient-weighted Class Activation Mapping (Grad-CAM) @selvaraju2017 have become established tools for visualizing CNN decisions. However, existing XAI frameworks for 3D medical imaging suffer from three critical limitations: (1) they typically employ only a single explanation method, providing an incomplete picture of model behavior; (2) they lack uncertainty quantification, making it impossible to distinguish between confident and uncertain predictions; and (3) they present explanations as static 2D overlays, failing to convey the volumetric nature of the underlying pathology @neuroxai @brainAR.
 
 This paper presents a unified, multi-method XAI framework that addresses these limitations. Our key contributions are:
 
-1. *Multi-perspective explainability:* We implement and quantitatively compare six complementary XAI techniques—Grad-CAM, Guided Backpropagation (GBP), Guided Grad-CAM, Layer-wise Relevance Propagation (LRP), Occlusion Sensitivity, and Monte Carlo (MC) Dropout—providing gradient-based, perturbation-based, and probabilistic perspectives on model decision-making.
+1. *Multi-perspective explainability:* We implement and quantitatively compare six complementary XAI techniques - Grad-CAM, Guided Backpropagation (GBP), Guided Grad-CAM, Layer-wise Relevance Propagation (LRP), Occlusion Sensitivity, and Monte Carlo (MC) Dropout - providing gradient-based, perturbation-based, and probabilistic perspectives on model decision-making.
 
 2. *Quantitative XAI validation with novel metrics:* We introduce a systematic evaluation framework using four metrics (Pointing Game, Saliency Coverage, Saliency IoU, and Weighted Dice) that objectively assess whether the model "looks at the right place for the right reasons." The Weighted Dice metric, introduced as a novel contribution, enables reliable evaluation of coarse-resolution saliency methods by treating continuous saliency values as soft membership scores rather than forcing arbitrary binarization thresholds.
 
-3. *Uncertainty-aware explainability:* We integrate MC Dropout uncertainty quantification with structural attribution methods (LRP), enabling identification of _"brittle"_ decision regions where high feature importance intersects with high predictive variance—a critical clinical red flag.
+3. *Uncertainty-aware explainability:* We integrate MC Dropout uncertainty quantification with structural attribution methods (LRP), enabling identification of _"brittle"_ decision regions where high feature importance intersects with high predictive variance - a critical clinical red flag.
 
 4. *VR-ready volumetric pipeline:* All XAI outputs are exported as spatially-aligned NIfTI volumes, ready for immersive 3D visualization through platforms such as 3D Slicer and SlicerVR.
 
@@ -117,13 +117,13 @@ The BraTS challenge @brats2015 has served as the primary benchmark for evaluatin
 
 == Explainable AI for Medical Imaging
 
-XAI methods for CNNs are broadly categorized as _gradient-based_, _perturbation-based_, or _decomposition-based_. Grad-CAM @selvaraju2017 computes class-discriminative heatmaps using gradients flowing into a target convolutional layer, providing coarse but class-specific spatial localization. Guided Backpropagation @springenberg2015 produces full-resolution saliency maps by gating negative gradients during backpropagation. Their fusion—Guided Grad-CAM—achieves both high resolution and class specificity @selvaraju2017.
+XAI methods for CNNs are broadly categorized as _gradient-based_, _perturbation-based_, or _decomposition-based_. Grad-CAM @selvaraju2017 computes class-discriminative heatmaps using gradients flowing into a target convolutional layer, providing coarse but class-specific spatial localization. Guided Backpropagation @springenberg2015 produces full-resolution saliency maps by gating negative gradients during backpropagation. Their fusion - Guided Grad-CAM - achieves both high resolution and class specificity @selvaraju2017.
 
 Layer-wise Relevance Propagation (LRP) @montavon2017 operates on a conservation principle, attributing the output prediction score back to individual input voxels. For complex architectures, the Input $times$ Gradient approximation provides a computationally tractable proxy equivalent to $epsilon$-LRP in ReLU networks. Occlusion Sensitivity @zeiler2014 offers a complementary, model-agnostic approach by systematically masking input regions and measuring prediction changes.
 
 For uncertainty quantification, MC Dropout @gal2016dropout provides a Bayesian approximation by maintaining dropout during inference across multiple stochastic forward passes. The variance across predictions serves as a proxy for model uncertainty, identifying regions where the network lacks confidence.
 
-Recent surveys @bhati2024 have highlighted the growing importance of XAI in medical imaging, emphasizing that no single method provides a complete picture of model behavior—a gap our multi-method framework directly addresses. The NeuroXAI framework @neuroxai applied multiple gradient-based XAI methods to brain tumor segmentation, achieving 90% clinician alignment. The AXONS-3 framework @axons3 advanced this by integrating trust metrics into 3D segmentation pipelines. However, both frameworks lack integrated uncertainty quantification and rely on static visualization, limiting their clinical utility for interactive decision support.
+Recent surveys @bhati2024 have highlighted the growing importance of XAI in medical imaging, emphasizing that no single method provides a complete picture of model behavior - a gap our multi-method framework directly addresses. The NeuroXAI framework @neuroxai applied multiple gradient-based XAI methods to brain tumor segmentation, achieving 90% clinician alignment. The AXONS-3 framework @axons3 advanced this by integrating trust metrics into 3D segmentation pipelines. However, both frameworks lack integrated uncertainty quantification and rely on static visualization, limiting their clinical utility for interactive decision support.
 
 == Immersive Visualization in Medical Imaging
 
@@ -147,7 +147,7 @@ The backbone of our framework is SegResNet @myronenko2019, a 3D encoder-decoder 
 
 The encoder progressively downsamples input through four levels, increasing filters from 32 to 256 at the bottleneck, using strided $3 times 3 times 3$ convolutions. Each level is composed of Residual Blocks (ResBlocks) featuring GroupNorm normalization and ReLU activations. These blocks learn residual mappings via skip connections, preventing vanishing gradients and ensuring stable training of deep 3D networks @he2016deep. The decoder reconstructs the segmentation map via trilinear upsampling and encoder-decoder skip connections. A dropout probability of $p = 0.1$ serves dual purposes: regularization during training and enabling MC Dropout inference.
 
-To address severe class imbalance—particularly the ET region comprising merely ~5% of tumor volume—the model employs DiceFocalLoss with a focal parameter $gamma = 2.0$, which increases the loss contribution from hard-to-classify voxels:
+To address severe class imbalance - particularly the ET region comprising merely ~5% of tumor volume - the model employs DiceFocalLoss with a focal parameter $gamma = 2.0$, which increases the loss contribution from hard-to-classify voxels:
 
 $
   "DiceFocalLoss" = "DiceLoss" + lambda dot.c "FocalLoss"
@@ -215,7 +215,7 @@ $
   L^c_"Guided Grad-CAM" = L^c_"Grad-CAM" dot.c L_"GBP"
 $
 
-A critical implementation detail is _hook isolation_: simultaneously active Grad-CAM and GBP backward hooks corrupt each other's gradient flows. Our framework employs sequential per-patient computation—first Grad-CAM hooks, then GBP hooks on a clean model—before multiplying the stored results.
+A critical implementation detail is _hook isolation_: simultaneously active Grad-CAM and GBP backward hooks corrupt each other's gradient flows. Our framework employs sequential per-patient computation - first Grad-CAM hooks, then GBP hooks on a clean model - before multiplying the stored results.
 
 === Layer-wise Relevance Propagation (LRP)
 
@@ -432,23 +432,23 @@ Weighted Dice scores are highly stable across resolutions (typically within +-0.
 
 === Full-Resolution Gradient Attribution: Guided Backpropagation
 
-GBP achieves 100% Pointing Game across all five patients and all three tumor regions—including patient 00291, where Grad-CAM and Guided Grad-CAM produce zero saliency. This proves that the model encodes tumor-relevant features at the input pixel level.
+GBP achieves 100% Pointing Game across all five patients and all three tumor regions - including patient 00291, where Grad-CAM and Guided Grad-CAM produce zero saliency. This proves that the model encodes tumor-relevant features at the input pixel level.
 
 === Gradient Fusion: Guided Grad-CAM
 
-Guided Grad-CAM achieves the highest Saliency Coverage of any method evaluated: 0.81–0.96 for Whole Tumor and 0.81–0.92 for Tumor Core, indicating nearly all saliency mass is concentrated inside the tumor. However, it inherits Grad-CAM's failure modes—for patient 00291, element-wise multiplication zeros out GBP's otherwise perfect signal, producing blank maps.
+Guided Grad-CAM achieves the highest Saliency Coverage of any method evaluated: 0.81–0.96 for Whole Tumor and 0.81–0.92 for Tumor Core, indicating nearly all saliency mass is concentrated inside the tumor. However, it inherits Grad-CAM's failure modes - for patient 00291, element-wise multiplication zeros out GBP's otherwise perfect signal, producing blank maps.
 
 === Perturbation-Based Attribution: Occlusion Sensitivity
 
-Occlusion Sensitivity achieves 100% Pointing Game for Whole Tumor across all patients and produces the highest Weighted Dice scores of all six methods: 0.38–0.46 for WT, 0.24–0.47 for TC. Most remarkably, patient 01397 achieves Weighted Dice of 0.35 with PG=1.0 for Enhancing Tumor—the only method where ET localization truly succeeds above 0.30.
+Occlusion Sensitivity achieves 100% Pointing Game for Whole Tumor across all patients and produces the highest Weighted Dice scores of all six methods: 0.38–0.46 for WT, 0.24–0.47 for TC. Most remarkably, patient 01397 achieves Weighted Dice of 0.35 with PG=1.0 for Enhancing Tumor - the only method where ET localization truly succeeds above 0.30.
 
 This constitutes the strongest piece of evidence that the model genuinely relies on tumor voxels, ruling out shortcut learning, texture bias, or dataset artifacts.
 
 === Uncertainty Quantification: MC Dropout
 
-MC Dropout generates per-voxel variance maps quantifying where the model is uncertain—a complementary signal to saliency maps which show where the model attends.
+MC Dropout generates per-voxel variance maps quantifying where the model is uncertain - a complementary signal to saliency maps which show where the model attends.
 
-*Patient 01497 — Low Uncertainty, Clear Boundaries:*
+*Patient 01497  -  Low Uncertainty, Clear Boundaries:*
 
 #figure(
   table(
@@ -469,7 +469,7 @@ MC Dropout generates per-voxel variance maps quantifying where the model is unce
   caption: [MC Dropout uncertainty metrics for patient 01497. Low UAR (0.09-0.22) indicates confident segmentation. TC Boundary Ratio of 0.967 demonstrates nearly all uncertainty concentrates at Tumour Core edges. ET exhibits 100x higher internal variance than surrounding tissue (0.014 vs. 0.00005)],
 ) <tab:mc_01497>
 
-*Patient 01397 — High Uncertainty, Complex Morphology:*
+*Patient 01397  -  High Uncertainty, Complex Morphology:*
 
 #figure(
   table(
@@ -490,7 +490,7 @@ MC Dropout generates per-voxel variance maps quantifying where the model is unce
   caption: [MC Dropout uncertainty metrics for patient 01397. TC UAR of 0.892 indicates 89% of model uncertainty concentrates inside the Tumour Core. ET Boundary Ratio reaches 1.0-every unit of uncertainty sits at the ET edge, constituting the strongest calibration evidence],
 ) <tab:mc_01397>
 
-*Patient 00291 — The Gradient-Based Failure Case:*
+*Patient 00291  -  The Gradient-Based Failure Case:*
 
 #figure(
   table(
@@ -508,10 +508,10 @@ MC Dropout generates per-voxel variance maps quantifying where the model is unce
     [ET], [0.500], [0.997], [0.00930], [0.00002], [+0.053],
     table.hline(stroke: 1.5pt),
   ),
-  caption: [MC Dropout uncertainty metrics for patient 00291. Despite complete gradient-based XAI failure (Grad-CAM and Guided Grad-CAM produce zero saliency), Boundary Ratio reaches 0.997--1.000, proving the model's spatial reasoning is intact. Positive TC/ET correlation (+0.05 to +0.09) uniquely indicates the model relies on features it is not fully confident about—a clinical red flag],
+  caption: [MC Dropout uncertainty metrics for patient 00291. Despite complete gradient-based XAI failure (Grad-CAM and Guided Grad-CAM produce zero saliency), Boundary Ratio reaches 0.997--1.000, proving the model's spatial reasoning is intact. Positive TC/ET correlation (+0.05 to +0.09) uniquely indicates the model relies on features it is not fully confident about - a clinical red flag],
 ) <tab:mc_00291>
 
-Despite complete gradient-based XAI failure for this patient, MC Dropout reveals a fundamentally different picture. The Boundary Ratio of 0.997--1.000 demonstrates that despite the model's ambiguity, uncertainty concentrates at the ground truth boundaries rather than being randomly distributed. This confirms the model _is_ segmenting based on real spatial features—the gradient-based methods failed to explain it, but the model's internal reasoning remains spatially grounded.
+Despite complete gradient-based XAI failure for this patient, MC Dropout reveals a fundamentally different picture. The Boundary Ratio of 0.997--1.000 demonstrates that despite the model's ambiguity, uncertainty concentrates at the ground truth boundaries rather than being randomly distributed. This confirms the model _is_ segmenting based on real spatial features - the gradient-based methods failed to explain it, but the model's internal reasoning remains spatially grounded.
 
 === Cross-Method Comparative Analysis
 
@@ -604,9 +604,9 @@ The patient 00291 case provides the strongest evidence for multi-method evaluati
 
 == Clinical Implications
 
-The high saliency coverage of Guided Grad-CAM (93% for WT) demonstrates that the model focuses attention within the tumor boundary for the correct reasons, not on spurious correlations. The boundary-concentrated uncertainty pattern aligns with clinical intuition—tumor margins are inherently ambiguous due to infiltrative growth patterns.
+The high saliency coverage of Guided Grad-CAM (93% for WT) demonstrates that the model focuses attention within the tumor boundary for the correct reasons, not on spurious correlations. The boundary-concentrated uncertainty pattern aligns with clinical intuition - tumor margins are inherently ambiguous due to infiltrative growth patterns.
 
-The combination of structural attribution (LRP) with uncertainty quantification enables identification of anatomically ambiguous regions where the prediction may be unreliable. The positive correlation in patient 00291 (where high LRP relevance overlaps with high uncertainty) flags a case that should be prioritized for radiologist review—a unique diagnostic signal available only through multi-method analysis.
+The combination of structural attribution (LRP) with uncertainty quantification enables identification of anatomically ambiguous regions where the prediction may be unreliable. The positive correlation in patient 00291 (where high LRP relevance overlaps with high uncertainty) flags a case that should be prioritized for radiologist review - a unique diagnostic signal available only through multi-method analysis.
 
 == The Novel Weighted Dice Metric
 

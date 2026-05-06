@@ -126,6 +126,8 @@ def main():
                         help="Path to model checkpoint (.pth)")
     parser.add_argument("--limit", type=int, default=0,
                         help="Limit to N patients (0 = all)")
+    parser.add_argument("--skip", type=int, default=0,
+                        help="Skip first N patients (default: 0)")
     parser.add_argument("--split", type=str, default="test",
                         help="Dataset split to process")
     parser.add_argument("--layer", type=str, default="bottleneck",
@@ -139,6 +141,8 @@ def main():
                              "saliency voxels before computing metrics. "
                              "Saves a separate Weighted Dice CSV. "
                              "Set to 0 to disable (default: 0).")
+    parser.add_argument("--output", type=str, default="",
+                        help="Custom output filename (default: auto-generated)")
     args = parser.parse_args()
 
     # ── Setup ───────────────────────────────────────────────────────────
@@ -174,7 +178,10 @@ def main():
     target_layer = _get_target_layer(model, args.layer)
 
     # ── CSV setup ───────────────────────────────────────────────────────
-    csv_path = results_dir / f"xai_gradcam_coarse_{args.layer}_metrics.csv"
+    if args.output:
+        csv_path = results_dir / args.output
+    else:
+        csv_path = results_dir / f"xai_gradcam_coarse_{args.layer}_metrics.csv"
     csv_fieldnames = [
         "Patient", "Region", "Native_Resolution",
         "Pointing_Game", "Saliency_Coverage", "Saliency_IoU", "Weighted_Dice",
@@ -201,8 +208,13 @@ def main():
     print()
 
     processed = 0
+    skipped = 0
 
     for data in tqdm(loader, desc=f"Coarse Grad-CAM ({args.layer})"):
+
+        if skipped < args.skip:
+            skipped += 1
+            continue
 
         if args.limit > 0 and processed >= args.limit:
             break

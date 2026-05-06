@@ -5,11 +5,11 @@
 
 ## 1. Project Synthesis and The Original Motivation (approx. 75 words)
 *   **Goal:** Anchor the conclusion by reflecting on the *entire* project's starting point.
-*   **Narrative:** The project began with a fundamental clinical problem: deep learning models for brain tumor segmentation operate as impenetrable "black boxes," rendering them unsafe for neurosurgical planning despite high accuracy. The overarching objective was to construct an end-to-end framework—from raw MRI data to immersive visualization—that systematically dismantled this opacity, proving that mathematical precision and clinical transparency can be co-engineered.
+*   **Narrative:** The project began with a fundamental clinical problem: deep learning models for brain tumor segmentation operate as impenetrable "black boxes," rendering them unsafe for neurosurgical planning despite high accuracy. The overarching objective was to construct an end-to-end framework - from raw MRI data to immersive visualization - that systematically dismantled this opacity, proving that mathematical precision and clinical transparency can be co-engineered.
 
 ## 2. The Methodological Journey: Data to Architecture (approx. 100 words)
 *   **Goal:** Summarize the engineering effort before the final results.
-*   **Narrative:** Reflect on the rigorous data pipeline required to process the massive BraTS 2023 cohort. Acknowledging the transition from initial 45-patient prototyping to training a full 3D SegResNet on 1,251 patients. Emphasize that the foundation of the project's success was rooted in robust data standardization and selecting a volumetrically aware architecture, which ultimately enabled the model to achieve an Enhancing Tumor (ET) HD95 of 3.66 mm—a clinically viable sub-voxel margin.
+*   **Narrative:** Reflect on the rigorous data pipeline required to process the massive BraTS 2023 cohort. Acknowledging the transition from initial 45-patient prototyping to training a full 3D SegResNet on 1,251 patients. Emphasize that the foundation of the project's success was rooted in robust data standardization and selecting a volumetrically aware architecture, which ultimately enabled the model to achieve an Enhancing Tumor (ET) HD95 of 3.66 mm - a clinically viable sub-voxel margin.
 
 ## 3. Resolving the Interpretability Crisis (approx. 125 words)
 *   **Goal:** Highlight the critical findings of the XAI investigation (the core of the dissertation).
