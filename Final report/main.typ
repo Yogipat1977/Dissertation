@@ -23,7 +23,7 @@
 
     I also extend my heartfelt thanks to Maged Abdelmonem for generously providing access to a VR headset, which was essential to the immersive visualisation component of this framework and directly contributed to achieving the project's objectives.
 
-    Finally, I am profoundly thankful to my family and friends for their unwavering patience, understanding, and motivation during the demanding months of this final year project.
+
   ],
 )
 
