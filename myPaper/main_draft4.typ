@@ -160,16 +160,16 @@ of Weighted Dice, a novel soft metric for resolution-robust saliency evaluation.
 
 #figure(
   block(width: 100%)[
-    #show table.cell: set text(size: 8pt)
+    #show table.cell: set text(size: 8pt, hyphenate: false)
     #table(
-      columns: (17%, 15%, 11%, 20%, 15%, 10%, 12%),
-      inset: 5pt,
+      columns: (13%, 15%, 11%, 19%, 17%, 10%, 15%),
+      inset: 3.5pt,
       align: center + horizon,
       stroke: none,
 
       table.hline(stroke: 1.5pt),
-      [*Framework*], [*XAI \ Methods*], [*Uncertainty*], [*Perturbation \ Validation*],
-      [*Quantitative \ XAI Metrics*], [*3D/VR \ Viz*], [*Evaluation \ Cohort*],
+      [*Framework*], [*XAI Methods*], [*Uncertainty*], [*Perturbation Validation*],
+      [*Quantitative XAI Metrics*], [*3D/VR Viz*], [*Evaluation Cohort*],
       table.hline(stroke: 0.5pt),
 
       [NeuroXAI @neuroxai \ (Zeineldin et al., 2022)],

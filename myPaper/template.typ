@@ -18,7 +18,7 @@
 
   set page(
     paper: "a4",
-    margin: (left: 2.5cm, right: 2.5cm, top: 2.5cm, bottom: 2.5cm),
+    margin: (left: 2cm, right: 2cm, top: 2cm, bottom: 2cm),
     numbering: "1",
     number-align: center,
   )
